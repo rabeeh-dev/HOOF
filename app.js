@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000
 connectDB()
 
 app.get('/',(req,res)=>{
-    res.send("Server is running successfully")
+    res.send("Server is running")
 })
 
 
