@@ -1,16 +1,16 @@
 
-const express = require('express');
-const mongoose = require('mongoose');
-const session = require('express-session');
-const path = require('path');
-const dotenv = require('dotenv');
+const express = require('express')
+const mongoose = require('mongoose')
+const session = require('express-session')
+const path = require('path')
+const dotenv = require('dotenv')
 const connectDB = require('./config/db')
-dotenv.config();
+dotenv.config()
 
 connectDB()
 
 
-const app = express();
+const app = express()
 
 
 

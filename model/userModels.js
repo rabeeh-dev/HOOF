@@ -40,16 +40,15 @@ const userSchema = new mongoose.Schema({
     timestamps : true
 })
 
-userSchema.pre("validate", function (next) {
+userSchema.pre("validate", function () {
   if (this.authProvider === "local" && !this.password) {
-    return next(new Error("Password is required"));
+    throw new Error("Password is required");
   }
 
   if (this.authProvider === "google") {
     this.password = undefined;
   }
-
-  next();
 });
+
 
 module.exports = mongoose.model("User",userSchema)
