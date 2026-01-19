@@ -1,11 +1,14 @@
-
+require('dotenv').config();
 const express = require('express')
 const mongoose = require('mongoose')
 const session = require('express-session')
 const path = require('path')
 const dotenv = require('dotenv')
 const connectDB = require('./config/db')
-dotenv.config()
+const passport = require('./config/passport');
+const authRoutes = require('./routes/authRoutes');
+
+
 
 
 connectDB()
@@ -36,6 +39,11 @@ app.use((req, res, next) => {
     next();
 });
 
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+
 // View engine setup
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -53,7 +61,8 @@ const userRoutes = require('./routes/userRoutes');
 
 app.use('/user', userRoutes);
 // app.use('/admin', adminRoutes);
-
+app.use('/auth', authRoutes);
+app.use("/", require("./routes/testMail"));
 
 app.get('/', (req, res) => {
     res.render('User/landing', {
@@ -68,8 +77,6 @@ app.get('/home', (req, res) => {
     layout: 'layouts/user'
   });
 });
-
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

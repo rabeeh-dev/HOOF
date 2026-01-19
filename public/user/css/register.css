@@ -300,6 +300,10 @@ img { max-width: 100%; display: block; }
   font-weight: 500;
   padding: 1.1rem;
 }
+.google-signup a {
+  text-decoration: none;
+  color: black;
+}
 .google-signup:hover {
   background: #f8f9fa;
   border-color: rgba(0, 0, 0, 0.15);

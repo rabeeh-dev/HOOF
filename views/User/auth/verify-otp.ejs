@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Verify OTP | HOOF</title>
-  <link rel="stylesheet" href="/user/css/otp.css" />
+  <link rel="stylesheet" href="/user/css/verify-otp.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -50,35 +50,40 @@
             <p class="otp-email">john.doe@example.com</p>
           </div>
 
-          <form class="otp-form" id="otpForm">
-            <div class="otp-inputs">
-              <div class="otp-input-group">
-                <input type="text" class="otp-input" maxlength="1" data-index="0" required />
-              </div>
-              <div class="otp-input-group">
-                <input type="text" class="otp-input" maxlength="1" data-index="1" required />
-              </div>
-              <div class="otp-input-group">
-                <input type="text" class="otp-input" maxlength="1" data-index="2" required />
-              </div>
-              <div class="otp-input-group">
-                <input type="text" class="otp-input" maxlength="1" data-index="3" required />
-              </div>
-              <div class="otp-input-group">
-                <input type="text" class="otp-input" maxlength="1" data-index="4" required />
-              </div>
-              <div class="otp-input-group">
-                <input type="text" class="otp-input" maxlength="1" data-index="5" required />
-              </div>
-            </div>
+          <form class="otp-form" id="otpForm" action="/user/verify-otp" method="POST">
+  
+  <div class="otp-inputs">
+    <div class="otp-input-group">
+      <input type="text" class="otp-input" maxlength="1" data-index="0" required />
+    </div>
+    <div class="otp-input-group">
+      <input type="text" class="otp-input" maxlength="1" data-index="1" required />
+    </div>
+    <div class="otp-input-group">
+      <input type="text" class="otp-input" maxlength="1" data-index="2" required />
+    </div>
+    <div class="otp-input-group">
+      <input type="text" class="otp-input" maxlength="1" data-index="3" required />
+    </div>
+    <div class="otp-input-group">
+      <input type="text" class="otp-input" maxlength="1" data-index="4" required />
+    </div>
+    <div class="otp-input-group">
+      <input type="text" class="otp-input" maxlength="1" data-index="5" required />
+    </div>
+  </div>
 
-            <div class="otp-timer">
-              <span id="timer">02:00</span>
-              <button type="button" class="resend-otp" id="resendOtp">Resend Code</button>
-            </div>
+  <!-- ✅ THIS IS THE KEY FIX -->
+  <input type="hidden" name="otp" id="otpHidden" />
 
-            <button type="submit" class="btn primary otp-btn">Verify OTP</button>
-          </form>
+  <div class="otp-timer">
+    <span id="timer">02:00</span>
+    <button type="button" class="resend-otp" id="resendOtp">Resend Code</button>
+  </div>
+
+  <button type="submit" class="btn primary otp-btn">Verify OTP</button>
+</form>
+
 
           <div class="otp-divider">
             <span>or</span>
@@ -117,6 +122,6 @@
     </div>
   </footer>
 
-  <script src="/user/js/otp.js" defer></script>
+  <script src="/user/js/verify-otp.js" defer></script>
 </body>
 </html>

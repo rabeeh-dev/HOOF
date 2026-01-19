@@ -14,8 +14,8 @@
 *::before,
 *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-@font-face { font-family: silver; src: url(./fonts/fonnts.com-Silver_Streak.otf) format("opentype"); }
-@font-face { font-family: Roboto; src: url(./fonts/roboto/Roboto-Medium.ttf); }
+@font-face { font-family: silver; src: url(/user/fonts/fonnts.com-Silver_Streak.otf) format("opentype"); }
+@font-face { font-family: Roboto; src: url(/user/fonts/roboto/Roboto-Medium.ttf); }
 
 body {
   font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
