@@ -13,7 +13,7 @@ router.post('/signup', (req, res, next) => {
 
 
 router.get('/login',userController.loginPage)
-// router.post('/login',userController)
+router.post('/login',userController.login)
 
 
 module.exports = router

@@ -46,12 +46,12 @@
             <p class="login-subtitle">Sign in to your HOOF account</p>
           </div>
 
-          <form class="login-form" id="loginForm">
+          <form class="login-form" id="loginForm" action="/user/login" method="POST">
             <div class="form-group">
               <label for="loginEmail">Email Address</label>
               <div class="input-wrapper">
                 <i class="fas fa-envelope input-icon"></i>
-                <input type="email" id="loginEmail" name="loginEmail" placeholder="Enter your email" required />
+                <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required />
               </div>
             </div>
 
@@ -59,7 +59,7 @@
               <label for="loginPassword">Password</label>
               <div class="input-wrapper">
                 <i class="fas fa-lock input-icon"></i>
-                <input type="password" id="loginPassword" name="loginPassword" placeholder="Enter your password" required />
+                <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required />
               </div>
             </div>
 

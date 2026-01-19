@@ -7,6 +7,7 @@ const dotenv = require('dotenv')
 const connectDB = require('./config/db')
 dotenv.config()
 
+
 connectDB()
 
 
@@ -59,7 +60,15 @@ app.get('/', (req, res) => {
         title: 'Home - ShoeStore',
         layout: 'layouts/user'
     });
-});       
+});      
+
+app.get('/home', (req, res) => {
+  res.render('User/home', {
+    title: 'Home - ShoeStore',
+    layout: 'layouts/user'
+  });
+});
+
 
 
 const PORT = process.env.PORT || 3000;
