@@ -4,31 +4,37 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Log In | HOOF</title>
+
   <link rel="stylesheet" href="/user/css/login.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="icon" type="image/x-icon" href="./images/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/user/images/favicon.ico">
 </head>
+
 <body>
-  <!-- NAVBAR (EXACT SAME) -->
+  <!-- NAVBAR -->
   <header class="topbar">
     <div class="container nav-inner">
       <a href="javascript:history.back()" class="nav-back" aria-label="Go back">
         <i class="fa-solid fa-arrow-left"></i>
       </a>
+
       <div class="logo">HOOF</div>
+
       <nav class="nav">
         <ul class="nav-links">
-          <li><a href="home.html#home">Home</a></li>
-          <li><a href="index.html#about">About</a></li>
-          <li><a href="home.html#products">Shop</a></li>
-          <li><a href="index.html#contact">Contact</a></li>
+          <li><a href="/home">Home</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="/shop">Shop</a></li>
+          <li><a href="/contact">Contact</a></li>
         </ul>
+
         <div class="nav-actions">
-          <a href="#" class="nav-icon" title="Wishlist"><i class="far fa-heart"></i><span class="nav-badge">0</span></a>
-          <a href="#" class="nav-icon cart-icon" title="Cart"><i class="fas fa-shopping-bag"></i><span class="nav-badge cart-count">0</span></a>
+          <a href="#" class="nav-icon"><i class="far fa-heart"></i><span class="nav-badge">0</span></a>
+          <a href="#" class="nav-icon cart-icon"><i class="fas fa-shopping-bag"></i><span class="nav-badge">0</span></a>
         </div>
+
         <button class="nav-toggle" id="nav-toggle">
           <span></span><span></span><span></span>
         </button>
@@ -36,22 +42,38 @@
     </div>
   </header>
 
-  <!-- LOGIN SECTION (EXACT SAME LAYOUT) -->
+  <!-- LOGIN SECTION -->
   <section class="section login-hero">
     <div class="container">
       <div class="login-container">
         <div class="login-card">
+
           <div class="login-header">
             <h1 class="login-title">Welcome Back</h1>
             <p class="login-subtitle">Sign in to your HOOF account</p>
           </div>
 
+          <!-- SERVER ERROR MESSAGE -->
+          <% if (typeof error !== "undefined" && error) { %>
+            <div class="server-message error">
+              <%= error %>
+            </div>
+          <% } %>
+
           <form class="login-form" id="loginForm" action="/user/login" method="POST">
+
             <div class="form-group">
               <label for="loginEmail">Email Address</label>
               <div class="input-wrapper">
                 <i class="fas fa-envelope input-icon"></i>
-                <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required />
+                <input
+                  type="email"
+                  id="loginEmail"
+                  name="email"
+                  placeholder="Enter your email"
+                  required
+                  value="<%= typeof email !== 'undefined' ? email : '' %>"
+                />
               </div>
             </div>
 
@@ -59,15 +81,25 @@
               <label for="loginPassword">Password</label>
               <div class="input-wrapper">
                 <i class="fas fa-lock input-icon"></i>
-                <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required />
+                <input
+                  type="password"
+                  id="loginPassword"
+                  name="password"
+                  placeholder="Enter your password"
+                  required
+                />
               </div>
             </div>
 
             <div class="login-actions">
-              <a href="#" class="forgot-password">Forgot Password?</a>
+              <a href="/user/forgot-password" class="forgot-password">
+                Forgot Password?
+              </a>
             </div>
 
-            <button type="submit" class="btn primary login-btn">Sign In</button>
+            <button type="submit" class="btn primary login-btn">
+              Sign In
+            </button>
           </form>
 
           <div class="login-divider">
@@ -81,25 +113,32 @@
           </button>
 
           <div class="login-footer">
-            <p>Don't have an account? <a href="signup.html">Sign up here</a></p>
+            <p>
+              Don't have an account?
+              <a href="/user/signup">Sign up here</a>
+            </p>
           </div>
+
         </div>
       </div>
     </div>
   </section>
 
-  <!-- FOOTER (EXACT SAME - 2 columns) -->
+  <!-- FOOTER -->
   <footer class="section footer">
     <div class="container footer-inner">
       <div class="footer-left">
         <div class="logo">HOOF</div>
-        <p class="footer-text">Premium sneakers designed to complement your everyday journey with style, comfort, and durability.</p>
+        <p class="footer-text">
+          Premium sneakers designed to complement your everyday journey with style, comfort, and durability.
+        </p>
         <div class="footer-social">
           <a href="#"><i class="fa-brands fa-instagram"></i></a>
           <a href="#"><i class="fa-solid fa-phone"></i></a>
           <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
         </div>
       </div>
+
       <div class="footer-right">
         <h4>Malappuram</h4>
         <p>HOOF Sneaker House</p>
@@ -109,6 +148,6 @@
     </div>
   </footer>
 
-  <script src="user/js/login.js" defer></script>
+  <script src="/user/js/login.js" defer></script>
 </body>
 </html>
