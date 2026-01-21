@@ -349,11 +349,21 @@ exports.resetPassword = async (req, res) => {
 /* =========================
    LOGOUT
 ========================= */
-
 exports.logout = (req, res) => {
+    // 1. Clear variables from session object
+    req.session.userId = null;
+    req.session.userName = null;
+
+    // 2. Destroy the session in MongoDB
     req.session.destroy((err) => {
-        if (err) console.log(err);
-        res.clearCookie("connect.sid");
+        if (err) {
+            console.log("Logout Error:", err);
+            return res.redirect("/user/home");
+        }
+        // 3. Clear the cookie from the browser
+        res.clearCookie("connect.sid", { path: '/' }); 
+        
+        // 4. Redirect to login
         res.redirect("/user/login");
     });
 };

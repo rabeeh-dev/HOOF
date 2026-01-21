@@ -51,12 +51,17 @@ app.use(passport.session());
 
 // ================== GLOBAL LOCALS ==================
 app.use((req, res, next) => {
-  res.locals.user = req.session.userId ? {
-    id: req.session.userId,
-    name: req.session.userName,
-    email: req.session.userEmail
-  } : null;
-  next();
+    // This tells the browser: "Do not save this page in history/cache"
+    res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+    res.header('Expires', '-1');
+    res.header('Pragma', 'no-cache');
+
+    res.locals.user = req.session.userId ? {
+        id: req.session.userId,
+        name: req.session.userName,
+        email: req.session.userEmail
+    } : null;
+    next();
 });
 // ================== ROUTES ==================
 const userRoutes = require("./routes/userRoutes");

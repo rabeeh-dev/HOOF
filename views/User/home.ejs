@@ -398,5 +398,14 @@
     </footer>
 
     <script src="/user/js/home.js" defer></script>
+    <script>
+  // This script detects if the page is being loaded from the browser cache (back button)
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted || (typeof window.performance != "undefined" && window.performance.navigation.type === 2)) {
+      // If the page was loaded from cache (navigation type 2 is 'back'), force a reload
+      window.location.reload();
+    }
+  });
+</script>
   </body>
 </html>
