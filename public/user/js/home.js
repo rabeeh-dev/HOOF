@@ -79,18 +79,26 @@ profileDropdown.addEventListener("click", (e) => {
 });
 
 // Handle dropdown menu item clicks
+// Handle dropdown menu item clicks
 document.querySelectorAll(".dropdown-item").forEach(item => {
   item.addEventListener("click", (e) => {
-    // If it's the logout button, don't preventDefault! 
-    // Let the form submit naturally.
+    // 1. If it's the logout button, let the form submit naturally
     if (item.classList.contains('logout')) {
         return; 
     }
 
+    // 2. Check if the item is a link (like the Profile link)
+    // If it has a real href (not just "#"), let it navigate!
+    if (item.getAttribute('href') && item.getAttribute('href') !== '#') {
+        profileDropdown.classList.remove("active");
+        return; // Exit and let the browser navigate to /user/profile
+    }
+
+    // 3. For placeholder items with "#", prevent default behavior
     e.preventDefault(); 
     const text = item.querySelector("span").textContent;
     profileDropdown.classList.remove("active");
-    alert(`Navigating to ${text}...`);
+    console.log(`Action for: ${text}`);
   });
 });
 

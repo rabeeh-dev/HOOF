@@ -39,6 +39,10 @@ router.get('/home', isUser, (req, res) => {
   });
 });
 
+// ================= USER PROFILE =================
+router.get('/profile', isUser, userController.getProfile);
+router.post('/profile/update', isUser, userController.updateProfile);
+
 
 // ================= LOGOUT=================
 router.post("/logout", userController.logout);

@@ -368,3 +368,49 @@ exports.logout = (req, res) => {
     });
 };
 
+
+/* =========================
+   GET USER PROFILE
+========================= */
+// 1. Show the Profile Page
+// Render Profile Page
+exports.getProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.session.userId);
+        res.render('User/user-profile', {
+            user,
+            title: 'My Profile | HOOF',
+            layout: 'layouts/user' 
+        });
+    } catch (err) {
+        res.redirect('/user/home');
+    }
+};
+
+// Handle AJAX Profile Update
+exports.updateProfile = async (req, res) => {
+    try {
+        // Log req.body to see exactly what the frontend is sending
+        console.log("Update Data received:", req.body);
+
+        const { fullName, phoneNumber, dateOfBirth } = req.body;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.session.userId,
+            { 
+                fullName: fullName,
+                phone: phoneNumber,
+                dob: dateOfBirth // Make sure this variable name matches the 'name' attribute in EJS
+            },
+            { new: true }
+        );
+
+        req.session.userName = updatedUser.fullName;
+        res.json({ success: true, message: "Profile updated successfully!" });
+    } catch (err) {
+        console.error("Update Error:", err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+

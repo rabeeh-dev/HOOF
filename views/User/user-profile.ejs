@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile | HOOF</title>
+  <link rel="stylesheet" href="/user/css/user-profile.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container nav-inner">
+      <div class="logo">HOOF</div>
+      <nav class="nav">
+        <ul class="nav-links">
+          <li><a href="/user/home">Home</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#products">Shop</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a href="#" class="nav-icon" title="Wishlist">
+            <i class="far fa-heart"></i>
+            <span class="nav-badge">0</span>
+          </a>
+          <a href="#" class="nav-icon cart-icon" title="Cart">
+            <i class="fas fa-shopping-bag"></i>
+            <span class="nav-badge cart-count">0</span>
+          </a>
+          <div class="profile-dropdown-wrapper">
+            <a href="#" class="nav-icon profile-icon" title="Profile" id="profileToggle">
+              <i class="fas fa-user"></i>
+            </a>
+            <div class="profile-dropdown" id="profileDropdown">
+              <div class="dropdown-header">
+                <div class="dropdown-avatar" style="font-family: silver; text-transform: uppercase;">
+                  <%= user.fullName.charAt(0) %>
+                </div>
+                <div class="dropdown-user-info">
+                  <h4><%= user.fullName %></h4>
+                  <p><%= user.email %></p>
+                </div>
+              </div>
+              <div class="dropdown-divider"></div>
+              <ul class="dropdown-menu">
+                <li>
+                  <a href="/user/profile" class="dropdown-item active">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Profile</span>
+                  </a>
+                </li>
+                <li><a href="#" class="dropdown-item"><i class="fas fa-box"></i><span>Orders</span></a></li>
+                <li><a href="#" class="dropdown-item"><i class="fas fa-wallet"></i><span>Wallet</span></a></li>
+                <li><a href="#" class="dropdown-item"><i class="fas fa-gift"></i><span>Referral</span></a></li>
+              </ul>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-footer">
+                <form action="/user/logout" method="POST" id="logoutForm">
+                  <button type="submit" class="dropdown-item logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="nav-toggle" id="nav-toggle">
+          <span></span><span></span><span></span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <section class="breadcrumb-section">
+    <div class="container">
+      <div class="breadcrumb">
+        <a href="/user/home">Home</a>
+        <span>/</span>
+        <a href="/user/profile">User</a>
+        <span>/</span>
+        <span>Profile</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="profile-section">
+    <div class="container">
+      <div class="profile-header-title">
+        <h1>My Profile</h1>
+        <p>Manage your account</p>
+      </div>
+
+      <div class="profile-layout">
+        <div class="profile-sidebar">
+          <div class="profile-card">
+            <div class="profile-avatar-wrapper">
+              <div class="profile-avatar" id="profileAvatar" style="font-family: silver; text-transform: uppercase; display: flex; align-items: center; justify-content: center;">
+                <%= user.fullName.charAt(0) %>
+              </div>
+              <% if (user.isEmailVerified) { %>
+                <div class="avatar-verified"><i class="fas fa-check"></i></div>
+              <% } %>
+            </div>
+            <h3 class="profile-name" id="sidebarName"><%= user.fullName %></h3>
+            <button class="btn-edit-profile" id="editToggleBtn">Edit Profile</button>
+            
+            <div class="profile-stats">
+              <div class="stat-item">
+                <p class="stat-label">Member Since</p>
+                <p class="stat-value"><%= new Date(user.createdAt).toLocaleString('default', { month: 'short', year: 'numeric' }) %></p>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <p class="stat-label">Auth</p>
+                <p class="stat-value" style="text-transform: capitalize;"><%= user.authProvider %></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-main">
+          <div class="profile-tabs">
+            <button class="tab-btn active" data-tab="details"><i class="fas fa-user-circle"></i><span>Details</span></button>
+            <button class="tab-btn" data-tab="orders"><i class="fas fa-box"></i><span>Orders</span></button>
+            <button class="tab-btn" data-tab="wallet"><i class="fas fa-wallet"></i><span>Wallet</span></button>
+            <button class="tab-btn" data-tab="referral"><i class="fas fa-gift"></i><span>Referral</span></button>
+            <button class="tab-btn" data-tab="faq"><i class="fas fa-question-circle"></i><span>FAQ</span></button>
+          </div>
+
+          <div class="tab-content-wrapper">
+            <div class="tab-content active" id="details-tab">
+              <div class="content-header"><h2>Account Details</h2></div>
+              <form class="profile-form" id="profileForm">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" value="<%= user.fullName %>" disabled />
+                  </div>
+                  <div class="form-group">
+                    <label for="emailAddress">Email Address</label>
+                    <div class="password-input-wrapper">
+                      <input type="email" value="<%= user.email %>" disabled />
+                      <a href="javascript:void(0)" class="change-password-link" onclick="verifyAndChange('email')">Change Email</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="phoneNumber">Phone Number</label>
+                    <input type="tel" id="phoneNumber" name="phoneNumber" value="<%= user.phone || '' %>" placeholder="Not set" disabled />
+                  </div>
+                  <div class="form-group">
+  <label for="dateOfBirth">Date of Birth</label>
+  <input type="date" 
+         id="dateOfBirth" 
+         name="dateOfBirth"  value="<%= user.dob ? user.dob.toISOString().split('T')[0] : '' %>" 
+         disabled />
+</div>
+                </div>
+                <div class="form-group">
+                  <label for="password">Password</label>
+                  <div class="password-input-wrapper">
+                    <input type="password" value="••••••••••••••••" disabled />
+                    <a href="javascript:void(0)" class="change-password-link" onclick="verifyAndChange('password')">Update Password</a>
+                  </div>
+                </div>
+                <div class="form-actions" id="formActions" style="display: none;">
+                  <button type="submit" class="btn primary">Save Changes</button>
+                  <button type="button" class="btn outline" id="cancelEdit">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="section footer">
+    <div class="container footer-inner">
+      <div class="footer-left">
+        <div class="logo">HOOF</div>
+        <p class="footer-text">Premium sneakers designed for style and comfort.</p>
+      </div>
+      <div class="footer-center"><h3>Location</h3><p>Malappuram, Kerala</p></div>
+      <div class="footer-right"><h3>Contact</h3><p>hoofshoes.co@gmail.com</p></div>
+    </div>
+  </footer>
+
+  <script src="/user/js/user-profile.js" defer></script>
+</body>
+</html>

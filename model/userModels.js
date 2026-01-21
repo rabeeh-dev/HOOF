@@ -43,6 +43,8 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    phone: { type: String },
+    dob: { type: Date },
   },
   {
     timestamps: true,
