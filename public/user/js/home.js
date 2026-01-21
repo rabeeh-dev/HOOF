@@ -54,3 +54,49 @@ document.querySelectorAll(".action-btn.wishlist").forEach(btn => {
 document.querySelector(".search-input").addEventListener("keypress", (e) => {
   if (e.key === "Enter") alert(`Searching for: "${e.target.value}" sneakers...`);
 });
+
+// PROFILE DROPDOWN FUNCTIONALITY
+const profileToggle = document.getElementById("profileToggle");
+const profileDropdown = document.getElementById("profileDropdown");
+
+// Toggle dropdown on profile icon click
+profileToggle.addEventListener("click", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  profileDropdown.classList.toggle("active");
+});
+
+// Close dropdown when clicking outside
+document.addEventListener("click", (e) => {
+  if (!profileToggle.contains(e.target) && !profileDropdown.contains(e.target)) {
+    profileDropdown.classList.remove("active");
+  }
+});
+
+// Prevent dropdown from closing when clicking inside it
+profileDropdown.addEventListener("click", (e) => {
+  e.stopPropagation();
+});
+
+// Handle dropdown menu item clicks
+document.querySelectorAll(".dropdown-item").forEach(item => {
+  item.addEventListener("click", (e) => {
+    // If it's the logout button, don't preventDefault! 
+    // Let the form submit naturally.
+    if (item.classList.contains('logout')) {
+        return; 
+    }
+
+    e.preventDefault(); 
+    const text = item.querySelector("span").textContent;
+    profileDropdown.classList.remove("active");
+    alert(`Navigating to ${text}...`);
+  });
+});
+
+// Close dropdown on escape key
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    profileDropdown.classList.remove("active");
+  }
+});

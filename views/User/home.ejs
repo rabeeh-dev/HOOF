@@ -1,265 +1,402 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HOOF | Home</title>
-  <link rel="stylesheet" href="/user/css/home.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-<link rel="icon" type="image/x-icon" href="user/images/home-images/favicon.ico">
-</head>
-<body>
-  <!-- NAVBAR with Cart/Wishlist/Profile -->
-  <header class="topbar">
-    <div class="container nav-inner">
-      <div class="logo">HOOF</div>
-      <nav class="nav">
-        <ul class="nav-links">
-          <li><a href="index.html#home">Home</a></li>
-          <li><a href="index.html#about">About</a></li>
-          <li><a href="#products">Shop</a></li>
-          <li><a href="index.html#contact">Contact</a></li>
-        </ul>
-        <div class="nav-actions">
-          <a href="#" class="nav-icon" title="Wishlist">
-            <i class="far fa-heart"></i>
-            <span class="nav-badge">0</span>
-          </a>
-          <a href="#" class="nav-icon cart-icon" title="Cart">
-            <i class="fas fa-shopping-bag"></i>
-            <span class="nav-badge cart-count">0</span>
-          </a>
-          <a href="#" class="nav-icon profile-icon" title="Profile">
-            <i class="fas fa-user"></i>
-          </a>
-        </div>
-        <button class="nav-toggle" id="nav-toggle">
-          <span></span><span></span><span></span>
-        </button>
-      </nav>
-    </div>
-  </header>
-
-  <!-- HERO BANNER -->
-  <section class="section hero-home reveal" id="home">
-    <div class="container hero-home-inner">
-      <h1 class="hero-title">FIND YOUR PERFECT PAIR</h1>
-      <p class="hero-subtitle">Premium sneakers for every style and stride</p>
-      <div class="hero-search">
-        <input type="text" placeholder="Search sneakers..." class="search-input" />
-        <button class="btn primary">Search</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- FEATURED PRODUCTS -->
-  <section class="section products-section reveal" id="products">
-    <div class="container">
-      <div class="section-header">
-        <p class="band-label">FEATURED</p>
-        <h2>NEW ARRIVALS</h2>
-      </div>
-      <div class="products-grid">
-        <div class="product-card-home floating-slow">
-          <div class="product-image-home">
-            <img src="user/images/home-images/shoe4.jpg" alt="Urban Drift" />
-            <div class="product-badge">New</div>
-            <div class="product-actions">
-              <button class="action-btn wishlist"><i class="far fa-heart"></i></button>
-              <button class="action-btn cart"><i class="fas fa-shopping-bag"></i></button>
-              <button class="action-btn view"><i class="fas fa-eye"></i></button>
-            </div>
-          </div>
-          <div class="product-info">
-            <h3>Urban Drift</h3>
-            <p class="product-price">₹4,999</p>
-            <div class="product-rating">
-              <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-              <span>4.8 (127)</span>
-            </div>
-            <button class="btn primary product-btn">Add to Cart</button>
-          </div>
-        </div>
-
-        <div class="product-card-home floating">
-          <div class="product-image-home">
-            <img src="user/images/home-images/shoe7.jpg" alt="Street Sonic" />
-            <div class="product-badge orange">Hot</div>
-            <div class="product-actions">
-              <button class="action-btn wishlist"><i class="far fa-heart"></i></button>
-              <button class="action-btn cart"><i class="fas fa-shopping-bag"></i></button>
-              <button class="action-btn view"><i class="fas fa-eye"></i></button>
-            </div>
-          </div>
-          <div class="product-info">
-            <h3>Street Sonic</h3>
-            <p class="product-price">₹5,499</p>
-            <div class="product-rating">
-              <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
-              <span>4.5 (89)</span>
-            </div>
-            <button class="btn primary product-btn">Add to Cart</button>
-          </div>
-        </div>
-
-        <div class="product-card-home floating-alt">
-          <div class="product-image-home">
-            <img src="user/images/home-images/shoe3.jpg" alt="Night Runner" />
-            <div class="product-actions">
-              <button class="action-btn wishlist"><i class="far fa-heart"></i></button>
-              <button class="action-btn cart"><i class="fas fa-shopping-bag"></i></button>
-              <button class="action-btn view"><i class="fas fa-eye"></i></button>
-            </div>
-          </div>
-          <div class="product-info">
-            <h3>Night Runner</h3>
-            <p class="product-price">₹6,299</p>
-            <div class="product-rating">
-              <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-              <span>4.9 (203)</span>
-            </div>
-            <button class="btn primary product-btn">Add to Cart</button>
-          </div>
-        </div>
-
-        <div class="product-card-home">
-          <div class="product-image-home">
-            <img src="user/images/home-images/Homeshoe.png" alt="Cloud Pace" />
-            <div class="product-badge">Sale</div>
-            <div class="product-actions">
-              <button class="action-btn wishlist"><i class="far fa-heart"></i></button>
-              <button class="action-btn cart"><i class="fas fa-shopping-bag"></i></button>
-              <button class="action-btn view"><i class="fas fa-eye"></i></button>
-            </div>
-          </div>
-          <div class="product-info">
-            <h3>Cloud Pace</h3>
-            <p class="product-price"><span class="old-price">₹7,999</span> ₹5,999</p>
-            <div class="product-rating">
-              <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
-              <span>4.6 (156)</span>
-            </div>
-            <button class="btn primary product-btn">Add to Cart</button>
-          </div>
-        </div>
-
-        <div class="product-card-home floating-slow">
-          <div class="product-image-home">
-            <img src="user/images/home-images/shoe4.jpg" alt="Vapor Max" />
-            <div class="product-actions">
-              <button class="action-btn wishlist"><i class="far fa-heart"></i></button>
-              <button class="action-btn cart"><i class="fas fa-shopping-bag"></i></button>
-              <button class="action-btn view"><i class="fas fa-eye"></i></button>
-            </div>
-          </div>
-          <div class="product-info">
-            <h3>Vapor Max</h3>
-            <p class="product-price">₹8,499</p>
-            <div class="product-rating">
-              <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-              <span>5.0 (45)</span>
-            </div>
-            <button class="btn primary product-btn">Add to Cart</button>
-          </div>
-        </div>
-
-        <div class="product-card-home">
-          <div class="product-image-home">
-            <img src="user/images/home-images/shoe7.jpg" alt="Phantom Flex" />
-            <div class="product-actions">
-              <button class="action-btn wishlist"><i class="far fa-heart"></i></button>
-              <button class="action-btn cart"><i class="fas fa-shopping-bag"></i></button>
-              <button class="action-btn view"><i class="fas fa-eye"></i></button>
-            </div>
-          </div>
-          <div class="product-info">
-            <h3>Phantom Flex</h3>
-            <p class="product-price">₹4,799</p>
-            <div class="product-rating">
-              <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
-              <span>4.7 (98)</span>
-            </div>
-            <button class="btn primary product-btn">Add to Cart</button>
-          </div>
-        </div>
-      </div>
-      <div class="section-footer">
-        <button class="btn outline">View All Products</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- CATEGORIES -->
-  <section class="section categories-section reveal">
-    <div class="container">
-      <div class="section-header">
-        <p class="band-label">CATEGORIES</p>
-        <h2>SHOP BY STYLE</h2>
-      </div>
-      <div class="categories-grid">
-        <div class="category-card">
-          <div class="category-icon"><i class="fa-solid fa-shoe-prints"></i></div>
-          <h3>Sneakers</h3>
-          <p>Performance gear</p>
-        </div>
-        <div class="category-card">
-          <div class="category-icon"><i class="fas fa-street-view"></i></div>
-          <h3>Loafers</h3>
-          <p>Urban style</p>
-        </div>
-        <div class="category-card">
-          <div class="category-icon"><i class="fa-solid fa-handshake"></i></div>
-          <h3>Derby</h3>
-          <p>Everyday comfort</p>
-        </div>
-        <div class="category-card">
-          <div class="category-icon"><i class="fa-solid fa-person-running"></i></div>
-          <h3>Running</h3>
-          <p>Exclusive drops</p>
-        </div>
-        <div class="category-card">
-          <div class="category-icon"><i class="fa-solid fa-user-tie"></i></div>
-          <h3>Formal</h3>
-          <p>Urban style</p>
-        </div>
-        <div class="category-card">
-          <div class="category-icon"><i class="fa-solid fa-bolt"></i></div>
-          <h3>Chunky Snekears</h3>
-          <p>Urban style</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOOTER (same as your landing) -->
-  <footer class="section footer">
-    <div class="container footer-inner">
-      <div class="footer-left">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HOOF | Home</title>
+    <link rel="stylesheet" href="/user/css/home.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="user/images/home-images/favicon.ico"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container nav-inner">
         <div class="logo">HOOF</div>
-        <p class="footer-text">
-          Premium sneakers designed to complement your everyday journey with style, comfort, and durability.
-        </p>
-        <div class="footer-social">
-          <a href="#"><i class="fa-brands fa-instagram"></i></a>
-          <a href="#"><i class="fa-solid fa-phone"></i></a>
-          <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
+        <nav class="nav">
+          <ul class="nav-links">
+            <li><a href="/user/home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#products">Shop</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+          <div class="nav-actions">
+            <a href="#" class="nav-icon" title="Wishlist">
+              <i class="far fa-heart"></i>
+              <span class="nav-badge">0</span>
+            </a>
+            <a href="#" class="nav-icon cart-icon" title="Cart">
+              <i class="fas fa-shopping-bag"></i>
+              <span class="nav-badge cart-count">0</span>
+            </a>
+            <div class="profile-dropdown-wrapper">
+              <a
+                href="#"
+                class="nav-icon profile-icon"
+                title="Profile"
+                id="profileToggle"
+              >
+                <i class="fas fa-user"></i>
+              </a>
+              <div class="profile-dropdown" id="profileDropdown">
+                <div class="dropdown-header">
+                  <div class="dropdown-avatar">
+                    <i class="fas fa-user" style="<%= user ? 'color: #ff4d4d;' : '' %>"></i>
+                  </div>
+                  <div class="dropdown-user-info">
+                    <h4><%= user ? (user.name || user.userName) : 'Guest User' %></h4>
+                    <p><%= user ? user.email : 'Welcome to HOOF' %></p>
+                  </div>
+                </div>
+                <div class="dropdown-divider"></div>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a href="/user/profile" class="dropdown-item">
+                      <i class="fas fa-user-circle"></i>
+                      <span>Profile</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" class="dropdown-item">
+                      <i class="fas fa-box"></i>
+                      <span>Orders</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" class="dropdown-item">
+                      <i class="fas fa-wallet"></i>
+                      <span>Wallet</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" class="dropdown-item">
+                      <i class="fas fa-gift"></i>
+                      <span>Referral</span>
+                    </a>
+                  </li>
+                </ul>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-footer">
+                  <form action="/user/logout" method="POST" id="logoutForm">
+                    <button
+                      type="submit"
+                      class="dropdown-item logout"
+                      style="
+                        width: 100%;
+                        border: none;
+                        background: none;
+                        text-align: left;
+                        cursor: pointer;
+                        font-family: inherit;
+                        font-size: inherit;
+                      "
+                    >
+                      <i class="fas fa-sign-out-alt"></i>
+                      <span>Logout</span>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="nav-toggle" id="nav-toggle">
+            <span></span><span></span><span></span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <section class="section hero-home reveal" id="home">
+      <div class="container hero-home-inner">
+        <h1 class="hero-title">FIND YOUR PERFECT PAIR</h1>
+        <p class="hero-subtitle">Premium sneakers for every style and stride</p>
+        <div class="hero-search">
+          <input
+            type="text"
+            placeholder="Search sneakers..."
+            class="search-input"
+          />
+          <button class="btn primary">Search</button>
         </div>
       </div>
-      <div class="footer-center">
-        <h3>Have questions? Our team is ready to assist.</h3>
-        <button class="btn outline">Contact</button>
-      </div>
-      <div class="footer-right">
-        <h4>Malappuram</h4>
-        <p>HOOF Sneaker House</p>
-        <p>+91 98765 43210</p>
-        <p>support@hoofsnkrs.com</p>
-      </div>
-    </div>
-  </footer>
+    </section>
 
-  <script src="/user/js/home.js" defer></script>
-</body>
+    <section class="section products-section reveal" id="products">
+      <div class="container">
+        <div class="section-header">
+          <p class="band-label">FEATURED</p>
+          <h2>NEW ARRIVALS</h2>
+        </div>
+        <div class="products-grid">
+          <div class="product-card-home floating-slow">
+            <div class="product-image-home">
+              <img src="/user/images/home-images/shoe4.jpg" alt="Urban Drift" />
+              <div class="product-badge">New</div>
+              <div class="product-actions">
+                <button class="action-btn wishlist">
+                  <i class="far fa-heart"></i>
+                </button>
+                <button class="action-btn cart">
+                  <i class="fas fa-shopping-bag"></i>
+                </button>
+                <button class="action-btn view">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <div class="product-info">
+              <h3>Urban Drift</h3>
+              <p class="product-price">₹4,999</p>
+              <div class="product-rating">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i
+                ><i class="fas fa-star"></i><i class="fas fa-star"></i
+                ><i class="fas fa-star"></i>
+                <span>4.8 (127)</span>
+              </div>
+              <button class="btn primary product-btn">Add to Cart</button>
+            </div>
+          </div>
+
+          <div class="product-card-home floating">
+            <div class="product-image-home">
+              <img src="/user/images/home-images/shoe7.jpg" alt="Street Sonic" />
+              <div class="product-badge orange">Hot</div>
+              <div class="product-actions">
+                <button class="action-btn wishlist">
+                  <i class="far fa-heart"></i>
+                </button>
+                <button class="action-btn cart">
+                  <i class="fas fa-shopping-bag"></i>
+                </button>
+                <button class="action-btn view">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <div class="product-info">
+              <h3>Street Sonic</h3>
+              <p class="product-price">₹5,499</p>
+              <div class="product-rating">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i
+                ><i class="fas fa-star"></i><i class="fas fa-star"></i
+                ><i class="far fa-star"></i>
+                <span>4.5 (89)</span>
+              </div>
+              <button class="btn primary product-btn">Add to Cart</button>
+            </div>
+          </div>
+
+          <div class="product-card-home floating-alt">
+            <div class="product-image-home">
+              <img src="/user/images/home-images/shoe3.jpg" alt="Night Runner" />
+              <div class="product-actions">
+                <button class="action-btn wishlist">
+                  <i class="far fa-heart"></i>
+                </button>
+                <button class="action-btn cart">
+                  <i class="fas fa-shopping-bag"></i>
+                </button>
+                <button class="action-btn view">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <div class="product-info">
+              <h3>Night Runner</h3>
+              <p class="product-price">₹6,299</p>
+              <div class="product-rating">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i
+                ><i class="fas fa-star"></i><i class="fas fa-star"></i
+                ><i class="fas fa-star"></i>
+                <span>4.9 (203)</span>
+              </div>
+              <button class="btn primary product-btn">Add to Cart</button>
+            </div>
+          </div>
+
+          <div class="product-card-home">
+            <div class="product-image-home">
+              <img
+                src="/user/images/home-images/Homeshoe.png"
+                alt="Cloud Pace"
+              />
+              <div class="product-badge">Sale</div>
+              <div class="product-actions">
+                <button class="action-btn wishlist">
+                  <i class="far fa-heart"></i>
+                </button>
+                <button class="action-btn cart">
+                  <i class="fas fa-shopping-bag"></i>
+                </button>
+                <button class="action-btn view">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <div class="product-info">
+              <h3>Cloud Pace</h3>
+              <p class="product-price">
+                <span class="old-price">₹7,999</span> ₹5,999
+              </p>
+              <div class="product-rating">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i
+                ><i class="fas fa-star"></i><i class="fas fa-star"></i
+                ><i class="far fa-star"></i>
+                <span>4.6 (156)</span>
+              </div>
+              <button class="btn primary product-btn">Add to Cart</button>
+            </div>
+          </div>
+
+          <div class="product-card-home floating-slow">
+            <div class="product-image-home">
+              <img src="/user/images/home-images/shoe4.jpg" alt="Vapor Max" />
+              <div class="product-actions">
+                <button class="action-btn wishlist">
+                  <i class="far fa-heart"></i>
+                </button>
+                <button class="action-btn cart">
+                  <i class="fas fa-shopping-bag"></i>
+                </button>
+                <button class="action-btn view">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <div class="product-info">
+              <h3>Vapor Max</h3>
+              <p class="product-price">₹8,499</p>
+              <div class="product-rating">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i
+                ><i class="fas fa-star"></i><i class="fas fa-star"></i
+                ><i class="fas fa-star"></i>
+                <span>5.0 (45)</span>
+              </div>
+              <button class="btn primary product-btn">Add to Cart</button>
+            </div>
+          </div>
+
+          <div class="product-card-home">
+            <div class="product-image-home">
+              <img src="/user/images/home-images/shoe7.jpg" alt="Phantom Flex" />
+              <div class="product-actions">
+                <button class="action-btn wishlist">
+                  <i class="far fa-heart"></i>
+                </button>
+                <button class="action-btn cart">
+                  <i class="fas fa-shopping-bag"></i>
+                </button>
+                <button class="action-btn view">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <div class="product-info">
+              <h3>Phantom Flex</h3>
+              <p class="product-price">₹4,799</p>
+              <div class="product-rating">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i
+                ><i class="fas fa-star"></i><i class="fas fa-star"></i
+                ><i class="far fa-star"></i>
+                <span>4.7 (98)</span>
+              </div>
+              <button class="btn primary product-btn">Add to Cart</button>
+            </div>
+          </div>
+        </div>
+        <div class="section-footer">
+          <button class="btn outline">View All Products</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section categories-section reveal">
+      <div class="container">
+        <div class="section-header">
+          <p class="band-label">CATEGORIES</p>
+          <h2>SHOP BY STYLE</h2>
+        </div>
+        <div class="categories-grid">
+          <div class="category-card">
+            <div class="category-icon">
+              <i class="fa-solid fa-shoe-prints"></i>
+            </div>
+            <h3>Sneakers</h3>
+            <p>Performance gear</p>
+          </div>
+          <div class="category-card">
+            <div class="category-icon"><i class="fas fa-street-view"></i></div>
+            <h3>Loafers</h3>
+            <p>Urban style</p>
+          </div>
+          <div class="category-card">
+            <div class="category-icon">
+              <i class="fa-solid fa-handshake"></i>
+            </div>
+            <h3>Derby</h3>
+            <p>Everyday comfort</p>
+          </div>
+          <div class="category-card">
+            <div class="category-icon">
+              <i class="fa-solid fa-person-running"></i>
+            </div>
+            <h3>Running</h3>
+            <p>Exclusive drops</p>
+          </div>
+          <div class="category-card">
+            <div class="category-icon">
+              <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <h3>Formal</h3>
+            <p>Urban style</p>
+          </div>
+          <div class="category-card">
+            <div class="category-icon"><i class="fa-solid fa-bolt"></i></div>
+            <h3>Chunky Snekears</h3>
+            <p>Urban style</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="section footer">
+      <div class="container footer-inner">
+        <div class="footer-left">
+          <div class="logo">HOOF</div>
+          <p class="footer-text">
+            Premium sneakers designed to complement your everyday journey with
+            style, comfort, and durability.
+          </p>
+          <div class="footer-social">
+            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#"><i class="fa-solid fa-phone"></i></a>
+            <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
+          </div>
+        </div>
+        <div class="footer-center">
+          <h3>Have questions? Our team is ready to assist.</h3>
+          <button class="btn outline">Contact</button>
+        </div>
+        <div class="footer-right">
+          <h4>Malappuram</h4>
+          <p>HOOF Sneaker House</p>
+          <p>+91 98765 43210</p>
+          <p>support@hoofsnkrs.com</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/user/js/home.js" defer></script>
+  </body>
 </html>

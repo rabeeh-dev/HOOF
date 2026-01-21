@@ -1,84 +1,82 @@
-require('dotenv').config();
-const express = require('express')
-const mongoose = require('mongoose')
-const session = require('express-session')
-const path = require('path')
-const dotenv = require('dotenv')
-const connectDB = require('./config/db')
-const passport = require('./config/passport');
-const authRoutes = require('./routes/authRoutes');
+require("dotenv").config();
 
+const express = require("express");
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
+const path = require("path");
 
+const connectDB = require("./config/db");
+const passport = require("./config/passport");
 
+// ================== INITIAL SETUP ==================
+const app = express();
 
-connectDB()
+// Connect Database (before server starts)
+connectDB();
 
+// ================== VIEW ENGINE ==================
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
-const app = express()
-
-
-
-// Session middleware (Add this BEFORE routes)
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        maxAge: 1000 * 60 * 60 * 24 // 24 hours
-    }
-}));
-
-// Middleware to make user data available in all views
-app.use((req, res, next) => {
-    res.locals.user = req.session.userId ? {
-        id: req.session.userId,
-        name: req.session.userName,
-        email: req.session.userEmail,
-        role: req.session.userRole
-    } : null;
-    next();
-});
-
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-
-// View engine setup
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
-// Body parser
+// ================== BODY PARSERS ==================
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Static files
-app.use(express.static(path.join(__dirname, 'public')));
+// ================== STATIC FILES ==================
+app.use(express.static(path.join(__dirname, "public")));
 
-// Routes
-const userRoutes = require('./routes/userRoutes');
-// const adminRoutes = require('./routes/adminRoutes');
+// ================== SESSION CONFIG ==================
+app.use(
+  session({
+    name: "hoof.sid", // explicit cookie name (good practice)
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
 
-app.use('/user', userRoutes);
-// app.use('/admin', adminRoutes);
-app.use('/auth', authRoutes);
-app.use("/", require("./routes/testMail"));
+    store: MongoStore.default.create({ // Added .default here
+        mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/hoof',
+    }),
 
-app.get('/', (req, res) => {
-    res.render('User/landing', {
-        title: 'Home - ShoeStore',
-        layout: 'layouts/user'
-    });
-});      
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      httpOnly: true,
+      sameSite: "lax",
+    },
+  })
+);
 
-app.get('/home', (req, res) => {
-  res.render('User/home', {
-    title: 'Home - ShoeStore',
-    layout: 'layouts/user'
+// ================== PASSPORT ==================
+app.use(passport.initialize());
+app.use(passport.session());
+
+// ================== GLOBAL LOCALS ==================
+app.use((req, res, next) => {
+  res.locals.user = req.session.userId ? {
+    id: req.session.userId,
+    name: req.session.userName,
+    email: req.session.userEmail
+  } : null;
+  next();
+});
+// ================== ROUTES ==================
+const userRoutes = require("./routes/userRoutes");
+const authRoutes = require("./routes/authRoutes");
+const testMailRoutes = require("./routes/testMail");
+
+app.use("/user", userRoutes);
+app.use("/auth", authRoutes);
+app.use("/", testMailRoutes);
+
+// ================== HOME ==================
+app.get("/", (req, res) => {
+  res.render("User/landing", {
+    title: "HOOF | Premium Sneakers",
+    layout: "layouts/user",
   });
 });
 
-const PORT = process.env.PORT || 3000;
+// ================== SERVER ==================
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

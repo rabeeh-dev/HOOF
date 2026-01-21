@@ -18,7 +18,7 @@ router.get(
   }),
   (req, res) => {
     // User is now authenticated
-    res.redirect('/home');
+    res.redirect('/user/home');
   }
 );
 

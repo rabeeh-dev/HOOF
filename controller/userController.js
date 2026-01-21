@@ -35,7 +35,10 @@ exports.signup = async (req, res) => {
     if (password.length < 8) {
       return res.render("User/auth/register", {
         layout: "layouts/user",
-        message: { type: "error", text: "Password must be at least 8 characters" },
+        message: {
+          type: "error",
+          text: "Password must be at least 8 characters",
+        },
         formData: { fullName, email },
       });
     }
@@ -85,7 +88,6 @@ exports.signup = async (req, res) => {
 
     console.log("OTP (DEV):", otp);
     res.redirect("/user/verify-otp");
-
   } catch (err) {
     console.error("Signup error:", err);
     res.render("User/auth/register", {
@@ -108,7 +110,9 @@ exports.verifyOtp = async (req, res) => {
       return res.redirect("/user/signup");
     }
 
-    const otpRecord = await Otp.findOne({ email: pendingUser.email }).sort({ createdAt: -1 });
+    const otpRecord = await Otp.findOne({ email: pendingUser.email }).sort({
+      createdAt: -1,
+    });
 
     if (!otpRecord || otpRecord.expiresAt < Date.now()) {
       return res.render("User/auth/verify-otp", {
@@ -138,7 +142,6 @@ exports.verifyOtp = async (req, res) => {
     req.session.otpEmail = null;
 
     res.redirect("/user/login");
-
   } catch (err) {
     console.error("Verify OTP error:", err);
     res.render("User/auth/verify-otp", {
@@ -156,7 +159,9 @@ exports.resendOtp = async (req, res) => {
     const email = req.session.otpEmail;
 
     if (!email) {
-      return res.status(400).json({ message: "Session expired. Please signup again." });
+      return res
+        .status(400)
+        .json({ message: "Session expired. Please signup again." });
     }
 
     const existingOtp = await Otp.findOne({ email });
@@ -187,13 +192,11 @@ exports.resendOtp = async (req, res) => {
     console.log("RESEND OTP (DEV):", otp);
 
     res.json({ message: "OTP resent successfully" });
-
   } catch (err) {
     console.error("Resend OTP error:", err);
     res.status(500).json({ message: "Failed to resend OTP" });
   }
 };
-
 
 /* =========================
    LOGIN PAGE
@@ -208,10 +211,11 @@ exports.loginPage = (req, res) => {
 /* =========================
    LOGIN
 ========================= */
+// controller/userController.js
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await User.findOne({ email }).select("+password");
 
     if (!user || user.authProvider !== "local") {
@@ -229,14 +233,18 @@ exports.login = async (req, res) => {
       });
     }
 
+    // Assigning session variables
     req.session.userId = user._id;
-    req.session.userName = user.fullName;
+    req.session.userName = user.fullName; // Maps to fullName in your Model
     req.session.userEmail = user.email;
 
-    res.redirect("/home");
+    // Save to MongoStore then redirect
+    req.session.save((err) => {
+      if (err) return res.redirect("/user/login");
+      res.redirect("/user/home");
+    });
 
   } catch (err) {
-    console.error("Login error:", err);
     res.render("User/auth/login", {
       layout: "layouts/user",
       error: "Something went wrong. Try again.",
@@ -261,7 +269,10 @@ exports.forgotPassword = async (req, res) => {
 
     if (user && user.authProvider === "local") {
       const resetToken = crypto.randomBytes(32).toString("hex");
-      const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(resetToken)
+        .digest("hex");
 
       user.resetPasswordToken = hashedToken;
       user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
@@ -274,7 +285,6 @@ exports.forgotPassword = async (req, res) => {
       layout: "layouts/user",
       message: "If an account exists, a reset link has been sent.",
     });
-
   } catch (err) {
     console.error("Forgot password error:", err);
     res.render("User/auth/forgot-password", {
@@ -288,7 +298,10 @@ exports.forgotPassword = async (req, res) => {
    RESET PASSWORD
 ========================= */
 exports.resetPasswordPage = async (req, res) => {
-  const hashedToken = crypto.createHash("sha256").update(req.params.token).digest("hex");
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
 
   const user = await User.findOne({
     resetPasswordToken: hashedToken,
@@ -312,7 +325,10 @@ exports.resetPassword = async (req, res) => {
     return res.send("Passwords do not match");
   }
 
-  const hashedToken = crypto.createHash("sha256").update(req.params.token).digest("hex");
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
 
   const user = await User.findOne({
     resetPasswordToken: hashedToken,
@@ -329,3 +345,16 @@ exports.resetPassword = async (req, res) => {
 
   res.redirect("/user/login");
 };
+
+/* =========================
+   LOGOUT
+========================= */
+
+exports.logout = (req, res) => {
+    req.session.destroy((err) => {
+        if (err) console.log(err);
+        res.clearCookie("connect.sid");
+        res.redirect("/user/login");
+    });
+};
+
