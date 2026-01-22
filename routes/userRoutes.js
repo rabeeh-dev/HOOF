@@ -61,6 +61,18 @@ router.post('/profile/change-email-new-otp', isUser, userController.sendNewEmail
 // ================= CHANGE PASSWORD =================
 // Trigger Change Password (reuses forgot password logic)
 router.get('/profile/change-password-request', isUser, userController.changePasswordRequest);
+
+
+const addressController = require("../controller/addressController");
+
+// ================= ADDRESS =================
+
+router.post('/address/add', isUser, addressController.addAddress);
+
+// Route to delete an address
+router.delete('/address/delete/:id', isUser, addressController.deleteAddress);
+
+
 // ================= LOGOUT=================
 router.post("/logout", userController.logout);
 

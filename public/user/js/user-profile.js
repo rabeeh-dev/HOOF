@@ -12,6 +12,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const formActions = document.getElementById("formActions");
     const personalInputs = document.querySelectorAll("#profileForm input:not([type='email']):not([type='password'])");
 
+    // --- ADDRESS SELECTORS ---
+    const openAddressModal = document.getElementById("openAddressModal");
+    const closeAddressModal = document.getElementById("closeAddressModal");
+    const addressModal = document.getElementById("addressModal");
+    const addressForm = document.getElementById("addressForm");
+
     // --- 1. MOBILE NAVIGATION ---
     if (navToggle && navLinks) {
         navToggle.addEventListener("click", () => navLinks.classList.toggle("open"));
@@ -58,30 +64,19 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- 4. EDIT PROFILE LOGIC ---
     if (editToggleBtn) {
         editToggleBtn.addEventListener("click", () => {
-            // Unlock inputs (Full Name, Phone, etc.)
             personalInputs.forEach(input => input.disabled = false);
-            
-            // UI Changes
             formActions.style.display = "flex";
             editToggleBtn.style.display = "none";
-            
-            // Focus first editable input
             if(personalInputs[0]) personalInputs[0].focus();
-            
             showToast("Edit mode enabled. Basic details unlocked.", "info");
         });
     }
 
     if (cancelEditBtn) {
         cancelEditBtn.addEventListener("click", () => {
-            // Re-lock inputs
             personalInputs.forEach(input => input.disabled = true);
-            
-            // UI Changes
             formActions.style.display = "none";
             editToggleBtn.style.display = "block";
-            
-            // Reset form to original values
             profileForm.reset();
             showToast("Edit cancelled.", "info");
         });
@@ -91,7 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (profileForm) {
         profileForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            
             const formData = new FormData(profileForm);
             const data = Object.fromEntries(formData.entries());
 
@@ -101,16 +95,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-
                 const result = await response.json();
-
                 if (result.success) {
                     showToast("Profile updated successfully!", "success");
-                    
-                    // Update sidebar and locked UI
-                    const displayName = document.getElementById("display-name");
-                    if(displayName) displayName.textContent = data.fullName;
-                    
                     personalInputs.forEach(input => input.disabled = true);
                     formActions.style.display = "none";
                     editToggleBtn.style.display = "block";
@@ -123,53 +110,99 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- 6. UTILITIES (Copy, FAQ, etc.) ---
-    const copyCodeBtn = document.getElementById("copyCodeBtn");
-    if (copyCodeBtn) {
-        copyCodeBtn.addEventListener("click", () => {
-            const referralCode = document.getElementById("referralCode");
-            referralCode.select();
-            document.execCommand("copy");
-            showToast("Referral code copied!", "success");
+    // --- 6. ADDRESS MODAL LOGIC ---
+    if (openAddressModal) {
+        openAddressModal.addEventListener("click", () => {
+            addressModal.style.display = "flex";
         });
     }
 
-    document.querySelectorAll(".faq-item").forEach(item => {
-        item.querySelector(".faq-question").addEventListener("click", () => {
-            const isActive = item.classList.contains("active");
-            document.querySelectorAll(".faq-item").forEach(f => f.classList.remove("active"));
-            if (!isActive) item.classList.add("active");
+    if (closeAddressModal) {
+        closeAddressModal.addEventListener("click", () => {
+            addressModal.style.display = "none";
         });
+    }
+
+    window.addEventListener("click", (e) => {
+        if (e.target.classList.contains("modal-overlay")) {
+            addressModal.style.display = "none";
+        }
     });
+
+    if (addressForm) {
+        addressForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData(addressForm);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/user/address/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast("Address added successfully!", "success");
+                    addressModal.style.display = "none";
+                    addressForm.reset();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(result.message || "Failed to add address", "error");
+                }
+            } catch (err) {
+                showToast("Network error. Please try again.", "error");
+            }
+        });
+    }
 });
 
 // --- GLOBAL FUNCTIONS ---
 
+// Function to handle Address Deletion
+async function deleteAddress(addressId) {
+    if (!confirm("Are you sure you want to delete this address?")) return;
+
+    try {
+        const response = await fetch(`/user/address/delete/${addressId}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            showToast("Address deleted successfully", "success");
+            
+            // Dynamically remove the card from the UI
+            const addressCard = document.getElementById(`address-${addressId}`);
+            if (addressCard) addressCard.remove();
+            
+            // Check if grid is empty to refresh and show empty state
+            const grid = document.getElementById("addressGrid");
+            if (grid && grid.querySelectorAll('.address-card').length === 0) {
+                setTimeout(() => location.reload(), 800);
+            }
+        } else {
+            showToast(result.message || "Failed to delete address", "error");
+        }
+    } catch (err) {
+        showToast("Error deleting address", "error");
+    }
+}
+
 async function verifyAndChange(type) {
     if (type === 'email') {
-        // Show OTP toast and redirect to start the double-verification process
         showToast("Security: An OTP has been sent to your current email.", "info");
-        
-        // Delay redirect slightly so user can see the toast
-        setTimeout(() => {
-            window.location.href = "/user/profile/change-email-start";
-        }, 1500);
-
+        setTimeout(() => { window.location.href = "/user/profile/change-email-start"; }, 1500);
     } else if (type === 'password') {
-        // Show processing toast
         showToast("Sending reset link to your email...", "info");
-
         try {
-            // Call the route we created in the controller
             const response = await fetch("/user/profile/change-password-request");
-            
             if (response.ok) {
                 showToast("Password reset link shared to your email!", "success");
             } else {
                 showToast("Failed to send reset link. Try again later.", "error");
             }
         } catch (error) {
-            console.error("Password reset error:", error);
             showToast("Network error. Please try again.", "error");
         }
     }
@@ -178,12 +211,10 @@ async function verifyAndChange(type) {
 function showToast(message, type = "info") {
     const existingToast = document.querySelector(".toast-notification");
     if (existingToast) existingToast.remove();
-
     const toast = document.createElement("div");
     toast.className = `toast-notification toast-${type}`;
     toast.textContent = message;
     document.body.appendChild(toast);
-
     setTimeout(() => toast.classList.add("show"), 100);
     setTimeout(() => {
         toast.classList.remove("show");

@@ -4,6 +4,7 @@ const Otp = require("../model/otpModel");
 const { generateOtp } = require("../utils/generateOtp");
 const { sendOtpEmail, sendResetPasswordEmail } = require("../utils/sendEmail");
 const crypto = require("crypto");
+const Address = require("../model/addressModel");
 
 /* =========================
    SIGNUP PAGE
@@ -484,5 +485,25 @@ exports.changePasswordRequest = async (req, res) => {
     } catch (err) {
         console.error("Change password request error:", err);
         res.redirect('/user/profile');
+    }
+};
+
+ // Import the new model
+
+exports.getProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.session.userId);
+        
+        // FETCH ADDRESSES HERE
+        const addresses = await Address.find({ userId: req.session.userId });
+
+        res.render('User/user-profile', { 
+            user, 
+            addresses, // PASS THE ARRAY HERE
+            title: 'My Profile | HOOF' 
+        });
+    } catch (err) {
+        console.error(err);
+        res.redirect('/user/home');
     }
 };
