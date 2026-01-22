@@ -145,9 +145,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // --- GLOBAL FUNCTIONS ---
 
-function verifyAndChange(type) {
-    showToast(`Security: An OTP will be sent to verify your identity for ${type} change.`, "info");
-    // Link to OTP verification routes here
+async function verifyAndChange(type) {
+    if (type === 'email') {
+        // Show OTP toast and redirect to start the double-verification process
+        showToast("Security: An OTP has been sent to your current email.", "info");
+        
+        // Delay redirect slightly so user can see the toast
+        setTimeout(() => {
+            window.location.href = "/user/profile/change-email-start";
+        }, 1500);
+
+    } else if (type === 'password') {
+        // Show processing toast
+        showToast("Sending reset link to your email...", "info");
+
+        try {
+            // Call the route we created in the controller
+            const response = await fetch("/user/profile/change-password-request");
+            
+            if (response.ok) {
+                showToast("Password reset link shared to your email!", "success");
+            } else {
+                showToast("Failed to send reset link. Try again later.", "error");
+            }
+        } catch (error) {
+            console.error("Password reset error:", error);
+            showToast("Network error. Please try again.", "error");
+        }
+    }
 }
 
 function showToast(message, type = "info") {

@@ -449,3 +449,40 @@ exports.sendNewEmailOtp = async (req, res) => {
         res.render("User/auth/verify-otp", { layout: "layouts/user", email: newEmail, message: null });
     } catch (err) { res.redirect('/user/profile'); }
 };
+
+/* =========================
+   CHANGE PASSWORD REQUEST
+========================= */
+exports.changePasswordRequest = async (req, res) => {
+    try {
+        // 1. Find the logged-in user
+        const user = await User.findById(req.session.userId);
+        
+        if (!user || user.authProvider !== "local") {
+            return res.redirect('/user/profile');
+        }
+
+        // 2. Generate Reset Token (Same logic as forgotPassword)
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        const hashedToken = crypto
+            .createHash("sha256")
+            .update(resetToken)
+            .digest("hex");
+
+        // 3. Save to User Document
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 mins
+        await user.save();
+
+        // 4. Send the Email
+        await sendResetPasswordEmail(user.email, resetToken);
+
+        // 5. Redirect back to profile with a success message
+        // Using a query parameter to show a toast or alert
+        res.redirect('/user/profile?message=reset_link_sent');
+        
+    } catch (err) {
+        console.error("Change password request error:", err);
+        res.redirect('/user/profile');
+    }
+};

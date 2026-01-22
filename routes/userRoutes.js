@@ -58,6 +58,9 @@ router.post('/profile/change-email-new-otp', isUser, userController.sendNewEmail
 
 // Note: Both OTP entries will POST to your existing /verify-otp route
 
+// ================= CHANGE PASSWORD =================
+// Trigger Change Password (reuses forgot password logic)
+router.get('/profile/change-password-request', isUser, userController.changePasswordRequest);
 // ================= LOGOUT=================
 router.post("/logout", userController.logout);
 
