@@ -104,51 +104,43 @@ exports.signup = async (req, res) => {
 exports.verifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
+    const isOld = !!req.session.changeEmailFlow;
+    const isNew = !!req.session.newEmailOtpSent;
+    
+    // Choose the correct email to check against the DB
+    let email = isNew ? req.session.tempNewEmail : isOld ? req.session.currentEmailToVerify : req.session.pendingUser?.email;
+
+    if (!email) return res.redirect("/user/signup");
+
+    const otpRecord = await Otp.findOne({ email }).sort({ createdAt: -1 });
+    if (!otpRecord || otpRecord.expiresAt < Date.now() || !(await bcrypt.compare(otp, otpRecord.otp))) {
+      return res.render("User/auth/verify-otp", { layout: "layouts/user", message: { type: "error", text: "Invalid or expired OTP" }});
+    }
+
+    await Otp.deleteMany({ email });
+
+    // BRANCHING LOGIC
+    if (isNew) {
+      // SUCCESS: Update Database
+      await User.findByIdAndUpdate(req.session.userId, { email: req.session.tempNewEmail });
+      req.session.emailVerifiedForChange = req.session.newEmailOtpSent = req.session.tempNewEmail = null;
+      return res.redirect("/user/profile");
+    } 
+    
+    if (isOld) {
+      // MID-STEP: Allow access to New Email form
+      req.session.emailVerifiedForChange = true;
+      req.session.changeEmailFlow = null; 
+      return res.redirect("/user/profile/change-email-form");
+    }
+
+    // SIGNUP FLOW (Original)
     const pendingUser = req.session.pendingUser;
-
-    if (!pendingUser) {
-      return res.redirect("/user/signup");
-    }
-
-    const otpRecord = await Otp.findOne({ email: pendingUser.email }).sort({
-      createdAt: -1,
-    });
-
-    if (!otpRecord || otpRecord.expiresAt < Date.now()) {
-      return res.render("User/auth/verify-otp", {
-        layout: "layouts/user",
-        message: { type: "error", text: "OTP expired" },
-      });
-    }
-
-    const isValid = await bcrypt.compare(otp, otpRecord.otp);
-    if (!isValid) {
-      return res.render("User/auth/verify-otp", {
-        layout: "layouts/user",
-        message: { type: "error", text: "Invalid OTP" },
-      });
-    }
-
-    await User.create({
-      fullName: pendingUser.fullName,
-      email: pendingUser.email,
-      password: pendingUser.password,
-      authProvider: "local",
-      isEmailVerified: true,
-    });
-
-    await Otp.deleteMany({ email: pendingUser.email });
+    await User.create({ ...pendingUser, authProvider: "local", isEmailVerified: true });
     req.session.pendingUser = null;
-    req.session.otpEmail = null;
+    return res.redirect("/user/login");
 
-    res.redirect("/user/login");
-  } catch (err) {
-    console.error("Verify OTP error:", err);
-    res.render("User/auth/verify-otp", {
-      layout: "layouts/user",
-      message: { type: "error", text: "Verification failed" },
-    });
-  }
+  } catch (err) { res.render("User/auth/verify-otp", { layout: "layouts/user", message: { type: "error", text: "Error during verification." }}); }
 };
 
 /* =========================
@@ -413,4 +405,47 @@ exports.updateProfile = async (req, res) => {
     }
 };
 
+// Part 1: Sends OTP to the OLD email
+exports.getChangeEmailOtp = async (req, res) => {
+    try {
+        const user = await User.findById(req.session.userId);
+        const otp = generateOtp();
+        const hashedOtp = await bcrypt.hash(otp, 10);
+        
+        await Otp.deleteMany({ email: user.email });
+        await Otp.create({ email: user.email, otp: hashedOtp, expiresAt: Date.now() + 300000 });
+        await sendOtpEmail(user.email, otp);
 
+        console.log("OLD EMAIL OTP (DEBUG):", otp);
+
+        req.session.changeEmailFlow = true; 
+        req.session.currentEmailToVerify = user.email;
+
+        res.render("User/auth/verify-otp", { layout: "layouts/user", email: user.email, message: null });
+    } catch (err) { res.redirect('/user/profile'); }
+};
+
+// Part 2: Sends OTP to the NEW email
+exports.sendNewEmailOtp = async (req, res) => {
+    try {
+        if (!req.session.emailVerifiedForChange) return res.redirect('/user/profile');
+        const { newEmail } = req.body;
+
+        const exists = await User.findOne({ email: newEmail });
+        if (exists) return res.render('User/change-email', { layout: 'layouts/user', message: { type: 'error', text: 'Email already registered.' } });
+
+        const otp = generateOtp();
+        const hashedOtp = await bcrypt.hash(otp, 10);
+        
+        await Otp.deleteMany({ email: newEmail });
+        await Otp.create({ email: newEmail, otp: hashedOtp, expiresAt: Date.now() + 300000 });
+        await sendOtpEmail(newEmail, otp);
+
+        console.log("NEW EMAIL OTP (DEBUG):", otp);
+
+        req.session.tempNewEmail = newEmail;
+        req.session.newEmailOtpSent = true;
+
+        res.render("User/auth/verify-otp", { layout: "layouts/user", email: newEmail, message: null });
+    } catch (err) { res.redirect('/user/profile'); }
+};

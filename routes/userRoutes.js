@@ -43,6 +43,20 @@ router.get('/home', isUser, (req, res) => {
 router.get('/profile', isUser, userController.getProfile);
 router.post('/profile/update', isUser, userController.updateProfile);
 
+// ================= CHANGE EMAIL =================
+// 1. Trigger the process (Send OTP to current email)
+router.get('/profile/change-email-start', isUser, userController.getChangeEmailOtp);
+
+// 2. The page where user types the NEW email (Protected by session)
+router.get('/profile/change-email-form', isUser, (req, res) => {
+    if (!req.session.emailVerifiedForChange) return res.redirect('/user/profile');
+    res.render('User/change-email', { layout: 'layouts/user' });
+});
+
+// 3. Process the new email (Send OTP to the new email)
+router.post('/profile/change-email-new-otp', isUser, userController.sendNewEmailOtp);
+
+// Note: Both OTP entries will POST to your existing /verify-otp route
 
 // ================= LOGOUT=================
 router.post("/logout", userController.logout);

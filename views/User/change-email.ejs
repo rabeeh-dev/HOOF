@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Change Email | HOOF</title>
+  <link rel="stylesheet" href="/user/css/change-email.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container nav-inner">
+      <a href="/user/profile" class="nav-back" aria-label="Go back">
+        <i class="fa-solid fa-arrow-left"></i>
+      </a>
+      <div class="logo">HOOF</div>
+      <nav class="nav">
+        <ul class="nav-links">
+          <li><a href="/user/home">Home</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#products">Shop</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="section change-email-hero">
+    <div class="container">
+      <div class="change-email-container">
+        <div class="change-email-card">
+          <div class="change-email-header">
+            <div class="email-icon">
+              <i class="fas fa-envelope-circle-check"></i>
+            </div>
+            <h1 class="change-email-title">Step 2: New Email</h1>
+            <p class="change-email-subtitle">Enter the new address you want to use</p>
+          </div>
+
+          <% if (locals.message) { %>
+            <div class="alert <%= message.type %>" style="color: #ff4d4d; margin-bottom: 15px; text-align: center; font-weight: 500;">
+              <i class="fas fa-circle-exclamation"></i> <%= message.text %>
+            </div>
+          <% } %>
+
+          <form class="change-email-form" id="changeEmailForm" action="/user/profile/change-email-new-otp" method="POST">
+            <div class="form-group">
+              <label for="newEmail">New Email Address</label>
+              <div class="input-wrapper">
+                <i class="fas fa-envelope input-icon"></i>
+                <input type="email" id="newEmail" name="newEmail" placeholder="Enter new email address" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmEmail">Confirm Email Address</label>
+              <div class="input-wrapper">
+                <i class="fas fa-envelope-open input-icon"></i>
+                <input type="email" id="confirmEmail" name="confirmEmail" placeholder="Re-enter new email address" required />
+              </div>
+              <small id="emailError" style="color: #ff4d4d; display: none; margin-top: 5px;">Emails do not match!</small>
+            </div>
+
+            <button type="submit" class="btn primary change-email-btn" id="submitBtn">
+              <span class="btn-text">Verify New Email</span>
+            </button>
+          </form>
+
+          <div class="change-email-footer">
+            <p><a href="/user/profile" class="back-to-profile"><i class="fas fa-arrow-left"></i> Cancel and Exit</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="section footer">
+    <div class="container footer-inner">
+      <div class="footer-left">
+        <div class="logo">HOOF</div>
+        <p class="footer-text">Premium sneakers designed for your everyday journey.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const form = document.getElementById('changeEmailForm');
+    const newEmail = document.getElementById('newEmail');
+    const confirmEmail = document.getElementById('confirmEmail');
+    const emailError = document.getElementById('emailError');
+
+    form.addEventListener('submit', (e) => {
+      if (newEmail.value !== confirmEmail.value) {
+        e.preventDefault();
+        emailError.style.display = 'block';
+        confirmEmail.style.borderColor = '#ff4d4d';
+      } else {
+        emailError.style.display = 'none';
+        document.querySelector('.btn-text').innerText = 'Sending OTP...';
+        document.getElementById('submitBtn').disabled = true;
+      }
+    });
+  </script>
+</body>
+</html>
