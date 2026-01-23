@@ -1,0 +1,438 @@
+:root {
+  /* Admin Theme Colors */
+  --admin-bg: #869897;
+  --admin-card-bg: #f5f5f5;
+  --admin-primary: #c41e3a;
+  --admin-primary-dark: #a01729;
+  --admin-shield: #e74c3c;
+  --admin-text: #2c3e50;
+  --admin-text-light: #7f8c8d;
+  --admin-border: #e0e0e0;
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+@font-face {
+  font-family: silver;
+  src: url(/user/fonts/fonnts.com-Silver_Streak.otf) format("opentype");
+}
+
+@font-face {
+  font-family: Roboto;
+  src: url(/user/fonts/roboto/Roboto-Medium.ttf) format("truetype");
+}
+
+body {
+  font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #869897 0%, #a8b5b4 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background Pattern */
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.admin-login-container {
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  z-index: 1;
+}
+
+.admin-login-card {
+  background: var(--admin-card-bg);
+  border-radius: 12px;
+  padding: 3rem 2.5rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border-top: 4px solid var(--admin-primary);
+  position: relative;
+  animation: slideUp 0.6s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Shield Icon */
+.admin-shield-icon {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-dark) 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  box-shadow: 0 8px 20px rgba(196, 30, 58, 0.3);
+}
+
+.admin-shield-icon i {
+  font-size: 1.8rem;
+  color: white;
+}
+
+/* Header */
+.admin-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.admin-header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--admin-primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
+  font-family: "Roboto", sans-serif;
+  text-transform: uppercase;
+}
+
+.admin-header p {
+  font-size: 0.9rem;
+  color: var(--admin-text-light);
+  font-weight: 400;
+}
+
+/* Form */
+.admin-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admin-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--admin-text);
+}
+
+.admin-form-group input {
+  width: 100%;
+  padding: 1rem 1.2rem;
+  border: 2px solid var(--admin-border);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: "Poppins", sans-serif;
+  background: white;
+  transition: all 0.3s ease;
+  color: var(--admin-text);
+}
+
+.admin-form-group input::placeholder {
+  color: #bdc3c7;
+}
+
+.admin-form-group input:focus {
+  outline: none;
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 4px rgba(196, 30, 58, 0.1);
+}
+
+/* Password Wrapper */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper input {
+  padding-right: 3rem;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  color: var(--admin-text-light);
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+}
+
+.toggle-password:hover {
+  color: var(--admin-primary);
+}
+
+.toggle-password i {
+  font-size: 1.1rem;
+}
+
+/* Sign In Button */
+.admin-signin-btn {
+  width: 100%;
+  padding: 1.1rem;
+  background: var(--admin-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: "Poppins", sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
+  margin-top: 0.5rem;
+}
+
+.admin-signin-btn:hover {
+  background: var(--admin-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
+}
+
+.admin-signin-btn:active {
+  transform: translateY(0);
+}
+
+.admin-signin-btn i {
+  font-size: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.admin-signin-btn:hover i {
+  transform: translateX(4px);
+}
+
+/* Footer Notes */
+.admin-footer-notes {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--admin-border);
+  text-align: center;
+}
+
+.admin-footer-notes p {
+  font-size: 0.8rem;
+  color: var(--admin-text-light);
+  margin-bottom: 0.3rem;
+}
+
+/* Bottom Links */
+.admin-bottom-links {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.admin-bottom-links a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.admin-bottom-links a::after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: white;
+  transition: width 0.3s ease;
+}
+
+.admin-bottom-links a:hover {
+  color: white;
+}
+
+.admin-bottom-links a:hover::after {
+  width: 100%;
+}
+
+/* Loading State */
+.admin-signin-btn.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.admin-signin-btn.loading i {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error State */
+.admin-form-group.error input {
+  border-color: #e74c3c;
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+/* Success State */
+.admin-form-group.success input {
+  border-color: #27ae60;
+}
+
+/* Toast Notification */
+.admin-toast {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  background: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+  max-width: 350px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.admin-toast.error {
+  border-left: 4px solid #e74c3c;
+}
+
+.admin-toast.success {
+  border-left: 4px solid #27ae60;
+}
+
+.admin-toast i {
+  font-size: 1.5rem;
+}
+
+.admin-toast.error i {
+  color: #e74c3c;
+}
+
+.admin-toast.success i {
+  color: #27ae60;
+}
+
+.admin-toast-content {
+  flex: 1;
+}
+
+.admin-toast-content h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--admin-text);
+  margin-bottom: 0.2rem;
+}
+
+.admin-toast-content p {
+  font-size: 0.85rem;
+  color: var(--admin-text-light);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  body {
+    padding: 1rem;
+  }
+
+  .admin-login-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .admin-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .admin-bottom-links {
+    gap: 1rem;
+  }
+
+  .admin-toast {
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .admin-shield-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .admin-shield-icon i {
+    font-size: 1.5rem;
+  }
+
+  .admin-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .admin-header p {
+    font-size: 0.85rem;
+  }
+
+  .admin-bottom-links {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+  }
+}

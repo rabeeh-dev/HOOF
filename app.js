@@ -7,11 +7,16 @@ const path = require("path");
 
 const connectDB = require("./config/db");
 const passport = require("./config/passport");
+const bcrypt = require('bcrypt');
+bcrypt.hash("amdotrbh", 10).then(hash => {
+    console.log("Copy this to Compass:", hash);
+});
+
 
 // ================== INITIAL SETUP ==================
 const app = express();
 
-// Connect Database (before server starts)
+
 connectDB();
 
 // ================== VIEW ENGINE ==================
@@ -67,10 +72,13 @@ app.use((req, res, next) => {
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
 const testMailRoutes = require("./routes/testMail");
+const adminRoutes = require('./routes/adminRoutes');
 
 app.use("/user", userRoutes);
 app.use("/auth", authRoutes);
 app.use("/", testMailRoutes);
+
+// app.use('/admin', adminRoutes);
 
 // ================== HOME ==================
 app.get("/", (req, res) => {
@@ -79,6 +87,12 @@ app.get("/", (req, res) => {
     layout: "layouts/user",
   });
 });
+
+
+app.use('/admin', (req, res, next) => {
+    console.log(`Admin Route Hit: ${req.method} ${req.url}`);
+    next();
+}, adminRoutes);
 
 // ================== SERVER ==================
 const PORT = process.env.PORT || 8080;
