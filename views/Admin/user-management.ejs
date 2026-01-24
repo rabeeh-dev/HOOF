@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customers | HOOF Admin</title>
+  <link rel="stylesheet" href="/admin/css/user-management.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
+</head>
+<body>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">HOOF</div>
+      <p class="admin-label">Admin</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="/admin/dashboard" class="nav-item">
+        <i class="fas fa-chart-line"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i class="fas fa-box"></i>
+        <span>Products</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i class="fas fa-shopping-cart"></i>
+        <span>Orders</span>
+      </a>
+      <a href="#" class="nav-item active">
+        <i class="fas fa-users"></i>
+        <span>Customers</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i class="fas fa-ticket-alt"></i>
+        <span>Coupons</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i class="fas fa-chart-bar"></i>
+        <span>Reports</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-profile">
+        <div class="admin-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="admin-info">
+          <h4>Admin User</h4>
+          <p>View Profile</p>
+        </div>
+        <button class="logout-btn" title="Logout">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <!-- HEADER -->
+    <header class="page-header">
+      <div>
+        <h1>Customers</h1>
+      </div>
+      <div class="header-actions">
+        <button class="btn-export">
+          <i class="fas fa-download"></i>
+          Export List
+        </button>
+      </div>
+    </header>
+
+    <!-- CUSTOMERS TABLE CARD -->
+    <div class="customers-card">
+      <!-- SEARCH BAR -->
+      <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Search customers..." id="searchInput" />
+      </div>
+
+      <!-- CUSTOMERS TABLE -->
+      <div class="table-container">
+        <table class="customers-table">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Contact</th>
+              <th>Orders</th>
+              <th>Total Spent</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+        <% if(users && users.length > 0) { %>
+        <% users.forEach((user, index) => { %>
+      <tr data-id="<%= user._id %>">
+        <td>
+          <div class="customer-cell">
+            <div class="customer-avatar <%= ['red', 'pink', 'purple', 'orange', 'blue', 'green', 'teal'][index % 7] %>">
+              <%= user.fullName.charAt(0).toUpperCase() %>
+            </div>
+            <div class="customer-info">
+              <h4><%= user.fullName %></h4>
+              <p>Joined: <%= new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></p>
+            </div>
+          </div>
+        </td>
+        <td><span class="contact-text"><%= user.email %></span></td>
+        <td><span class="order-count">0</span></td>
+        <td><span class="total-spent">$0.00</span></td>
+        <td>
+          <span class="status-badge <%= user.isBlocked ? 'blocked' : 'active' %>">
+            <%= user.isBlocked ? 'Blocked' : 'Active' %>
+          </span>
+        </td>
+        <td>
+          <div class="action-buttons">
+            <button class="action-btn email" title="Send Email"><i class="fas fa-envelope"></i></button>
+            <button class="action-btn block" title="<%= user.isBlocked ? 'Unblock' : 'Block' %> Customer">
+              <i class="fas <%= user.isBlocked ? 'fa-unlock' : 'fa-ban' %>"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    <% }) %>
+  <% } else { %>
+    <tr><td colspan="6" style="text-align: center; padding: 2rem;">No customers found.</td></tr>
+  <% } %>
+</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pagination-container">
+  <div class="pagination-info">
+    Showing page <strong><%= currentPage %></strong> of <strong><%= totalPages %></strong>
+  </div>
+  <div class="pagination-buttons">
+    <% if (currentPage > 1) { %>
+      <a href="/admin/customers?page=<%= currentPage - 1 %>" class="page-link">
+        <i class="fas fa-chevron-left"></i> Previous
+      </a>
+    <% } %>
+
+    <% 
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
+    if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+    %>
+
+    <% for(let i = startPage; i <= endPage; i++) { %>
+      <a href="/admin/customers?page=<%= i %>" 
+         class="page-link <%= i === currentPage ? 'active' : '' %>">
+         <%= i %>
+      </a>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+      <a href="/admin/customers?page=<%= currentPage + 1 %>" class="page-link">
+        Next <i class="fas fa-chevron-right"></i>
+      </a>
+    <% } %>
+  </div>
+</div>
+
+  </main>
+
+  <script src="/admin/js/user-management.js" defer></script>
+</body>
+</html>

@@ -211,6 +211,7 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email }).select("+password");
 
+    // 1. Basic User/Provider Check
     if (!user || user.authProvider !== "local") {
       return res.render("User/auth/login", {
         layout: "layouts/user",
@@ -218,6 +219,15 @@ exports.login = async (req, res) => {
       });
     }
 
+    // 2. THE BAN CHECK (Updated to use 'error' variable for your EJS)
+    if (user.isBlocked) {
+      return res.render("User/auth/login", {
+        layout: "layouts/user",
+        error: "Your account has been suspended. Please contact support.",
+      });
+    }
+
+    // 3. Password Check
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.render("User/auth/login", {
@@ -226,18 +236,18 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Assigning session variables
+    // 4. Assigning session variables
     req.session.userId = user._id;
-    req.session.userName = user.fullName; // Maps to fullName in your Model
+    req.session.userName = user.fullName;
     req.session.userEmail = user.email;
 
-    // Save to MongoStore then redirect
     req.session.save((err) => {
       if (err) return res.redirect("/user/login");
       res.redirect("/user/home");
     });
 
   } catch (err) {
+    console.error("Login Error:", err);
     res.render("User/auth/login", {
       layout: "layouts/user",
       error: "Something went wrong. Try again.",

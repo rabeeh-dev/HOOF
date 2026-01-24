@@ -1,4 +1,5 @@
-const Admin = require("../model/adminModel"); // Ensure the path matches your folder name (model or models)
+const Admin = require("../model/adminModel");
+const User = require("../model/userModels");
 const bcrypt = require("bcrypt");
 
 // 1. Load the existing sign-in page
@@ -51,14 +52,70 @@ exports.loadDashboard = async (req, res) => {
     }
 };
 
-// 4. Admin Logout
-exports.logout = async (req, res) => {
+
+
+exports.loadCustomers = async (req, res) => {
     try {
-        // Specifically delete only the admin session ID
-        delete req.session.adminId;
-        res.redirect('/admin/login');
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const skip = (page - 1) * limit;
+
+        const totalUsers = await User.countDocuments({});
+        
+        // .sort({ createdAt: -1 }) ensures latest users appear first
+        const users = await User.find({})
+            .sort({ createdAt: -1 }) 
+            .skip(skip)
+            .limit(limit);
+
+        res.render('Admin/user-management', {
+            users,
+            currentPage: page,
+            totalPages: Math.ceil(totalUsers / limit),
+            title: "Customers | HOOF Admin"
+        });
     } catch (error) {
-        console.error("Logout Error:", error.message);
-        res.redirect('/admin/dashboard');
+        console.error("Sort Error:", error);
+        res.status(500).send("Error loading sorted customers");
     }
+};
+
+// Logic for Blocking/Unblocking
+exports.toggleUserStatus = async (req, res) => {
+    try {
+        const { id, action } = req.params;
+        
+        // Convert the string action into a boolean
+        // If action is 'block', isBlocked becomes true.
+        const blockStatus = (action === 'block'); 
+
+        const updatedUser = await User.findByIdAndUpdate(
+            id, 
+            { isBlocked: blockStatus }, 
+            { new: true } // Returns the updated document
+        );
+
+        if (updatedUser) {
+            res.json({ success: true });
+        } else {
+            res.json({ success: false, message: "User not found" });
+        }
+    } catch (error) {
+        console.error("Update Error:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// 4. Admin Logout
+exports.logout = (req, res) => {
+    // Destroy the session
+    req.session.destroy((err) => {
+      if (err) {
+        console.log("Logout error:", err);
+        return res.redirect('/admin/dashboard');
+      }
+      // Clear the cookie
+      res.clearCookie('connect.sid'); 
+      res.redirect('/admin/login');
+    });
 };

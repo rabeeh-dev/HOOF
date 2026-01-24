@@ -39,10 +39,7 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    isBlocked: {
-      type: Boolean,
-      default: false,
-    },
+    isBlocked: { type: Boolean, default: false },
     phone: { type: String },
     dob: { type: Date },
   },
@@ -62,7 +59,5 @@ userSchema.pre("validate", async function () {
     this.password = undefined;
   }
 });
-
-
 
 module.exports = mongoose.model("User", userSchema);

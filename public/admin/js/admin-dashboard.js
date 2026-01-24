@@ -69,15 +69,17 @@ mobileStyles.textContent = `
 document.head.appendChild(mobileStyles);
 
 // Logout Button
+// Logout Button - Fixed
 const logoutBtn = document.querySelector('.logout-btn');
 if (logoutBtn) {
   logoutBtn.addEventListener('click', () => {
     if (confirm('Are you sure you want to logout?')) {
       showToast('Logging out...', 'info');
+      
+      // Redirect to the backend logout route
       setTimeout(() => {
-        // window.location.href = '/admin/login';
-        console.log('Logging out...');
-      }, 1000);
+        window.location.href = '/admin/logout';
+      }, 500);
     }
   });
 }

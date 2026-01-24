@@ -7,10 +7,6 @@ const path = require("path");
 
 const connectDB = require("./config/db");
 const passport = require("./config/passport");
-const bcrypt = require('bcrypt');
-bcrypt.hash("amdotrbh", 10).then(hash => {
-    console.log("Copy this to Compass:", hash);
-});
 
 
 // ================== INITIAL SETUP ==================
