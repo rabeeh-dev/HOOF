@@ -43,6 +43,8 @@ app.use(
   })
 );
 
+app.set('trust proxy', 1);
+
 // ================== PASSPORT ==================
 app.use(passport.initialize());
 app.use(passport.session());

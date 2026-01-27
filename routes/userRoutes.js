@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const userController = require("../controller/userController");
 const { isUser, isLoggedOut } = require("../middleware/auth");
+const passport = require("../config/passport");
 
 // ================= AUTH PAGES =================
 // Use isLoggedOut so a logged-in user can't sign up again
@@ -17,6 +18,33 @@ router.get("/verify-otp", (req, res) => {
 });
 router.post("/verify-otp", userController.verifyOtp);
 router.post("/resend-otp", userController.resendOtp);
+
+
+// ================= G AUTH PAGES =================
+
+// 1. Redirect to Google (isLoggedOut is fine here)
+router.get("/auth/google", isLoggedOut, 
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+// 2. Google Callback (REMOVE isLoggedOut here)
+router.get("/auth/google/callback", 
+  passport.authenticate("google", { failureRedirect: "/user/login" }),
+  (req, res) => {
+    // Manually set session variables
+    req.session.userId = req.user._id;
+    req.session.userName = req.user.fullName;
+    req.session.userEmail = req.user.email;
+
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session Save Error:", err);
+        return res.redirect("/user/login");
+      }
+      res.redirect("/user/home");
+    });
+  }
+);
 
 // ================= LOGIN =================
 // isLoggedOut prevents a logged-in user from seeing the login page
