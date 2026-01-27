@@ -393,8 +393,7 @@ exports.getProfile = async (req, res) => {
 // Handle AJAX Profile Update
 exports.updateProfile = async (req, res) => {
     try {
-        // Log req.body to see exactly what the frontend is sending
-        console.log("Update Data received:", req.body);
+        // console.log("Update Data received:", req.body);
 
         const { fullName, phoneNumber, dateOfBirth } = req.body;
 
@@ -403,7 +402,7 @@ exports.updateProfile = async (req, res) => {
             { 
                 fullName: fullName,
                 phone: phoneNumber,
-                dob: dateOfBirth // Make sure this variable name matches the 'name' attribute in EJS
+                dob: dateOfBirth
             },
             { new: true }
         );
@@ -489,7 +488,6 @@ exports.changePasswordRequest = async (req, res) => {
         await sendResetPasswordEmail(user.email, resetToken);
 
         // 5. Redirect back to profile with a success message
-        // Using a query parameter to show a toast or alert
         res.redirect('/user/profile?message=reset_link_sent');
         
     } catch (err) {
@@ -509,7 +507,7 @@ exports.getProfile = async (req, res) => {
 
         res.render('User/user-profile', { 
             user, 
-            addresses, // PASS THE ARRAY HERE
+            addresses,
             title: 'My Profile | HOOF' 
         });
     } catch (err) {

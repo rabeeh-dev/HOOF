@@ -26,12 +26,11 @@ exports.verifyAdmin = async (req, res) => {
             const passwordMatch = await bcrypt.compare(password, adminData.password);
             if (passwordMatch) {
                 req.session.adminId = adminData._id;
-                // Send JSON for the fetch call
+                
                 return res.status(200).json({ success: true });
             }
         }
         
-        // If it fails, send JSON error
         return res.status(401).json({ success: false, message: "Invalid email or password" });
 
     } catch (error) {
@@ -42,7 +41,6 @@ exports.verifyAdmin = async (req, res) => {
 // 3. Load Admin Dashboard (CRITICAL: Added this to fix your crash)
 exports.loadDashboard = async (req, res) => {
     try {
-        // You can fetch stats here later (total users, total orders, etc.)
         res.render('Admin/admin-dashboard', { 
             title: "Admin Dashboard | HOOF" 
         });
@@ -63,7 +61,7 @@ exports.loadCustomers = async (req, res) => {
 
         const totalUsers = await User.countDocuments({});
         
-        // .select("-password") ensures we don't fetch sensitive data
+        
         const users = await User.find({})
             .select("-password") 
             .sort({ createdAt: -1 }) 
@@ -73,7 +71,7 @@ exports.loadCustomers = async (req, res) => {
         res.render('Admin/user-management', {
             users,
             currentPage: page,
-            totalPages: Math.ceil(totalUsers / limit) || 1, // Fallback to 1 if no users
+            totalPages: Math.ceil(totalUsers / limit) || 1,
             title: "Customers | HOOF Admin"
         });
     } catch (error) {
@@ -86,15 +84,13 @@ exports.loadCustomers = async (req, res) => {
 exports.toggleUserStatus = async (req, res) => {
     try {
         const { id, action } = req.params;
-        
-        // Convert the string action into a boolean
-        // If action is 'block', isBlocked becomes true.
+
         const blockStatus = (action === 'block'); 
 
         const updatedUser = await User.findByIdAndUpdate(
             id, 
             { isBlocked: blockStatus }, 
-            { new: true } // Returns the updated document
+            { new: true }
         );
 
         if (updatedUser) {

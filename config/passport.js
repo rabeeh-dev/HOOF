@@ -9,7 +9,6 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_CALLBACK_URL
     },
-    // Example logic for Google Strategy Callback
 async (accessToken, refreshToken, profile, done) => {
     try {
         // 1. Check if user already exists
@@ -29,7 +28,7 @@ async (accessToken, refreshToken, profile, done) => {
                 email: profile.emails[0].value,
                 googleId: profile.id,
                 authProvider: 'google',
-                isEmailVerified: true // Google emails are pre-verified
+                isEmailVerified: true 
             });
             return done(null, newUser);
         }

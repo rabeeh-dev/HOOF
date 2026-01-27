@@ -29,7 +29,6 @@ const checkBlocked = async (req, res, next) => {
 };
 
 const isAdmin = (req, res, next) => {
-    // Future implementation for Admin
     if (req.session && req.session.isAdmin) {
         return next();
     }

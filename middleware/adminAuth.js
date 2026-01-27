@@ -14,7 +14,7 @@ const isLogin = async (req, res, next) => {
 const isLogout = async (req, res, next) => {
     try {
         if (req.session.adminId) {
-            return res.redirect('/admin/dashboard'); // Added return to prevent double-execution
+            return res.redirect('/admin/dashboard');
         }
         next();
     } catch (error) {

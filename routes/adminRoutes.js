@@ -11,6 +11,6 @@ router.get('/customers', adminAuth.isLogin, adminController.loadCustomers);
 router.patch('/users/:action/:id', adminAuth.isLogin, adminController.toggleUserStatus);
 
 
-router.get('/logout', adminAuth.isLogin, adminController.logout); // Added logout route
+router.get('/logout', adminAuth.isLogin, adminController.logout);
 
 module.exports = router;

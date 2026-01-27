@@ -29,7 +29,6 @@ exports.addAddress = async (req, res) => {
 exports.deleteAddress = async (req, res) => {
     try {
         const addressId = req.params.id;
-        // Ensure the address belongs to the logged-in user before deleting
         await Address.findOneAndDelete({ _id: addressId, userId: req.session.userId });
         
         res.status(200).json({ success: true, message: "Address deleted successfully." });

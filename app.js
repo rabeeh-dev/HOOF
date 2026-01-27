@@ -26,12 +26,12 @@ app.use(express.static(path.join(__dirname, "public")));
 // ================== SESSION CONFIG ==================
 app.use(
   session({
-    name: "hoof.sid", // explicit cookie name (good practice)
+    name: "hoof.sid",
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
 
-    store: MongoStore.default.create({ // Added .default here
+    store: MongoStore.default.create({
         mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/hoof',
     }),
 
@@ -51,7 +51,6 @@ app.use(passport.session());
 
 // ================== GLOBAL LOCALS ==================
 app.use((req, res, next) => {
-    // This tells the browser: "Do not save this page in history/cache"
     res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
     res.header('Expires', '-1');
     res.header('Pragma', 'no-cache');

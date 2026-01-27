@@ -9,7 +9,6 @@ const passport = require("../config/passport");
 router.get("/signup", isLoggedOut, userController.signupPage);
 router.post("/signup", isLoggedOut, userController.signup);
 
-// These stay public so the verification flow can finish
 router.get("/verify-otp", (req, res) => {
   res.render("User/auth/verify-otp", {
     layout: "layouts/user",
