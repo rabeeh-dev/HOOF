@@ -1,24 +1,25 @@
 const isLogin = async (req, res, next) => {
     try {
         if (req.session.adminId) {
-            next(); // Admin is logged in, proceed
+            next(); 
         } else {
-            res.redirect('/admin/login'); // Not logged in, send to login page
+            res.redirect('/admin/login'); 
         }
     } catch (error) {
-        console.log(error.message);
+        console.error("Auth Middleware Error:", error.message);
+        res.status(500).send("Internal Server Error");
     }
 };
 
 const isLogout = async (req, res, next) => {
     try {
         if (req.session.adminId) {
-            res.redirect('/admin/dashboard'); // Already logged in, skip login page
-        } else {
-            next();
+            return res.redirect('/admin/dashboard'); // Added return to prevent double-execution
         }
+        next();
     } catch (error) {
-        console.log(error.message);
+        console.error("Auth Middleware Error:", error.message);
+        res.status(500).send("Internal Server Error");
     }
 };
 

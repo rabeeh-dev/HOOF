@@ -54,6 +54,7 @@ exports.loadDashboard = async (req, res) => {
 
 
 
+//loadCustomers
 exports.loadCustomers = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -62,8 +63,9 @@ exports.loadCustomers = async (req, res) => {
 
         const totalUsers = await User.countDocuments({});
         
-        // .sort({ createdAt: -1 }) ensures latest users appear first
+        // .select("-password") ensures we don't fetch sensitive data
         const users = await User.find({})
+            .select("-password") 
             .sort({ createdAt: -1 }) 
             .skip(skip)
             .limit(limit);
@@ -71,12 +73,12 @@ exports.loadCustomers = async (req, res) => {
         res.render('Admin/user-management', {
             users,
             currentPage: page,
-            totalPages: Math.ceil(totalUsers / limit),
+            totalPages: Math.ceil(totalUsers / limit) || 1, // Fallback to 1 if no users
             title: "Customers | HOOF Admin"
         });
     } catch (error) {
-        console.error("Sort Error:", error);
-        res.status(500).send("Error loading sorted customers");
+        console.error("Load Customers Error:", error.message);
+        res.status(500).send("Error loading customer data");
     }
 };
 

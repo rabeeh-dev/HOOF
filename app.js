@@ -8,11 +8,8 @@ const path = require("path");
 const connectDB = require("./config/db");
 const passport = require("./config/passport");
 
-
 // ================== INITIAL SETUP ==================
 const app = express();
-
-
 connectDB();
 
 // ================== VIEW ENGINE ==================
@@ -74,7 +71,9 @@ app.use("/user", userRoutes);
 app.use("/auth", authRoutes);
 app.use("/", testMailRoutes);
 
-// app.use('/admin', adminRoutes);
+app.use('/admin', (req, res, next) => {
+    next();
+}, adminRoutes);
 
 // ================== HOME ==================
 app.get("/", (req, res) => {
@@ -83,12 +82,6 @@ app.get("/", (req, res) => {
     layout: "layouts/user",
   });
 });
-
-
-app.use('/admin', (req, res, next) => {
-    console.log(`Admin Route Hit: ${req.method} ${req.url}`);
-    next();
-}, adminRoutes);
 
 // ================== SERVER ==================
 const PORT = process.env.PORT || 8080;

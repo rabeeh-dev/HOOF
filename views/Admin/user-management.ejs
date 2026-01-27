@@ -173,5 +173,15 @@
   </main>
 
   <script src="/admin/js/user-management.js" defer></script>
+  <script>
+  window.addEventListener("pageshow", function (event) {
+    const navEntries = performance.getEntriesByType('navigation');
+    const isBackForward = navEntries.length > 0 && navEntries[0].type === 'back_forward';
+
+    if (event.persisted || isBackForward) {
+      window.location.reload();
+    }
+  });
+</script>
 </body>
 </html>
