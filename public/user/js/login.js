@@ -33,3 +33,19 @@ document.querySelectorAll(".login-form input").forEach(input => {
     input.closest(".form-group").classList.remove("focused");
   });
 });
+
+// Password Toggle
+const togglePassword = document.querySelector("#togglePassword");
+const password = document.querySelector("#loginPassword");
+
+if (togglePassword && password) {
+  togglePassword.addEventListener("click", function (e) {
+    // toggle the type attribute
+    const type = password.getAttribute("type") === "password" ? "text" : "password";
+    password.setAttribute("type", type);
+
+    // toggle the eye slash icon
+    this.classList.toggle("fa-eye-slash");
+    this.classList.toggle("fa-eye");
+  });
+}

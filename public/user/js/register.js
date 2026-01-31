@@ -10,6 +10,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // --- EYE TOGGLE FEATURE ---
+  const handleToggle = (iconId, inputId) => {
+    const icon = document.getElementById(iconId);
+    const input = document.getElementById(inputId);
+    if (icon && input) {
+      icon.addEventListener("click", () => {
+        const isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+        icon.classList.toggle("fa-eye");
+        icon.classList.toggle("fa-eye-slash");
+      });
+    }
+  };
+
+  handleToggle("togglePassword", "password");
+  handleToggle("toggleConfirmPassword", "confirmPassword");
+
   // Close mobile menu on link click
   document.querySelectorAll(".nav-links a").forEach(link => {
     link.addEventListener("click", () => {
@@ -30,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     observer.observe(section);
   });
 
-  // ✅ FORM VALIDATION (FIXED)
+  // FORM VALIDATION
   const signupForm = document.getElementById('signupForm');
   if (signupForm) {
     signupForm.addEventListener('submit', function (e) {
@@ -49,8 +66,6 @@ document.addEventListener("DOMContentLoaded", () => {
         alert('Please accept the terms');
         return;
       }
-
-      // ✅ allow normal form submit
     });
   }
 
@@ -62,7 +77,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Toast message function
   function showMessage(text, type) {
     const existing = document.querySelector(".message-toast");
     if (existing) existing.remove();
@@ -82,22 +96,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 4000);
   }
 
-  // Toast styles
   const toastStyle = document.createElement("style");
   toastStyle.textContent = `
     .message-toast {
-      position: fixed;
-      top: 100px;
-      right: 20px;
-      padding: 1.2rem 1.8rem;
-      border-radius: 12px;
-      color: white;
-      font-weight: 500;
-      z-index: 10000;
-      transform: translateX(400px);
-      transition: all 0.4s ease;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-      max-width: 350px;
+      position: fixed; top: 100px; right: 20px; padding: 1.2rem 1.8rem;
+      border-radius: 12px; color: white; font-weight: 500; z-index: 10000;
+      transform: translateX(400px); transition: all 0.4s ease;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3); max-width: 350px;
       font-family: Poppins, sans-serif;
     }
     .message-toast.success { background: #28a745; }
@@ -106,7 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
   `;
   document.head.appendChild(toastStyle);
 
-  // Input focus effects
   document.querySelectorAll(".signup-form input").forEach(input => {
     input.addEventListener("focus", function() {
       this.closest(".form-group")?.classList.add("focused");
@@ -115,5 +119,4 @@ document.addEventListener("DOMContentLoaded", () => {
       this.closest(".form-group")?.classList.remove("focused");
     });
   });
-
 });

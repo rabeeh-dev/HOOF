@@ -4,25 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign Up | HOOF</title>
-
   <link rel="stylesheet" href="/user/css/register.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="icon" type="image/x-icon" href="/user/images/favicon.ico">
 </head>
-
 <body>
 
-<!-- NAVBAR -->
 <header class="topbar">
   <div class="container nav-inner">
-    <a href="javascript:history.back()" class="nav-back">
-      <i class="fa-solid fa-arrow-left"></i>
-    </a>
-
+    <a href="javascript:history.back()" class="nav-back"><i class="fa-solid fa-arrow-left"></i></a>
     <div class="logo">HOOF</div>
-
     <nav class="nav">
       <ul class="nav-links">
         <li><a href="/home">Home</a></li>
@@ -30,50 +23,34 @@
         <li><a href="/shop">Shop</a></li>
         <li><a href="/contact">Contact</a></li>
       </ul>
-
       <div class="nav-actions">
         <a href="#" class="nav-icon"><i class="far fa-heart"></i></a>
         <a href="#" class="nav-icon"><i class="fas fa-shopping-bag"></i></a>
       </div>
-
-      <button class="nav-toggle" id="nav-toggle">
-        <span></span><span></span><span></span>
-      </button>
+      <button class="nav-toggle" id="nav-toggle"><span></span><span></span><span></span></button>
     </nav>
   </div>
 </header>
 
-<!-- SIGNUP -->
 <section class="section signup-hero reveal">
   <div class="container">
     <div class="signup-container">
       <div class="signup-card">
-
         <div class="signup-header">
           <h1 class="signup-title">Create Account</h1>
           <p class="signup-subtitle">Join HOOF and get access to exclusive drops</p>
         </div>
 
-        <!-- 🔴 SERVER MESSAGE -->
         <% if (message) { %>
-          <div class="server-message <%= message.type %>">
-            <%= message.text %>
-          </div>
+          <div class="server-message <%= message.type %>"><%= message.text %></div>
         <% } %>
 
         <form class="signup-form" id="signupForm" action="/user/signup" method="POST">
-
           <div class="form-group">
             <label>Full Name</label>
             <div class="input-wrapper">
               <i class="fas fa-user input-icon"></i>
-              <input
-                type="text"
-                name="fullName"
-                placeholder="Enter your full name"
-                value="<%= formData?.fullName || '' %>"
-                required
-              />
+              <input type="text" name="fullName" placeholder="Enter your full name" value="<%= formData?.fullName || '' %>" required />
             </div>
           </div>
 
@@ -81,13 +58,7 @@
             <label>Email Address</label>
             <div class="input-wrapper">
               <i class="fas fa-envelope input-icon"></i>
-              <input
-                type="email"
-                name="email"
-                placeholder="Enter your email"
-                value="<%= formData?.email || '' %>"
-                required
-              />
+              <input type="email" name="email" placeholder="Enter your email" value="<%= formData?.email || '' %>" required />
             </div>
           </div>
 
@@ -95,13 +66,8 @@
             <label>Password</label>
             <div class="input-wrapper">
               <i class="fas fa-lock input-icon"></i>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                placeholder="Create password"
-                required
-              />
+              <input type="password" id="password" name="password" placeholder="Create password" required />
+              <i class="fas fa-eye toggle-password" id="togglePassword"></i>
             </div>
           </div>
 
@@ -109,40 +75,22 @@
             <label>Confirm Password</label>
             <div class="input-wrapper">
               <i class="fas fa-lock input-icon"></i>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                placeholder="Confirm password"
-                required
-              />
+              <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm password" required />
+              <i class="fas fa-eye toggle-password" id="toggleConfirmPassword"></i>
             </div>
           </div>
 
           <div class="form-check">
             <input type="checkbox" id="terms" required />
-            <label for="terms">
-              I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a>
-            </label>
+            <label for="terms">I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a></label>
           </div>
 
-          <button type="submit" class="btn primary signup-btn">
-            Create Account
-          </button>
+          <button type="submit" class="btn primary signup-btn">Create Account</button>
         </form>
 
         <div class="signup-divider"><span>or</span></div>
-
-        <button class="btn google-signup">
-          <a href="/auth/google">
-            <i class="fab fa-google"></i> Continue with Google
-          </a>
-        </button>
-
-        <div class="signup-footer">
-          <p>Already have an account? <a href="/user/login">Log in here</a></p>
-        </div>
-
+        <button class="btn google-signup"><a href="/auth/google"><i class="fab fa-google"></i> Continue with Google</a></button>
+        <div class="signup-footer"><p>Already have an account? <a href="/user/login">Log in here</a></p></div>
       </div>
     </div>
   </div>
@@ -154,10 +102,7 @@
       <div class="logo">HOOF</div>
       <p class="footer-text">Premium sneakers designed to complement your journey.</p>
     </div>
-    <div class="footer-right">
-      <h4>Malappuram</h4>
-      <p>support@hoofsnkrs.com</p>
-    </div>
+    <div class="footer-right"><h4>Malappuram</h4><p>support@hoofsnkrs.com</p></div>
   </div>
 </footer>
 
