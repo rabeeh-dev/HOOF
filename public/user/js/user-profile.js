@@ -12,11 +12,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const formActions = document.getElementById("formActions");
     const personalInputs = document.querySelectorAll("#profileForm input:not([type='email']):not([type='password'])");
 
+    // --- INLINE VALIDATION SELECTORS ---
+    const newAddressMobile = document.getElementById("newAddressMobile");
+    const mobileError = document.getElementById("mobileError");
+    const newAddressPincode = document.getElementById("newAddressPincode");
+    const pincodeError = document.getElementById("pincodeError");
+
     // --- ADDRESS SELECTORS ---
     const openAddressModal = document.getElementById("openAddressModal");
     const closeAddressModal = document.getElementById("closeAddressModal");
     const addressModal = document.getElementById("addressModal");
     const addressForm = document.getElementById("addressForm");
+
+    // --- DELETE MODAL SELECTORS ---
+    const deleteConfirmModal = document.getElementById("deleteConfirmModal");
+    const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+    const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+    let addressIdToDelete = null;
 
     // --- 1. MOBILE NAVIGATION ---
     if (navToggle && navLinks) {
@@ -67,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
             personalInputs.forEach(input => input.disabled = false);
             formActions.style.display = "flex";
             editToggleBtn.style.display = "none";
-            if(personalInputs[0]) personalInputs[0].focus();
+            if (personalInputs[0]) personalInputs[0].focus();
             showToast("Edit mode enabled. Basic details unlocked.", "info");
         });
     }
@@ -135,6 +147,24 @@ document.addEventListener("DOMContentLoaded", () => {
             const formData = new FormData(addressForm);
             const data = Object.fromEntries(formData.entries());
 
+            // --- FRONTEND VALIDATION ---
+            if (data.fullName.trim().length < 3) return showToast("Name is too short", "error");
+
+            // Indian Mobile Number Regex (Starts with 6-9, 10 digits total)
+            if (!/^[6-9]\d{9}$/.test(data.mobile)) {
+                return showToast("Enter a valid 10-digit mobile number", "error");
+            }
+
+            if (data.houseName.trim().length < 2) return showToast("House name is required", "error");
+
+            // 6 Digit Pincode
+            if (!/^\d{6}$/.test(data.pincode)) {
+                return showToast("Pincode must be 6 digits", "error");
+            }
+
+            if (data.city.trim().length < 2) return showToast("City is required", "error");
+            if (data.state.trim().length < 2) return showToast("State is required", "error");
+
             try {
                 const response = await fetch('/user/address/add', {
                     method: 'POST',
@@ -155,37 +185,127 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+    // --- 7. INLINE VALIDATION LOGIC ---
+    if (newAddressMobile) {
+        newAddressMobile.addEventListener('input', function () {
+            // Remove non-numeric characters
+            this.value = this.value.replace(/\D/g, '');
+
+            // Validate length
+            if (this.value.length === 0) {
+                setValidationStatus(this, mobileError, "", null);
+            } else if (this.value.length !== 10) {
+                setValidationStatus(this, mobileError, "Must be exactly 10 digits", "error");
+            } else {
+                setValidationStatus(this, mobileError, "Valid mobile number", "success");
+            }
+        });
+    }
+
+    if (newAddressPincode) {
+        newAddressPincode.addEventListener('input', function () {
+            // Remove non-numeric characters
+            this.value = this.value.replace(/\D/g, '');
+
+            // Validate length
+            if (this.value.length === 0) {
+                setValidationStatus(this, pincodeError, "", null);
+            } else if (this.value.length !== 6) {
+                setValidationStatus(this, pincodeError, "Must be exactly 6 digits", "error");
+            } else {
+                setValidationStatus(this, pincodeError, "Valid pincode", "success");
+            }
+        });
+    }
+
+    function setValidationStatus(input, messageEl, message, status) {
+        messageEl.textContent = message;
+        input.classList.remove('valid', 'invalid');
+        messageEl.classList.remove('success', 'error');
+
+        if (status === 'error') {
+            input.classList.add('invalid');
+            messageEl.classList.add('error');
+        } else if (status === 'success') {
+            input.classList.add('valid');
+            messageEl.classList.add('success');
+        }
+    }
+
+    // --- DELETE MODAL LOGIC ---
+    // (Using variables declared at top of scope)
+
+    // Cancel Delete
+    if (cancelDeleteBtn) {
+        cancelDeleteBtn.addEventListener("click", () => {
+            if (deleteConfirmModal) deleteConfirmModal.style.display = "none";
+            window.addressIdToDelete = null;
+        });
+    }
+
+    // Close on overlay click
+    if (deleteConfirmModal) {
+        deleteConfirmModal.addEventListener("click", (e) => {
+            if (e.target.classList.contains("modal-overlay")) {
+                deleteConfirmModal.style.display = "none";
+                window.addressIdToDelete = null;
+            }
+        });
+    }
+
+    // Confirm Delete Action
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener("click", async () => {
+            if (!window.addressIdToDelete) return;
+
+            const addressId = window.addressIdToDelete;
+            const btnOriginalText = confirmDeleteBtn.textContent;
+            confirmDeleteBtn.textContent = "Deleting...";
+            confirmDeleteBtn.disabled = true;
+
+            try {
+                const response = await fetch(`/user/address/delete/${addressId}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast("Address deleted successfully", "success");
+
+                    // Dynamically remove the card from the UI
+                    const addressCard = document.getElementById(`address-${addressId}`);
+                    if (addressCard) addressCard.remove();
+
+                    // Check if grid is empty to refresh and show empty state
+                    const grid = document.getElementById("addressGrid");
+                    if (grid && grid.querySelectorAll('.address-card').length === 0) {
+                        setTimeout(() => location.reload(), 800);
+                    }
+
+                    // Close modal
+                    deleteConfirmModal.style.display = "none";
+                } else {
+                    showToast(result.message || "Failed to delete address", "error");
+                }
+            } catch (err) {
+                showToast("Error deleting address", "error");
+            } finally {
+                window.addressIdToDelete = null;
+                confirmDeleteBtn.textContent = btnOriginalText;
+                confirmDeleteBtn.disabled = false;
+            }
+        });
+    }
 });
 
 // --- GLOBAL FUNCTIONS ---
 
-// Function to handle Address Deletion
-async function deleteAddress(addressId) {
-    if (!confirm("Are you sure you want to delete this address?")) return;
-
-    try {
-        const response = await fetch(`/user/address/delete/${addressId}`, {
-            method: 'DELETE'
-        });
-        const result = await response.json();
-
-        if (result.success) {
-            showToast("Address deleted successfully", "success");
-            
-            // Dynamically remove the card from the UI
-            const addressCard = document.getElementById(`address-${addressId}`);
-            if (addressCard) addressCard.remove();
-            
-            // Check if grid is empty to refresh and show empty state
-            const grid = document.getElementById("addressGrid");
-            if (grid && grid.querySelectorAll('.address-card').length === 0) {
-                setTimeout(() => location.reload(), 800);
-            }
-        } else {
-            showToast(result.message || "Failed to delete address", "error");
-        }
-    } catch (err) {
-        showToast("Error deleting address", "error");
+// Function to handle Address Deletion (Opens Modal)
+window.deleteAddress = function (addressId) {
+    const deleteConfirmModal = document.getElementById("deleteConfirmModal");
+    window.addressIdToDelete = addressId;
+    if (deleteConfirmModal) {
+        deleteConfirmModal.style.display = "flex";
     }
 }
 
