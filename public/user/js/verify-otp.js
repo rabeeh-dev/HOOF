@@ -101,12 +101,13 @@ resendBtn?.addEventListener("click", async () => {
 });
 
 // ================= OTP FORM SUBMIT =================
-// ================= OTP FORM SUBMIT =================
 const otpForm = document.getElementById("otpForm");
 const otpHidden = document.getElementById("otpHidden");
 
 if (otpForm) {
-  otpForm.addEventListener("submit", (e) => {
+  otpForm.addEventListener("submit", async (e) => {
+    e.preventDefault(); // Prevent reload
+
     let isValid = true;
     let otpCode = "";
 
@@ -123,12 +124,49 @@ if (otpForm) {
     });
 
     if (!isValid || otpCode.length !== 6) {
-      e.preventDefault();
       showMessage("Please enter the full 6-digit code", "error");
       return;
     }
 
-    otpHidden.value = otpCode;
+    // AJAX Submission
+    const btn = otpForm.querySelector("button[type='submit']");
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Verifying...";
+
+    try {
+      const res = await fetch("/user/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp: otpCode })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        showMessage("Verified! Redirecting...", "success");
+        setTimeout(() => {
+          window.location.href = data.redirectUrl;
+        }, 1000);
+      } else {
+        // Error handling
+        showMessage(data.message || "Invalid OTP", "error");
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+
+        // Clear inputs and focus first
+        otpInputs.forEach(input => {
+          input.value = "";
+          input.classList.add("error");
+        });
+        otpInputs[0].focus();
+      }
+
+    } catch (err) {
+      showMessage("Something went wrong. Try again.", "error");
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
   });
 
   // Clear error on input
