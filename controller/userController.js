@@ -148,7 +148,9 @@ exports.verifyOtp = async (req, res) => {
       const pendingUser = req.session.pendingUser;
       await User.create({ ...pendingUser, authProvider: "local", isEmailVerified: true });
       req.session.pendingUser = null;
-      redirectUrl = "/user/login";
+      
+      // ✅ MODIFIED: Added query parameter for feedback
+      redirectUrl = "/user/login?signupSuccess=true"; 
     }
 
     if (req.headers["content-type"] === "application/json") {
@@ -215,9 +217,14 @@ exports.resendOtp = async (req, res) => {
    LOGIN PAGE
 ========================= */
 exports.loginPage = (req, res) => {
+  // Check if user just arrived from a successful OTP verification
+  const signupSuccess = req.query.signupSuccess === 'true';
+
   res.render("User/auth/login", {
     layout: "layouts/user",
     error: null,
+    // Pass the success message if the flag is present
+    successMessage: signupSuccess ? "Account created successfully! Please log in." : null,
   });
 };
 

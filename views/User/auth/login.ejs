@@ -51,16 +51,21 @@
         <div class="login-card">
 
           <div class="login-header">
-            <h1 class="login-title">Welcome Back</h1>
-            <p class="login-subtitle">Sign in to your HOOF account</p>
-          </div>
+  <h1 class="login-title">Welcome Back</h1>
+  <p class="login-subtitle">Sign in to your HOOF account</p>
+</div>
 
-          <!-- SERVER ERROR MESSAGE -->
-          <% if (typeof error !=="undefined" && error) { %>
-            <div class="server-message error">
-              <%= error %>
-            </div>
-            <% } %>
+<% if (typeof successMessage !== "undefined" && successMessage) { %>
+  <div class="server-message success">
+    <i class="fas fa-check-circle"></i> <%= successMessage %>
+  </div>
+<% } %>
+
+<% if (typeof error !=="undefined" && error) { %>
+  <div class="server-message error">
+    <%= error %>
+  </div>
+<% } %>
 
               <form class="login-form" id="loginForm" action="/user/login" method="POST">
 
