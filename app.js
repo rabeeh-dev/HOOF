@@ -6,6 +6,7 @@ const MongoStore = require("connect-mongo");
 const path = require("path");
 const connectDB = require("./config/db");
 const passport = require("./config/passport");
+const { checkBlocked } = require("./middleware/auth");
 
 const app = express();
 connectDB();
@@ -42,6 +43,7 @@ app.use(
 );
 
 app.set('trust proxy', 1);
+app.use(checkBlocked);
 
 // ================== PASSPORT ==================
 app.use(passport.initialize());

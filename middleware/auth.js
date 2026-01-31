@@ -1,7 +1,6 @@
-// middleware/auth.js
+const User = require("../model/userModels");
 
 const isUser = (req, res, next) => {
-    // Check our custom session instead of Passport
     if (req.session && req.session.userId) {
         return next();
     }
@@ -9,21 +8,8 @@ const isUser = (req, res, next) => {
 };
 
 const isLoggedOut = (req, res, next) => {
-    // If session exists, don't let them see Login/Signup
     if (req.session && req.session.userId) {
         return res.redirect('/user/home');
-    }
-    next();
-};
-
-// Middleware to check status on every page load
-const checkBlocked = async (req, res, next) => {
-    if (req.session.user) {
-        const user = await User.findById(req.session.user._id);
-        if (user && user.isBlocked) {
-            req.session.destroy(); // Boot them out
-            return res.redirect('/login?message=Account Suspended');
-        }
     }
     next();
 };
@@ -35,8 +21,35 @@ const isAdmin = (req, res, next) => {
     res.redirect('/admin/login');
 };
 
+const checkBlocked = async (req, res, next) => {
+    try {
+        if (req.session.userId) {
+            const user = await User.findById(req.session.userId);
+
+            if (!user || user.isBlocked) {
+                return req.session.destroy((err) => {
+                    if (err) console.log("Error destroying session:", err);
+                    res.clearCookie("hoof.sid");
+                    
+                    // Show the 404 page as requested
+                    return res.status(404).render("User/404", { 
+                        layout: "layouts/user", 
+                        title: "404 Not Found" 
+                    });
+                });
+            }
+        }
+        next();
+    } catch (err) {
+        console.error("Middleware Block Check Error:", err);
+        next();
+    }
+};
+
+// Export all of them at once
 module.exports = {
     isUser,
     isAdmin,
-    isLoggedOut
+    isLoggedOut,
+    checkBlocked
 };

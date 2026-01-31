@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 | HOOF</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #869897;
+            --bg-band: #8ea39e;
+            --text-main: #0f1514;
+            --text-light: #f5f8f7;
+            --accent: #ff914d;
+            --accent-dark: #e26820;
+        }
+
+        @font-face {
+            font-family: silver;
+            src: url(/user/fonts/fonnts.com-Silver_Streak.otf) format("opentype");
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-band) 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Subtle background pattern */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 80px 80px;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* Logo */
+        .logo {
+            position: absolute;
+            top: 2rem;
+            left: 3rem;
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            color: rgb(181, 5, 5);
+            font-family: silver;
+        }
+
+        /* Main container */
+        .error-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        /* 404 number */
+        .error-number {
+            font-family: silver;
+            font-size: clamp(8rem, 20vw, 14rem);
+            line-height: 1;
+            letter-spacing: 0.1em;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Sneaker icon */
+        .sneaker-icon {
+            font-size: clamp(4rem, 10vw, 6rem);
+            margin-bottom: 2rem;
+            display: inline-block;
+            animation: float 3.5s ease-in-out infinite;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(-10deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(-10deg);
+            }
+        }
+
+        /* Heading */
+        h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-light);
+        }
+
+        /* Message */
+        .message {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            font-weight: 300;
+            line-height: 1.6;
+            color: var(--text-light);
+            opacity: 0.9;
+            margin-bottom: 3rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Button */
+        .btn {
+            border-radius: 999px;
+            padding: 1rem 2.5rem;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            font-family: "Poppins", sans-serif;
+            background: var(--accent);
+            color: var(--text-light);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo {
+                top: 1.5rem;
+                left: 1.5rem;
+                font-size: 2rem;
+            }
+
+            body {
+                padding: 1rem;
+            }
+
+            .error-number {
+                margin-bottom: 0.5rem;
+            }
+
+            .sneaker-icon {
+                margin-bottom: 1.5rem;
+            }
+
+            h1 {
+                margin-bottom: 0.8rem;
+            }
+
+            .message {
+                margin-bottom: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.8rem;
+            }
+
+            .btn {
+                padding: 0.9rem 2rem;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Logo -->
+    <div class="logo">HOOF</div>
+
+    <!-- Error Container -->
+    <div class="error-container">
+        <div class="error-number">404</div>
+        <div class="sneaker-icon">👟</div>
+        <h1>Page Not Found</h1>
+        <p class="message">
+            The page you're looking for has walked away. It might have been moved or doesn't exist anymore.
+        </p>
+        <a href="#contact" class="btn">Contact Team</a>
+    </div>
+</body>
+</html>
