@@ -25,7 +25,7 @@ document.querySelectorAll(".product-btn, .action-btn.cart").forEach(btn => {
     cartCount++;
     cartCounter.textContent = cartCount;
     if (cartCount > 0) cartCounter.style.display = "flex";
-    
+
     // Feedback
     const button = e.currentTarget;
     const originalText = button.textContent;
@@ -52,7 +52,7 @@ document.querySelectorAll(".action-btn.wishlist").forEach(btn => {
 
 // Search
 document.querySelector(".search-input").addEventListener("keypress", (e) => {
-  if (e.key === "Enter") alert(`Searching for: "${e.target.value}" sneakers...`);
+  if (e.key === "Enter") showMessage(`Searching for: "${e.target.value}" sneakers...`, "info");
 });
 
 // PROFILE DROPDOWN FUNCTIONALITY
@@ -84,18 +84,18 @@ document.querySelectorAll(".dropdown-item").forEach(item => {
   item.addEventListener("click", (e) => {
     // 1. If it's the logout button, let the form submit naturally
     if (item.classList.contains('logout')) {
-        return; 
+      return;
     }
 
     // 2. Check if the item is a link (like the Profile link)
     // If it has a real href (not just "#"), let it navigate!
     if (item.getAttribute('href') && item.getAttribute('href') !== '#') {
-        profileDropdown.classList.remove("active");
-        return; // Exit and let the browser navigate to /user/profile
+      profileDropdown.classList.remove("active");
+      return; // Exit and let the browser navigate to /user/profile
     }
 
     // 3. For placeholder items with "#", prevent default behavior
-    e.preventDefault(); 
+    e.preventDefault();
     const text = item.querySelector("span").textContent;
     profileDropdown.classList.remove("active");
     console.log(`Action for: ${text}`);
@@ -108,3 +108,37 @@ document.addEventListener("keydown", (e) => {
     profileDropdown.classList.remove("active");
   }
 });
+
+function showMessage(text, type = "info") {
+  const existing = document.querySelector(".message-toast");
+  if (existing) existing.remove();
+
+  const message = document.createElement("div");
+  message.className = `message-toast ${type}`;
+  message.textContent = text;
+  document.body.appendChild(message);
+
+  requestAnimationFrame(() => {
+    message.style.transform = "translateX(0)";
+  });
+
+  setTimeout(() => {
+    message.style.transform = "translateX(400px)";
+    setTimeout(() => message.remove(), 400);
+  }, 4000);
+}
+
+const toastStyle = document.createElement("style");
+toastStyle.textContent = `
+  .message-toast {
+    position: fixed; top: 100px; right: 20px; padding: 1.2rem 1.8rem;
+    border-radius: 12px; color: white; font-weight: 500; z-index: 10000;
+    transform: translateX(400px); transition: all 0.4s ease;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3); max-width: 350px;
+    font-family: Poppins, sans-serif;
+  }
+  .message-toast.success { background: #28a745; }
+  .message-toast.error { background: #dc3545; }
+  .message-toast.info { background: #333; }
+`;
+document.head.appendChild(toastStyle);

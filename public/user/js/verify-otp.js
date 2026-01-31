@@ -101,13 +101,41 @@ resendBtn?.addEventListener("click", async () => {
 });
 
 // ================= OTP FORM SUBMIT =================
+// ================= OTP FORM SUBMIT =================
 const otpForm = document.getElementById("otpForm");
 const otpHidden = document.getElementById("otpHidden");
 
 if (otpForm) {
-  otpForm.addEventListener("submit", () => {
-    const otpCode = Array.from(otpInputs).map(i => i.value).join("");
+  otpForm.addEventListener("submit", (e) => {
+    let isValid = true;
+    let otpCode = "";
+
+    otpInputs.forEach(input => {
+      // Clear previous error
+      input.classList.remove("error");
+
+      const val = input.value.trim();
+      if (!val) {
+        isValid = false;
+        input.classList.add("error");
+      }
+      otpCode += val;
+    });
+
+    if (!isValid || otpCode.length !== 6) {
+      e.preventDefault();
+      showMessage("Please enter the full 6-digit code", "error");
+      return;
+    }
+
     otpHidden.value = otpCode;
+  });
+
+  // Clear error on input
+  otpInputs.forEach(input => {
+    input.addEventListener("input", function () {
+      this.classList.remove("error");
+    });
   });
 }
 

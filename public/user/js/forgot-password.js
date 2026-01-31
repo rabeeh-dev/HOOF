@@ -32,38 +32,92 @@ document.querySelectorAll(".reveal").forEach(section => {
 // ===============================
 const forgotPasswordForm = document.getElementById("forgotPasswordForm");
 
-if (forgotPasswordForm) {
-  forgotPasswordForm.addEventListener("submit", () => {
-    // ❗ DO NOT preventDefault
-    // Browser must submit form normally
+// ===== INLINE VALIDATION =====
+function validateField(input) {
+  const formGroup = input.closest(".form-group");
+  const errorMsg = formGroup?.querySelector(".error-message");
+  if (!formGroup || !errorMsg) return true;
 
-    const emailInput = document.getElementById("resetEmail");
-    const email = emailInput.value.trim();
+  let isValid = true;
+  let message = "";
+
+  // Reset
+  formGroup.classList.remove("error", "success");
+  errorMsg.textContent = "";
+
+  // 1. Required Check
+  if (input.hasAttribute("required") && !input.value.trim()) {
+    isValid = false;
+    message = `${input.previousElementSibling.innerText || "This field"} is required`;
+  }
+  // 2. Email Check
+  else if (input.type === "email" && input.value.trim()) {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(input.value.trim())) {
+      isValid = false;
+      message = "Please enter a valid email address";
+    }
+  }
+
+  if (!isValid) {
+    formGroup.classList.add("error");
+    errorMsg.textContent = message;
+  } else if (input.value.trim()) {
+    formGroup.classList.add("success");
+  }
+
+  return isValid;
+}
+
+const inputs = document.querySelectorAll(".login-form input");
+inputs.forEach(input => {
+  // Validate on blur
+  input.addEventListener("blur", () => {
+    validateField(input);
+    input.closest(".form-group")?.classList.remove("focused");
+  });
+
+  // Clear error on input
+  input.addEventListener("input", () => {
+    const formGroup = input.closest(".form-group");
+    if (formGroup?.classList.contains("error")) {
+      validateField(input);
+    }
+  });
+
+  // Focus effect
+  input.addEventListener("focus", () => {
+    input.closest(".form-group")?.classList.add("focused");
+  });
+});
+
+if (forgotPasswordForm) {
+  forgotPasswordForm.addEventListener("submit", (e) => {
+    // Validate all fields
+    let isFormValid = true;
+    inputs.forEach(input => {
+      if (!validateField(input)) isFormValid = false;
+    });
+
+    if (!isFormValid) {
+      e.preventDefault();
+      return;
+    }
+
+    // Standard submission logic (no preventDefault if valid, browser handles POST)
+    // Only add loader if valid
+
+    // const emailInput = document.getElementById("resetEmail");
+    // const email = emailInput.value.trim(); // Already validated above
 
     const submitBtn = forgotPasswordForm.querySelector(".login-btn");
     const btnText = submitBtn.querySelector(".btn-text");
     const btnLoader = submitBtn.querySelector(".btn-loader");
 
-    // Client-side validation only
-    if (!email) {
-      showMessage("Please enter your email address", "error");
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      showMessage("Please enter a valid email address", "error");
-      return;
-    }
-
     // UI loading state ONLY
     submitBtn.disabled = true;
     btnText.style.display = "none";
     btnLoader.style.display = "inline-flex";
-
-    // ✅ NO setTimeout
-    // ✅ NO fake success
-    // Backend will handle everything
   });
 }
 
@@ -119,17 +173,17 @@ document.head.appendChild(toastStyle);
 // INPUT EFFECTS (UNCHANGED)
 // ===============================
 document.querySelectorAll(".login-form input").forEach(input => {
-  input.addEventListener("focus", function() {
+  input.addEventListener("focus", function () {
     this.parentElement.parentElement.classList.add("focused");
   });
-  input.addEventListener("blur", function() {
+  input.addEventListener("blur", function () {
     this.parentElement.parentElement.classList.remove("focused");
   });
 });
 
 const emailInput = document.getElementById("resetEmail");
 if (emailInput) {
-  emailInput.addEventListener("blur", function() {
+  emailInput.addEventListener("blur", function () {
     this.value = this.value.trim();
   });
 }
