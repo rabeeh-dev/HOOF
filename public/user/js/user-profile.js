@@ -241,3 +241,15 @@ if (!document.getElementById("toast-styles")) {
     `;
     document.head.appendChild(style);
 }
+
+// Auto-hide the success message after 5 seconds
+document.addEventListener("DOMContentLoaded", () => {
+    const successAlert = document.querySelector('.server-message.success');
+    if (successAlert) {
+        setTimeout(() => {
+            successAlert.style.transition = "opacity 0.5s ease";
+            successAlert.style.opacity = "0";
+            setTimeout(() => successAlert.remove(), 500);
+        }, 5000);
+    }
+});

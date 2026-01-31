@@ -123,6 +123,13 @@
         </div>
 
         <div class="profile-main">
+          <% if (typeof successMessage !== 'undefined' && successMessage) { %>
+    <div class="server-message success">
+      <i class="fas fa-check-circle"></i>
+      <%= successMessage %>
+    </div>
+  <% } %>
+
           <div class="profile-tabs">
             <button class="tab-btn active" data-tab="details"><i class="fas fa-user-circle"></i><span>Details</span></button>
             <button class="tab-btn" data-tab="orders"><i class="fas fa-box"></i><span>Orders</span></button>

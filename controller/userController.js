@@ -108,61 +108,44 @@ exports.verifyOtp = async (req, res) => {
     const isOld = !!req.session.changeEmailFlow;
     const isNew = !!req.session.newEmailOtpSent;
 
-    // Choose the correct email to check against the DB
     let email = isNew ? req.session.tempNewEmail : isOld ? req.session.currentEmailToVerify : req.session.pendingUser?.email;
 
     if (!email) {
-      if (req.headers["content-type"] === "application/json") {
-        return res.status(400).json({ success: false, message: "Session expired" });
-      }
-      return res.redirect("/user/signup");
+      return res.status(400).json({ success: false, message: "Session expired" });
     }
 
     const otpRecord = await Otp.findOne({ email }).sort({ createdAt: -1 });
+    
     if (!otpRecord || otpRecord.expiresAt < Date.now() || !(await bcrypt.compare(otp, otpRecord.otp))) {
-      if (req.headers["content-type"] === "application/json") {
-        return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
-      }
-      return res.render("User/auth/verify-otp", { layout: "layouts/user", message: { type: "error", text: "Invalid or expired OTP" } });
+      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
     }
 
     await Otp.deleteMany({ email });
-
     let redirectUrl = "";
 
-    // BRANCHING LOGIC
     if (isNew) {
-      // SUCCESS: Update Database
       await User.findByIdAndUpdate(req.session.userId, { email: req.session.tempNewEmail });
       req.session.emailVerifiedForChange = req.session.newEmailOtpSent = req.session.tempNewEmail = null;
-      redirectUrl = "/user/profile";
-    }
+      redirectUrl = "/user/profile?emailChanged=true";
+    } 
     else if (isOld) {
-      // Allow access to New Email form
       req.session.emailVerifiedForChange = true;
       req.session.changeEmailFlow = null;
       redirectUrl = "/user/profile/change-email-form";
-    }
+    } 
     else {
-      // SIGNUP FLOW 
       const pendingUser = req.session.pendingUser;
       await User.create({ ...pendingUser, authProvider: "local", isEmailVerified: true });
       req.session.pendingUser = null;
-      
-      // ✅ MODIFIED: Added query parameter for feedback
-      redirectUrl = "/user/login?signupSuccess=true"; 
+      redirectUrl = "/user/login?signupSuccess=true";
     }
 
-    if (req.headers["content-type"] === "application/json") {
-      return res.json({ success: true, redirectUrl });
-    }
-    return res.redirect(redirectUrl);
+    // ✅ ALWAYS send JSON for AJAX requests
+    return res.json({ success: true, redirectUrl });
 
   } catch (err) {
-    if (req.headers["content-type"] === "application/json") {
-      return res.status(500).json({ success: false, message: "Error during verification." });
-    }
-    res.render("User/auth/verify-otp", { layout: "layouts/user", message: { type: "error", text: "Error during verification." } });
+    console.error("Verification Error:", err);
+    return res.status(500).json({ success: false, message: "Error during verification." });
   }
 };
 
@@ -350,31 +333,39 @@ exports.resetPasswordPage = async (req, res) => {
 };
 
 exports.resetPassword = async (req, res) => {
-  const { password, confirmPassword } = req.body;
+  try {
+    const { password, confirmPassword } = req.body;
 
-  if (password !== confirmPassword) {
-    return res.send("Passwords do not match");
+    if (password !== confirmPassword) {
+      return res.send("Passwords do not match");
+    }
+
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) return res.send("Invalid or expired token");
+
+    // Update password
+    user.password = await bcrypt.hash(password, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save({ validateBeforeSave: false });
+
+    // ✅ MODIFIED: Redirect to profile with a success flag
+    res.redirect("/user/profile?passwordChanged=true");
+
+  } catch (err) {
+    console.error("Reset Password Error:", err);
+    res.status(500).send("Internal Server Error");
   }
-
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(req.params.token)
-    .digest("hex");
-
-  const user = await User.findOne({
-    resetPasswordToken: hashedToken,
-    resetPasswordExpires: { $gt: Date.now() },
-  });
-
-  if (!user) return res.send("Invalid or expired token");
-
-  user.password = await bcrypt.hash(password, 10);
-  user.resetPasswordToken = undefined;
-  user.resetPasswordExpires = undefined;
-
-  await user.save({ validateBeforeSave: false });
-
-  res.redirect("/user/login");
 };
 
 /* =========================
@@ -399,21 +390,38 @@ exports.logout = (req, res) => {
   });
 };
 
-
 /* =========================
-   GET USER PROFILE
+   GET USER PROFILE 
 ========================= */
-// 1. Show the Profile Page
-
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.session.userId);
+    const userId = req.session.userId;
+    if (!userId) return res.redirect('/user/login');
+
+    const user = await User.findById(userId);
+    const addresses = await Address.find({ userId: userId });
+    
+    // Check flags in the URL
+    const emailChanged = req.query.emailChanged === 'true';
+    const passwordChanged = req.query.passwordChanged === 'true';
+
+    // Determine which message to show
+    let successMessage = null;
+    if (emailChanged) {
+      successMessage = "Your email has been updated successfully!";
+    } else if (passwordChanged) {
+      successMessage = "Your password has been changed successfully!";
+    }
+
     res.render('User/user-profile', {
       user,
+      addresses,
       title: 'My Profile | HOOF',
-      layout: 'layouts/user'
+      layout: 'layouts/user',
+      successMessage: successMessage // Passes the specific message to EJS
     });
   } catch (err) {
+    console.error("Profile Error:", err);
     res.redirect('/user/home');
   }
 };
@@ -524,22 +532,3 @@ exports.changePasswordRequest = async (req, res) => {
   }
 };
 
-// Import the new model
-
-exports.getProfile = async (req, res) => {
-  try {
-    const user = await User.findById(req.session.userId);
-
-    // FETCH ADDRESSES HERE
-    const addresses = await Address.find({ userId: req.session.userId });
-
-    res.render('User/user-profile', {
-      user,
-      addresses,
-      title: 'My Profile | HOOF'
-    });
-  } catch (err) {
-    console.error(err);
-    res.redirect('/user/home');
-  }
-};
