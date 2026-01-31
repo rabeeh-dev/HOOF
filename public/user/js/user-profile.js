@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             try {
                 const response = await fetch('/user/profile/update', {
-                    method: 'POST',
+                    method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });

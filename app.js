@@ -4,11 +4,9 @@ const express = require("express");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const path = require("path");
-
 const connectDB = require("./config/db");
 const passport = require("./config/passport");
 
-// ================== INITIAL SETUP ==================
 const app = express();
 connectDB();
 
@@ -65,12 +63,10 @@ app.use((req, res, next) => {
 // ================== ROUTES ==================
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
-const testMailRoutes = require("./routes/testMail");
 const adminRoutes = require('./routes/adminRoutes');
 
 app.use("/user", userRoutes);
 app.use("/auth", authRoutes);
-app.use("/", testMailRoutes);
 
 app.use('/admin', (req, res, next) => {
     next();

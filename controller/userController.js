@@ -129,13 +129,13 @@ exports.verifyOtp = async (req, res) => {
     } 
     
     if (isOld) {
-      // MID-STEP: Allow access to New Email form
+      // Allow access to New Email form
       req.session.emailVerifiedForChange = true;
       req.session.changeEmailFlow = null; 
       return res.redirect("/user/profile/change-email-form");
     }
 
-    // SIGNUP FLOW (Original)
+    // SIGNUP FLOW 
     const pendingUser = req.session.pendingUser;
     await User.create({ ...pendingUser, authProvider: "local", isEmailVerified: true });
     req.session.pendingUser = null;
@@ -219,7 +219,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    // 2. THE BAN CHECK (Updated to use 'error' variable for your EJS)
+    // 2. THE BAN CHECK
     if (user.isBlocked) {
       return res.render("User/auth/login", {
         layout: "layouts/user",
@@ -288,6 +288,7 @@ exports.forgotPassword = async (req, res) => {
       layout: "layouts/user",
       message: "If an account exists, a reset link has been sent.",
     });
+
   } catch (err) {
     console.error("Forgot password error:", err);
     res.render("User/auth/forgot-password", {
@@ -376,7 +377,7 @@ exports.logout = (req, res) => {
    GET USER PROFILE
 ========================= */
 // 1. Show the Profile Page
-// Render Profile Page
+
 exports.getProfile = async (req, res) => {
     try {
         const user = await User.findById(req.session.userId);

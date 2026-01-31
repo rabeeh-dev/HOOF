@@ -4,7 +4,7 @@ const userController = require("../controller/userController");
 const { isUser, isLoggedOut } = require("../middleware/auth");
 const passport = require("../config/passport");
 
-// ================= AUTH PAGES =================
+// =================  Normal AUTH PAGES =================
 // Use isLoggedOut so a logged-in user can't sign up again
 router.get("/signup", isLoggedOut, userController.signupPage);
 router.post("/signup", isLoggedOut, userController.signup);
@@ -15,11 +15,11 @@ router.get("/verify-otp", (req, res) => {
     error: null,
   });
 });
+
 router.post("/verify-otp", userController.verifyOtp);
 router.post("/resend-otp", userController.resendOtp);
 
-
-// ================= G AUTH PAGES =================
+// ================= Google AUTH PAGES =================
 
 // 1. Redirect to Google (isLoggedOut is fine here)
 router.get("/auth/google", isLoggedOut, 
@@ -68,7 +68,7 @@ router.get('/home', isUser, (req, res) => {
 
 // ================= USER PROFILE =================
 router.get('/profile', isUser, userController.getProfile);
-router.post('/profile/update', isUser, userController.updateProfile);
+router.patch('/profile/update', isUser, userController.updateProfile);
 
 // ================= CHANGE EMAIL =================
 // 1. Trigger the process (Send OTP to current email)
@@ -83,7 +83,6 @@ router.get('/profile/change-email-form', isUser, (req, res) => {
 // 3. Process the new email (Send OTP to the new email)
 router.post('/profile/change-email-new-otp', isUser, userController.sendNewEmailOtp);
 
-// Note: Both OTP entries will POST to your existing /verify-otp route
 
 // ================= CHANGE PASSWORD =================
 // Trigger Change Password (reuses forgot password logic)
@@ -96,7 +95,6 @@ const addressController = require("../controller/addressController");
 
 router.post('/address/add', isUser, addressController.addAddress);
 
-// Route to delete an address
 router.delete('/address/delete/:id', isUser, addressController.deleteAddress);
 
 
