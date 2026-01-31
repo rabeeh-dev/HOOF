@@ -1,5 +1,5 @@
-const Admin = require("../model/adminModel");
-const User = require("../model/userModels");
+const Admin = require("../model/Admin");
+const User = require("../model/User");
 const bcrypt = require("bcrypt");
 
 // 1. Load the existing sign-in page
@@ -9,7 +9,7 @@ exports.loadLogin = async (req, res) => {
         if (req.session.adminId) {
             return res.redirect('/admin/dashboard');
         }
-        res.render('Admin/auth/login', { message: null }); 
+        res.render('Admin/auth/login', { message: null });
     } catch (error) {
         console.error("Load Login Error:", error.message);
         res.status(500).send("Internal Server Error");
@@ -26,11 +26,11 @@ exports.verifyAdmin = async (req, res) => {
             const passwordMatch = await bcrypt.compare(password, adminData.password);
             if (passwordMatch) {
                 req.session.adminId = adminData._id;
-                
+
                 return res.status(200).json({ success: true });
             }
         }
-        
+
         return res.status(401).json({ success: false, message: "Invalid email or password" });
 
     } catch (error) {
@@ -41,8 +41,8 @@ exports.verifyAdmin = async (req, res) => {
 // 3. Load Admin Dashboard (CRITICAL: Added this to fix your crash)
 exports.loadDashboard = async (req, res) => {
     try {
-        res.render('Admin/admin-dashboard', { 
-            title: "Admin Dashboard | HOOF" 
+        res.render('Admin/admin-dashboard', {
+            title: "Admin Dashboard | HOOF"
         });
     } catch (error) {
         console.error("Load Dashboard Error:", error.message);
@@ -60,11 +60,11 @@ exports.loadCustomers = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const totalUsers = await User.countDocuments({});
-        
-        
+
+
         const users = await User.find({})
-            .select("-password") 
-            .sort({ createdAt: -1 }) 
+            .select("-password")
+            .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
 
@@ -85,11 +85,11 @@ exports.toggleUserStatus = async (req, res) => {
     try {
         const { id, action } = req.params;
 
-        const blockStatus = (action === 'block'); 
+        const blockStatus = (action === 'block');
 
         const updatedUser = await User.findByIdAndUpdate(
-            id, 
-            { isBlocked: blockStatus }, 
+            id,
+            { isBlocked: blockStatus },
             { new: true }
         );
 
@@ -108,12 +108,12 @@ exports.toggleUserStatus = async (req, res) => {
 exports.logout = (req, res) => {
     // Destroy the session
     req.session.destroy((err) => {
-      if (err) {
-        console.log("Logout error:", err);
-        return res.redirect('/admin/dashboard');
-      }
-      // Clear the cookie
-      res.clearCookie('connect.sid'); 
-      res.redirect('/admin/login');
+        if (err) {
+            console.log("Logout error:", err);
+            return res.redirect('/admin/dashboard');
+        }
+        // Clear the cookie
+        res.clearCookie('connect.sid');
+        res.redirect('/admin/login');
     });
 };

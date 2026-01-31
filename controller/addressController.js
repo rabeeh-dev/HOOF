@@ -1,4 +1,4 @@
-const Address = require("../model/addressModel");
+const Address = require("../model/Address");
 
 // 1. Add Address
 exports.addAddress = async (req, res) => {
@@ -43,7 +43,7 @@ exports.deleteAddress = async (req, res) => {
     try {
         const addressId = req.params.id;
         await Address.findOneAndDelete({ _id: addressId, userId: req.session.userId });
-        
+
         res.status(200).json({ success: true, message: "Address deleted successfully." });
     } catch (error) {
         console.error("Delete Address Error:", error);

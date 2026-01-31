@@ -1,10 +1,10 @@
-const User = require("../model/userModels");
+const User = require("../model/User");
 
 const isUser = (req, res, next) => {
     if (req.session && req.session.userId) {
         return next();
     }
-    res.redirect('/user/login'); 
+    res.redirect('/user/login');
 };
 
 const isLoggedOut = (req, res, next) => {
@@ -30,11 +30,11 @@ const checkBlocked = async (req, res, next) => {
                 return req.session.destroy((err) => {
                     if (err) console.log("Error destroying session:", err);
                     res.clearCookie("hoof.sid");
-                    
+
                     // Show the 404 page as requested
-                    return res.status(404).render("User/404", { 
-                        layout: "layouts/user", 
-                        title: "404 Not Found" 
+                    return res.status(404).render("User/404", {
+                        layout: "layouts/user",
+                        title: "404 Not Found"
                     });
                 });
             }

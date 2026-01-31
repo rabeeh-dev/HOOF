@@ -1,10 +1,10 @@
-const User = require("../model/userModels");
+const User = require("../model/User");
 const bcrypt = require("bcrypt");
-const Otp = require("../model/otpModel");
+const Otp = require("../model/Otp");
 const { generateOtp } = require("../utils/generateOtp");
 const { sendOtpEmail, sendResetPasswordEmail } = require("../utils/sendEmail");
 const crypto = require("crypto");
-const Address = require("../model/addressModel");
+const Address = require("../model/Address");
 
 /* =========================
    SIGNUP PAGE
@@ -115,7 +115,7 @@ exports.verifyOtp = async (req, res) => {
     }
 
     const otpRecord = await Otp.findOne({ email }).sort({ createdAt: -1 });
-    
+
     if (!otpRecord || otpRecord.expiresAt < Date.now() || !(await bcrypt.compare(otp, otpRecord.otp))) {
       return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
     }
@@ -127,12 +127,12 @@ exports.verifyOtp = async (req, res) => {
       await User.findByIdAndUpdate(req.session.userId, { email: req.session.tempNewEmail });
       req.session.emailVerifiedForChange = req.session.newEmailOtpSent = req.session.tempNewEmail = null;
       redirectUrl = "/user/profile?emailChanged=true";
-    } 
+    }
     else if (isOld) {
       req.session.emailVerifiedForChange = true;
       req.session.changeEmailFlow = null;
       redirectUrl = "/user/profile/change-email-form";
-    } 
+    }
     else {
       const pendingUser = req.session.pendingUser;
       await User.create({ ...pendingUser, authProvider: "local", isEmailVerified: true });
@@ -400,7 +400,7 @@ exports.getProfile = async (req, res) => {
 
     const user = await User.findById(userId);
     const addresses = await Address.find({ userId: userId });
-    
+
     // Check flags in the URL
     const emailChanged = req.query.emailChanged === 'true';
     const passwordChanged = req.query.passwordChanged === 'true';
