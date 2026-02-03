@@ -586,3 +586,34 @@ exports.updateProfileImage = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error during upload" });
     }
 };
+
+exports.deleteProfileImage = async (req, res) => {
+    try {
+        const fs = require('fs');
+        const path = require('path');
+        const userId = req.session.userId;
+
+        const user = await User.findById(userId);
+        if (!user || !user.profileImage) {
+            return res.status(400).json({ success: false, message: "No image to delete" });
+        }
+
+        // 1. Delete the file from the server
+        const imagePath = path.join(__dirname, '../public', user.profileImage);
+        if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath);
+        }
+
+        // 2. Clear the field in MongoDB
+        user.profileImage = "";
+        await user.save();
+
+        // 3. Update session if necessary
+        if (req.session.user) req.session.user.profileImage = "";
+
+        res.json({ success: true, message: "Profile image deleted" });
+    } catch (error) {
+        console.error("Delete Image Error:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};

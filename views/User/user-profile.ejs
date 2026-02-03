@@ -8,28 +8,18 @@
   <link rel="stylesheet" href="/user/css/user-profile.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.3/dist/heic2any.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
   <style>
     .validation-message { font-size: 0.8rem; height: 1.2em; display: block; margin-top: 4px; }
     .validation-message.error { color: #dc3545; }
     .validation-message.success { color: #28a745; }
     input.invalid { border-color: #dc3545 !important; }
     input.valid { border-color: #28a745 !important; }
-
-    /* NEW: Avatar specific style to handle the image display */
-    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-    .avatar-edit-icon { 
-      position: absolute; bottom: 5px; right: 5px; background: #ff914d; 
-      color: white; width: 32px; height: 32px; border-radius: 50%; 
-      display: flex; align-items: center; justify-content: center; 
-      cursor: pointer; border: 3px solid white; z-index: 2;
-    }
   </style>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
 </head>
 
 <body>
@@ -44,23 +34,13 @@
           <li><a href="#contact">Contact</a></li>
         </ul>
         <div class="nav-actions">
-          <a href="#" class="nav-icon" title="Wishlist">
-            <i class="far fa-heart"></i>
-            <span class="nav-badge">0</span>
-          </a>
-          <a href="#" class="nav-icon cart-icon" title="Cart">
-            <i class="fas fa-shopping-bag"></i>
-            <span class="nav-badge cart-count">0</span>
-          </a>
+          <a href="#" class="nav-icon" title="Wishlist"><i class="far fa-heart"></i><span class="nav-badge">0</span></a>
+          <a href="#" class="nav-icon cart-icon" title="Cart"><i class="fas fa-shopping-bag"></i><span class="nav-badge cart-count">0</span></a>
           <div class="profile-dropdown-wrapper">
-            <a href="#" class="nav-icon profile-icon" title="Profile" id="profileToggle">
-              <i class="fas fa-user"></i>
-            </a>
+            <a href="#" class="nav-icon profile-icon" title="Profile" id="profileToggle"><i class="fas fa-user"></i></a>
             <div class="profile-dropdown" id="profileDropdown">
               <div class="dropdown-header">
-                <div class="dropdown-avatar" style="font-family: silver; text-transform: uppercase;">
-                  <%= user.fullName.charAt(0) %>
-                </div>
+                <div class="dropdown-avatar" style="font-family: silver; text-transform: uppercase;"><%= user.fullName.charAt(0) %></div>
                 <div class="dropdown-user-info">
                   <h4><%= user.fullName %></h4>
                   <p><%= user.email %></p>
@@ -75,9 +55,7 @@
               </ul>
               <div class="dropdown-divider"></div>
               <div class="dropdown-footer">
-                <form action="/user/logout" method="POST" id="logoutForm">
-                  <button type="submit" class="dropdown-item logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
-                </form>
+                <form action="/user/logout" method="POST" id="logoutForm"><button type="submit" class="dropdown-item logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button></form>
               </div>
             </div>
           </div>
@@ -90,53 +68,35 @@
   <section class="breadcrumb-section">
     <div class="container">
       <div class="breadcrumb">
-        <a href="/user/home">Home</a><span>/</span>
-        <a href="/user/profile">User</a><span>/</span>
-        <span>Profile</span>
+        <a href="/user/home">Home</a><span>/</span><a href="/user/profile">User</a><span>/</span><span>Profile</span>
       </div>
     </div>
   </section>
 
   <section class="profile-section">
     <div class="container">
-      <div class="profile-header-title">
-        <h1>My Profile</h1>
-        <p>Manage your account</p>
-      </div>
+      <div class="profile-header-title"><h1>My Profile</h1><p>Manage your account</p></div>
 
       <div class="profile-layout">
         <div class="profile-sidebar">
           <div class="profile-card">
-            
             <div class="profile-avatar-wrapper">
-              <div class="profile-avatar" id="profileAvatar" style="font-family: silver; text-transform: uppercase; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              <div class="profile-avatar" id="profileAvatar">
                 <% if (user.profileImage) { %>
                   <img src="<%= user.profileImage %>" id="avatarImg" alt="Profile">
                 <% } else { %>
-                  <%= user.fullName.charAt(0) %>
+                  <span id="avatarLetter"><%= user.fullName.charAt(0) %></span>
                 <% } %>
               </div>
-              <label for="imageUpload" class="avatar-edit-icon">
-                <i class="fas fa-camera"></i>
-                <input type="file" id="imageUpload" hidden accept="image/*">
-              </label>
-              <% if (user.isEmailVerified) { %>
-                <div class="avatar-verified"><i class="fas fa-check"></i></div>
-              <% } %>
+              <label for="imageUpload" class="avatar-edit-icon"><i class="fas fa-camera"></i><input type="file" id="imageUpload" hidden accept="image/*"></label>
+              <button type="button" id="removePhotoBtn" class="avatar-remove-icon" style="<%= user.profileImage ? 'display: flex;' : 'display: none;' %>"><i class="fas fa-times"></i></button>
             </div>
-
             <h3 class="profile-name" id="sidebarName"><%= user.fullName %></h3>
             <button class="btn-edit-profile" id="editToggleBtn">Edit Profile</button>
             <div class="profile-stats">
-              <div class="stat-item">
-                <p class="stat-label">Member Since</p>
-                <p class="stat-value"><%= new Date(user.createdAt).toLocaleString('default', { month: 'short' , year: 'numeric' }) %></p>
-              </div>
+              <div class="stat-item"><p class="stat-label">Member Since</p><p class="stat-value"><%= new Date(user.createdAt).toLocaleString('default', { month: 'short' , year: 'numeric' }) %></p></div>
               <div class="stat-divider"></div>
-              <div class="stat-item">
-                <p class="stat-label">Auth</p>
-                <p class="stat-value" style="text-transform: capitalize;"><%= user.authProvider %></p>
-              </div>
+              <div class="stat-item"><p class="stat-label">Auth</p><p class="stat-value" style="text-transform: capitalize;"><%= user.authProvider %></p></div>
             </div>
           </div>
         </div>
@@ -160,47 +120,26 @@
               <div class="content-header"><h2>Account Details</h2></div>
               <form class="profile-form" id="profileForm">
                 <div class="form-row">
-                  <div class="form-group">
-                    <label for="fullName">Full Name</label>
-                    <input type="text" id="fullName" name="fullName" value="<%= user.fullName %>" disabled />
-                  </div>
+                  <div class="form-group"><label for="fullName">Full Name</label><input type="text" id="fullName" name="fullName" value="<%= user.fullName %>" disabled /></div>
                   <div class="form-group">
                     <label for="emailAddress">Email Address</label>
-                    <div class="password-input-wrapper">
-                      <input type="email" value="<%= user.email %>" disabled />
-                      <a href="javascript:void(0)" class="change-password-link" onclick="verifyAndChange('email')">Change Email</a>
-                    </div>
+                    <div class="password-input-wrapper"><input type="email" value="<%= user.email %>" disabled /><a href="javascript:void(0)" class="change-password-link" onclick="verifyAndChange('email')">Change Email</a></div>
                   </div>
                 </div>
                 <div class="form-row">
-                  <div class="form-group">
-                    <label for="phoneNumber">Phone Number</label>
-                    <input type="tel" id="phoneNumber" name="phoneNumber" value="<%= user.phone || '' %>" placeholder="Not set" disabled />
-                  </div>
-                  <div class="form-group">
-                    <label for="dateOfBirth">Date of Birth</label>
-                    <input type="date" id="dateOfBirth" name="dateOfBirth" value="<%= user.dob ? user.dob.toISOString().split('T')[0] : '' %>" disabled />
-                  </div>
+                  <div class="form-group"><label for="phoneNumber">Phone Number</label><input type="tel" id="phoneNumber" name="phoneNumber" value="<%= user.phone || '' %>" placeholder="Not set" disabled /></div>
+                  <div class="form-group"><label for="dateOfBirth">Date of Birth</label><input type="date" id="dateOfBirth" name="dateOfBirth" value="<%= user.dob ? user.dob.toISOString().split('T')[0] : '' %>" disabled /></div>
                 </div>
                 <div class="form-group">
                   <label for="password">Password</label>
-                  <div class="password-input-wrapper">
-                    <input type="password" value="••••••••••••••••" disabled />
-                    <a href="javascript:void(0)" class="change-password-link" onclick="verifyAndChange('password')">Update Password</a>
-                  </div>
+                  <div class="password-input-wrapper"><input type="password" value="••••••••••••••••" disabled /><a href="javascript:void(0)" class="change-password-link" onclick="verifyAndChange('password')">Update Password</a></div>
                 </div>
-                <div class="form-actions" id="formActions" style="display: none;">
-                  <button type="submit" class="btn primary">Save Changes</button>
-                  <button type="button" class="btn outline" id="cancelEdit">Cancel</button>
-                </div>
+                <div class="form-actions" id="formActions" style="display: none;"><button type="submit" class="btn primary">Save Changes</button><button type="button" class="btn outline" id="cancelEdit">Cancel</button></div>
               </form>
             </div>
 
             <div class="tab-content" id="address-tab">
-              <div class="content-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>My Addresses</h2>
-                <button type="button" class="btn primary" id="openAddressModal">Add New Address</button>
-              </div>
+              <div class="content-header" style="display: flex; justify-content: space-between; align-items: center;"><h2>My Addresses</h2><button type="button" class="btn primary" id="openAddressModal">Add New Address</button></div>
               <div class="address-grid" id="addressGrid">
                 <% if (addresses && addresses.length> 0) { %>
                   <% addresses.forEach(addr=> { %>
@@ -208,14 +147,10 @@
                       <span class="address-type-badge"><%= addr.addressType %></span>
                       <h4><%= addr.fullName %></h4>
                       <p class="address-details"><%= addr.houseName %><br><%= addr.city %>, <%= addr.state %> - <strong><%= addr.pincode %></strong><br>Phone: <%= addr.mobile %></p>
-                      <div class="address-actions">
-                        <a href="javascript:void(0)" onclick="deleteAddress('<%= addr._id %>')" class="action-link delete"><i class="fas fa-trash"></i> Delete</a>
-                      </div>
+                      <div class="address-actions"><a href="javascript:void(0)" onclick="deleteAddress('<%= addr._id %>')" class="action-link delete"><i class="fas fa-trash"></i> Delete</a></div>
                     </div>
                   <% }) %>
-                <% } else { %>
-                  <div class="empty-state"><p>No addresses saved yet.</p></div>
-                <% } %>
+                <% } else { %><div class="empty-state"><p>No addresses saved yet.</p></div><% } %>
               </div>
             </div>
           </div>
@@ -227,73 +162,21 @@
   <div id="cropperModal" class="custom-modal" style="display:none;">
     <div class="modal-overlay"></div>
     <div class="modal-container" style="max-width: 500px;">
-      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3>Crop Profile Picture</h3>
-        <button type="button" id="closeCropperHeader" style="background:none; border:none; font-size: 1.5rem; color: var(--text-main); cursor:pointer;">&times;</button>
-      </div>
-      <div style="width: 100%; height: 350px; background: #f0f0f0; border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
-        <img id="cropperImage" src="" style="max-width: 100%; display: block;">
-      </div>
-      <div class="modal-actions" style="display: flex; gap: 12px;">
-        <button type="button" id="cropButton" class="btn primary" style="flex: 1;">Crop & Save</button>
-        <button type="button" id="closeCropper" class="btn outline" style="flex: 1;">Cancel</button>
-      </div>
+      <div class="modal-header"><h3>Crop Profile Picture</h3><button type="button" id="closeCropperHeader" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button></div>
+      <div style="width: 100%; height: 350px; background: #f0f0f0; border-radius: 12px; overflow: hidden; margin-bottom: 20px;"><img id="cropperImage" src="" style="max-width: 100%; display: block;"></div>
+      <div class="modal-actions" style="display: flex; gap: 12px;"><button type="button" id="cropButton" class="btn primary" style="flex: 1;">Crop & Save</button><button type="button" id="closeCropper" class="btn outline" style="flex: 1;">Cancel</button></div>
     </div>
   </div>
 
-  <div id="addressModal" class="custom-modal" style="display:none;">
+  <div id="imageDeleteModal" class="custom-modal" style="display:none;">
     <div class="modal-overlay"></div>
-    <div class="modal-container">
-      <form id="addressForm">
-        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <h3>Add New Address</h3>
-          <button type="button" id="closeAddressModal" style="background:none; border:none; font-size: 1.5rem; color: var(--text-main); cursor:pointer;">&times;</button>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <div class="form-group"><label>Full Name</label><input type="text" name="fullName" placeholder="Receiver's name" required></div>
-          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group">
-              <label>Mobile Number</label>
-              <input type="tel" name="mobile" id="newAddressMobile" placeholder="10-digit mobile" maxlength="10" required>
-              <span class="validation-message" id="mobileError"></span>
-            </div>
-            <div class="form-group">
-              <label>Pincode</label>
-              <input type="text" name="pincode" id="newAddressPincode" placeholder="6-digit pincode" maxlength="6" required>
-              <span class="validation-message" id="pincodeError"></span>
-            </div>
-          </div>
-          <div class="form-group"><label>House Name / Apartment</label><input type="text" name="houseName" placeholder="House name or number" required></div>
-          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group"><label>City</label><input type="text" name="city" placeholder="City/Town" required></div>
-            <div class="form-group"><label>State</label><input type="text" name="state" placeholder="State" required></div>
-          </div>
-          <div class="form-group">
-            <label>Address Type</label>
-            <select name="addressType" style="padding: 10px; border: 2px solid rgba(0,0,0,0.1); border-radius: 12px; font-family: inherit;">
-              <option value="Home">Home</option>
-              <option value="Work">Work</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          <button type="submit" class="btn primary" style="width: 100%; margin-top: 10px;">Save Address</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div id="deleteConfirmModal" class="custom-modal" style="display:none;">
-    <div class="modal-overlay"></div>
-    <div class="modal-container" style="max-width: 400px; text-align: center;">
-      <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
-        <i class="fas fa-exclamation-circle" style="font-size: 3rem; color: #dc3545; margin-bottom: 10px;"></i>
+    <div class="modal-container" style="max-width: 420px; text-align: center;">
+      <div class="modal-header" style="justify-content: center; border: none; padding-bottom: 0;">
+        <div style="background: rgba(220, 53, 69, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;"><i class="fas fa-trash-alt" style="font-size: 2.5rem; color: #dc3545;"></i></div>
       </div>
-      <h3 style="margin-bottom: 10px;">Delete Address?</h3>
-      <p style="color: #666; margin-bottom: 25px;">Are you sure you want to remove this address? This action cannot be undone.</p>
-      <div class="modal-actions" style="display: flex; gap: 15px; justify-content: center;">
-        <button id="cancelDeleteBtn" class="btn outline" style="padding: 10px 25px;">Cancel</button>
-        <button id="confirmDeleteBtn" class="btn primary" style="background-color: #dc3545; border-color: #dc3545; padding: 10px 25px;">Delete</button>
-      </div>
+      <h3 style="font-size: 1.5rem; margin-bottom: 10px;">Remove Photo?</h3>
+      <p style="color: #666; margin-bottom: 25px; line-height: 1.6;">Are you sure you want to delete your profile picture? This action will revert your avatar to your initials.</p>
+      <div class="modal-footer" style="display: flex; gap: 12px; border: none; padding: 0;"><button type="button" id="confirmImageDelete" class="btn primary" style="flex: 1; background: #dc3545; border-color: #dc3545; color: white;">Yes, Delete</button><button type="button" id="cancelImageDelete" class="btn outline" style="flex: 1;">Cancel</button></div>
     </div>
   </div>
 
@@ -307,5 +190,4 @@
 
   <script src="/user/js/user-profile.js" defer></script>
 </body>
-
 </html>

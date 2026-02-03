@@ -808,3 +808,128 @@ input:disabled {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Position the Remove Button opposite to the Camera Icon */
+.avatar-remove-icon {
+    position: absolute;
+    bottom: 5px;
+    left: 5px; /* Opposite side of camera */
+    background: #ffffff;
+    color: #dc3545;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 10;
+    transition: all 0.2s ease;
+}
+
+.avatar-remove-icon:hover {
+    background: #dc3545;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Ensure the initial letter is styled correctly when img is gone */
+.profile-avatar span {
+    font-size: 3rem;
+    font-family: silver;
+    text-transform: uppercase;
+    color: white;
+}
+/* Mirror icons: Camera on Right, Remove on Left */
+.avatar-edit-icon { right: 5px; background: var(--accent); }
+.avatar-remove-icon { left: 5px; background: #fff; color: #dc3545; display: flex; align-items: center; justify-content: center; }
+
+/* Initials Fallback Style */
+#avatarLetter {
+    font-size: 3rem;
+    font-family: silver;
+    text-transform: uppercase;
+    color: white;
+    display: block;
+}
+
+/* Modal Overlay Centering Fix */
+/* Ensure the modal behaves as a full-screen flex container */
+.custom-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none; /* JS toggles to flex */
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 21, 20, 0.7);
+    backdrop-filter: blur(8px); /* The "Full Covered" blur effect */
+}
+
+/* Small Delete Icon on the Avatar */
+.avatar-remove-icon {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    background: white;
+    color: #dc3545;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+.avatar-remove-icon:hover {
+    background: #dc3545;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* FIXED: This ensures the modal covers the WHOLE screen like your cropper */
+.custom-modal {
+    position: fixed; /* Must be fixed, not absolute */
+    inset: 0;
+    z-index: 9999;
+    display: none; /* JS toggles this to 'flex' */
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 21, 20, 0.7); /* Dark semi-transparent background */
+    backdrop-filter: blur(8px); /* The "Fully Covered" blur effect */
+}
+
+.modal-container {
+    position: relative;
+    background: white;
+    padding: 30px;
+    border-radius: 24px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    z-index: 10001;
+    animation: modalPopUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalPopUp {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}

@@ -74,6 +74,7 @@ router.patch('/profile/update', isUser, userController.updateProfile);
 
 // ================= USER PROFILE =================
 router.post('/profile/update-image', isUser, upload.single('profileImage'), userController.updateProfileImage);
+router.delete('/profile/delete-image', isUser, userController.deleteProfileImage);
 // ================= CHANGE EMAIL =================
 // 1. Trigger the process (Send OTP to current email)
 router.get('/profile/change-email-start', isUser, userController.getChangeEmailOtp);
