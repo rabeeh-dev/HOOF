@@ -532,3 +532,57 @@ exports.changePasswordRequest = async (req, res) => {
   }
 };
 
+//Profile Picture Updating Logic 
+exports.updateProfileImage = async (req, res) => {
+    try {
+        const fs = require('fs');
+        const path = require('path');
+
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "No file uploaded" });
+        }
+
+        const userId = req.session.userId; 
+        const newImagePath = `/uploads/profile/${req.file.filename}`;
+
+        // 1. Find and Update the User
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        // 2. Delete old image (to prevent server clutter)
+        if (user.profileImage && user.profileImage.startsWith('/uploads/profile/')) {
+            const oldPath = path.join(__dirname, '../public', user.profileImage);
+            if (fs.existsSync(oldPath)) {
+                fs.unlinkSync(oldPath);
+            }
+        }
+
+        // 3. Update the database field
+        user.profileImage = newImagePath;
+        await user.save(); // Await is crucial here!
+
+        // 4. IMPORTANT: Update the topbar/navbar avatar instantly
+        // If your navbar uses user.profileImage from the session, update it here:
+        if (req.session.user) {
+            req.session.user.profileImage = newImagePath;
+        }
+
+        // 5. Explicitly save the session before sending the response
+        req.session.save((err) => {
+            if (err) {
+                console.error("Session Save Error:", err);
+                return res.status(500).json({ success: false, message: "Session update failed" });
+            }
+            // Send success only AFTER session is saved
+            res.json({ 
+                success: true, 
+                message: "Profile picture updated!", 
+                imagePath: newImagePath 
+            });
+        });
+
+    } catch (error) {
+        console.error("Profile Image Upload Error:", error);
+        res.status(500).json({ success: false, message: "Server error during upload" });
+    }
+};

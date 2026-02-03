@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controller/userController");
-const { isUser, isLoggedOut } = require("../middleware/auth");
+const { isUser, isLoggedOut, isLogin } = require("../middleware/auth");
+const upload = require('../middleware/multer');
 const passport = require("../config/passport");
+
 
 // =================  Normal AUTH PAGES =================
 // Use isLoggedOut so a logged-in user can't sign up again
@@ -70,6 +72,8 @@ router.get('/home', isUser, (req, res) => {
 router.get('/profile', isUser, userController.getProfile);
 router.patch('/profile/update', isUser, userController.updateProfile);
 
+// ================= USER PROFILE =================
+router.post('/profile/update-image', isUser, upload.single('profileImage'), userController.updateProfileImage);
 // ================= CHANGE EMAIL =================
 // 1. Trigger the process (Send OTP to current email)
 router.get('/profile/change-email-start', isUser, userController.getChangeEmailOtp);

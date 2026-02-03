@@ -30,6 +30,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
     let addressIdToDelete = null;
 
+    // --- NEW: CROPPER SELECTORS ---
+    const imageUpload = document.getElementById('imageUpload');
+    const cropperModal = document.getElementById('cropperModal');
+    const cropperImage = document.getElementById('cropperImage');
+    const cropButton = document.getElementById('cropButton');
+    const closeCropper = document.getElementById('closeCropper');
+    const closeCropperHeader = document.getElementById('closeCropperHeader');
+    let cropper; 
+
     // --- 1. MOBILE NAVIGATION ---
     if (navToggle && navLinks) {
         navToggle.addEventListener("click", () => navLinks.classList.toggle("open"));
@@ -138,6 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("click", (e) => {
         if (e.target.classList.contains("modal-overlay")) {
             addressModal.style.display = "none";
+            if (cropperModal) cropperModal.style.display = "none";
         }
     });
 
@@ -147,21 +157,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const formData = new FormData(addressForm);
             const data = Object.fromEntries(formData.entries());
 
-            // --- FRONTEND VALIDATION ---
             if (data.fullName.trim().length < 3) return showToast("Name is too short", "error");
-
-            // Indian Mobile Number Regex (Starts with 6-9, 10 digits total)
             if (!/^[6-9]\d{9}$/.test(data.mobile)) {
                 return showToast("Enter a valid 10-digit mobile number", "error");
             }
-
             if (data.houseName.trim().length < 2) return showToast("House name is required", "error");
-
-            // 6 Digit Pincode
             if (!/^\d{6}$/.test(data.pincode)) {
                 return showToast("Pincode must be 6 digits", "error");
             }
-
             if (data.city.trim().length < 2) return showToast("City is required", "error");
             if (data.state.trim().length < 2) return showToast("State is required", "error");
 
@@ -185,13 +188,107 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
-    // --- 7. INLINE VALIDATION LOGIC ---
+
+    // --- 7. NEW: CROPPER LOGIC (WITH HEIC AUTO-CONVERSION) ---
+    if (imageUpload) {
+        imageUpload.addEventListener('change', async function (e) {
+            let file = e.target.files[0];
+            if (!file) return;
+
+            // Check if file is HEIC/HEIF
+            const isHEIC = file.type === "image/heic" || 
+                           file.type === "image/heif" || 
+                           file.name.toLowerCase().endsWith(".heic") || 
+                           file.name.toLowerCase().endsWith(".heif");
+
+            if (isHEIC) {
+                showToast("Converting iPhone photo... Please wait.", "info");
+                try {
+                    // Convert HEIC to JPEG using heic2any
+                    const convertedBlob = await heic2any({
+                        blob: file,
+                        toType: "image/jpeg",
+                        quality: 0.8
+                    });
+                    
+                    // Create a standard File object from the blob
+                    file = new File([convertedBlob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+                        type: "image/jpeg"
+                    });
+                } catch (err) {
+                    console.error("HEIC Conversion Error:", err);
+                    showToast("Failed to convert iPhone photo. Please try a JPG or PNG.", "error");
+                    return;
+                }
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                cropperImage.src = event.target.result;
+                cropperModal.style.display = 'flex';
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(cropperImage, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    background: false,
+                    autoCropArea: 1
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (cropButton) {
+        cropButton.addEventListener('click', () => {
+            if (!cropper) return;
+            
+            const btnOriginalText = cropButton.textContent;
+            cropButton.textContent = "Updating...";
+            cropButton.disabled = true;
+
+            const canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append('profileImage', blob, 'profile.jpg');
+                try {
+                    const res = await fetch('/user/profile/update-image', { 
+                        method: 'POST', 
+                        body: formData 
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        const avatarContainer = document.getElementById('profileAvatar');
+                        if (avatarContainer) {
+                            avatarContainer.innerHTML = `<img src="${result.imagePath}" id="avatarImg" alt="Profile">`;
+                        }
+                        cropperModal.style.display = 'none';
+                        showToast("Image Updated!", "success");
+                    } else {
+                        showToast(result.message || "Upload failed", "error");
+                    }
+                } catch (err) { 
+                    showToast("Upload failed due to network error", "error"); 
+                } finally {
+                    cropButton.textContent = btnOriginalText;
+                    cropButton.disabled = false;
+                }
+            }, 'image/jpeg');
+        });
+    }
+
+    const closeCropperModal = () => {
+        cropperModal.style.display = 'none';
+        if (cropper) cropper.destroy();
+        imageUpload.value = "";
+    };
+
+    if (closeCropper) closeCropper.onclick = closeCropperModal;
+    if (closeCropperHeader) closeCropperHeader.onclick = closeCropperModal;
+
+    // --- 8. INLINE VALIDATION LOGIC ---
     if (newAddressMobile) {
         newAddressMobile.addEventListener('input', function () {
-            // Remove non-numeric characters
             this.value = this.value.replace(/\D/g, '');
-
-            // Validate length
             if (this.value.length === 0) {
                 setValidationStatus(this, mobileError, "", null);
             } else if (this.value.length !== 10) {
@@ -204,10 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (newAddressPincode) {
         newAddressPincode.addEventListener('input', function () {
-            // Remove non-numeric characters
             this.value = this.value.replace(/\D/g, '');
-
-            // Validate length
             if (this.value.length === 0) {
                 setValidationStatus(this, pincodeError, "", null);
             } else if (this.value.length !== 6) {
@@ -232,10 +326,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // --- DELETE MODAL LOGIC ---
-    // (Using variables declared at top of scope)
-
-    // Cancel Delete
+    // --- 9. DELETE MODAL LOGIC ---
     if (cancelDeleteBtn) {
         cancelDeleteBtn.addEventListener("click", () => {
             if (deleteConfirmModal) deleteConfirmModal.style.display = "none";
@@ -243,7 +334,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Close on overlay click
     if (deleteConfirmModal) {
         deleteConfirmModal.addEventListener("click", (e) => {
             if (e.target.classList.contains("modal-overlay")) {
@@ -253,7 +343,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Confirm Delete Action
     if (confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener("click", async () => {
             if (!window.addressIdToDelete) return;
@@ -271,18 +360,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (result.success) {
                     showToast("Address deleted successfully", "success");
-
-                    // Dynamically remove the card from the UI
                     const addressCard = document.getElementById(`address-${addressId}`);
                     if (addressCard) addressCard.remove();
-
-                    // Check if grid is empty to refresh and show empty state
                     const grid = document.getElementById("addressGrid");
                     if (grid && grid.querySelectorAll('.address-card').length === 0) {
                         setTimeout(() => location.reload(), 800);
                     }
-
-                    // Close modal
                     deleteConfirmModal.style.display = "none";
                 } else {
                     showToast(result.message || "Failed to delete address", "error");
@@ -299,8 +382,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // --- GLOBAL FUNCTIONS ---
-
-// Function to handle Address Deletion (Opens Modal)
 window.deleteAddress = function (addressId) {
     const deleteConfirmModal = document.getElementById("deleteConfirmModal");
     window.addressIdToDelete = addressId;
@@ -342,27 +423,7 @@ function showToast(message, type = "info") {
     }, 3000);
 }
 
-// Ensure toast styles are available
-if (!document.getElementById("toast-styles")) {
-    const style = document.createElement("style");
-    style.id = "toast-styles";
-    style.textContent = `
-        .toast-notification {
-            position: fixed; top: 100px; right: 20px;
-            padding: 1rem 1.5rem; border-radius: 12px;
-            color: white; z-index: 10000; opacity: 0;
-            transform: translateX(400px); transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .toast-notification.show { opacity: 1; transform: translateX(0); }
-        .toast-success { background: #28a745; }
-        .toast-error { background: #dc3545; }
-        .toast-info { background: #ff914d; }
-    `;
-    document.head.appendChild(style);
-}
-
-// Auto-hide the success message after 5 seconds
+// Auto-hide success message
 document.addEventListener("DOMContentLoaded", () => {
     const successAlert = document.querySelector('.server-message.success');
     if (successAlert) {

@@ -39,6 +39,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    profileImage: {
+      type: String,
+      default: ""
+    },
     isBlocked: { type: Boolean, default: false },
     phone: { type: String },
     dob: { type: Date },
