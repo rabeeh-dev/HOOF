@@ -10,9 +10,15 @@ const authService = require("../services/authService");
 const passwordService = require("../services/passwordService");
 const userService = require("../services/userService");
 
-/* =========================
-   SIGNUP PAGE
-========================= */
+/* =============================================================================
+   AUTHENTICATION SECTION (Signup, Login, OTP)
+============================================================================= */
+
+/**
+ * @route   GET /user/signup
+ * @desc    Renders the registration page
+ * @access  Public
+ */
 exports.signupPage = (req, res) => {
   res.render("User/auth/register", {
     layout: "layouts/user",
@@ -21,14 +27,15 @@ exports.signupPage = (req, res) => {
   });
 };
 
-/* =========================
-   SIGNUP WITH OTP
-========================= */
+/**
+ * @route   POST /user/signup
+ * @desc    Handles user registration and initiates OTP verification
+ * @access  Public
+ */
 exports.signup = async (req, res) => {
   const { fullName, email, password, confirmPassword } = req.body;
 
   try {
-    // 1. Basic Validation (Presentation logic stays in controller)
     if (!fullName || !email || !password || !confirmPassword) {
       return res.render("User/auth/register", {
         layout: "layouts/user",
@@ -53,10 +60,8 @@ exports.signup = async (req, res) => {
       });
     }
 
-    // 2. Call the Service Layer for the "Heavy Lifting"
     const result = await authService.initiateSignup(fullName, email, password);
 
-    // 3. Handle Session & Navigation
     req.session.pendingUser = result.pendingUser;
     req.session.otpEmail = email;
 
@@ -64,7 +69,6 @@ exports.signup = async (req, res) => {
     res.redirect("/user/verify-otp");
 
   } catch (err) {
-    // 4. Catch errors thrown by the service (like "User already exists")
     console.error("Signup error:", err);
     res.render("User/auth/register", {
       layout: "layouts/user",
@@ -74,16 +78,17 @@ exports.signup = async (req, res) => {
   }
 };
 
-/* =========================
-   VERIFY OTP
-========================= */
+/**
+ * @route   POST /user/verify-otp
+ * @desc    Verifies the OTP code for signup or email changes
+ * @access  Public / Session-based
+ */
 exports.verifyOtp = async (req, res) => {
     try {
         const { otp } = req.body;
         const isOld = !!req.session.changeEmailFlow;
         const isNew = !!req.session.newEmailOtpSent;
 
-        // 1. Determine Mode and Target Email
         let mode = 'NEW_SIGNUP';
         let email = req.session.pendingUser?.email;
 
@@ -99,7 +104,6 @@ exports.verifyOtp = async (req, res) => {
             return res.status(400).json({ success: false, message: "Session expired" });
         }
 
-        // 2. Delegate to Service
         const result = await authService.verifyOtpCode({
             otp,
             email,
@@ -108,7 +112,6 @@ exports.verifyOtp = async (req, res) => {
             pendingUserData: req.session.pendingUser
         });
 
-        // 3. Post-verification session cleanup (Controller responsibility)
         if (mode === 'NEW_EMAIL_UPDATE') {
             req.session.emailVerifiedForChange = req.session.newEmailOtpSent = req.session.tempNewEmail = null;
         } else if (mode === 'VERIFY_OLD_EMAIL') {
@@ -122,14 +125,15 @@ exports.verifyOtp = async (req, res) => {
 
     } catch (err) {
         console.error("Verification Error:", err);
-        // We catch the "Error" thrown by service and send its message
         return res.status(400).json({ success: false, message: err.message || "Error during verification." });
     }
 };
 
-/* =========================
-   RESEND OTP
-========================= */
+/**
+ * @route   POST /user/resend-otp
+ * @desc    Resends the OTP code with a 1-minute cooldown enforcement
+ * @access  Public / Session-based
+ */
 exports.resendOtp = async (req, res) => {
     try {
         const email = req.session.otpEmail;
@@ -140,29 +144,25 @@ exports.resendOtp = async (req, res) => {
             });
         }
 
-        // Delegate the work to the service
         const otp = await authService.processResendOtp(email);
-
         console.log("RESEND OTP (DEV):", otp);
 
         return res.json({ message: "OTP resent successfully" });
 
     } catch (err) {
         console.error("Resend OTP error:", err);
-        
-        // Handle the 429 Rate Limit error specifically
         const status = err.status || 500;
         const message = err.message || "Failed to resend OTP";
-        
         return res.status(status).json({ message });
     }
 };
 
-/* =========================
-   LOGIN PAGE
-========================= */
+/**
+ * @route   GET /user/login
+ * @desc    Renders the login page with optional success messages
+ * @access  Public
+ */
 exports.loginPage = (req, res) => {
-  // Check if user just arrived from a successful OTP verification
   const signupSuccess = req.query.signupSuccess === 'true';
   const resetSuccess = req.query.resetSuccess === 'true';
 
@@ -176,23 +176,20 @@ exports.loginPage = (req, res) => {
   res.render("User/auth/login", {
     layout: "layouts/user",
     error: null,
-    // Pass the success message if the flag is present
     successMessage: successMessage,
   });
 };
 
-/* =========================
-   LOGIN
-========================= */
-
+/**
+ * @route   POST /user/login
+ * @desc    Authenticates user and starts a session
+ * @access  Public
+ */
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
-
-        // 1. Call Service for Authentication
         const user = await authService.authenticateUser(email, password);
 
-        // 2. Controller handles the Session (This is a web-specific task)
         req.session.userId = user._id;
         req.session.userName = user.fullName;
         req.session.userEmail = user.email;
@@ -206,7 +203,6 @@ exports.login = async (req, res) => {
         });
 
     } catch (err) {
-        // 3. Catch errors from Service (Invalid credentials or Banned status)
         console.error("Login Error:", err);
         res.render("User/auth/login", {
             layout: "layouts/user",
@@ -215,9 +211,34 @@ exports.login = async (req, res) => {
     }
 };
 
-/* =========================
-   FORGOT PASSWORD
-========================= */
+/**
+ * @route   POST /user/logout
+ * @desc    Destroys user session and clears cookies
+ * @access  Private
+ */
+exports.logout = (req, res) => {
+  req.session.userId = null;
+  req.session.userName = null;
+
+  req.session.destroy((err) => {
+    if (err) {
+      console.log("Logout Error:", err);
+      return res.redirect("/user/home");
+    }
+    res.clearCookie("connect.sid", { path: '/' });
+    res.redirect("/user/login");
+  });
+};
+
+/* =============================================================================
+   PASSWORD RECOVERY SECTION
+============================================================================= */
+
+/**
+ * @route   GET /user/forgot-password
+ * @desc    Renders the forgot password email request page
+ * @access  Public
+ */
 exports.forgotPasswordPage = (req, res) => {
   res.render("User/auth/forgot-password", {
     layout: "layouts/user",
@@ -225,14 +246,16 @@ exports.forgotPasswordPage = (req, res) => {
   });
 };
 
+/**
+ * @route   POST /user/forgot-password
+ * @desc    Generates reset token and sends email
+ * @access  Public
+ */
 exports.forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
-
-        // Call the service to handle tokens, hashing, and emailing
         await passwordService.initiatePasswordReset(email);
 
-        // Controller only manages the response to the user
         res.render("User/auth/forgot-password", {
             layout: "layouts/user",
             message: "If an account exists, a reset link has been sent.",
@@ -247,9 +270,11 @@ exports.forgotPassword = async (req, res) => {
     }
 };
 
-/* =========================
-   RESET PASSWORD
-========================= */
+/**
+ * @route   GET /user/reset-password/:token
+ * @desc    Renders password reset form if token is valid
+ * @access  Public
+ */
 exports.resetPasswordPage = async (req, res) => {
   const hashedToken = crypto
     .createHash("sha256")
@@ -271,12 +296,16 @@ exports.resetPasswordPage = async (req, res) => {
   });
 };
 
+/**
+ * @route   POST /user/reset-password/:token
+ * @desc    Updates the password in the database
+ * @access  Public
+ */
 exports.resetPassword = async (req, res) => {
     try {
         const { password, confirmPassword } = req.body;
         const { token } = req.params;
 
-        // 1. Basic UI Validation (Controller's job)
         if (password !== confirmPassword) {
             return res.render("User/auth/reset-password", {
                 token,
@@ -284,44 +313,24 @@ exports.resetPassword = async (req, res) => {
             });
         }
 
-        // 2. Call Service to handle the logic
         await passwordService.resetPassword(token, password);
-
-        // 3. Redirect to Login with a success flag
         res.redirect("/user/login?resetSuccess=true");
 
     } catch (err) {
         console.error("Reset Password Error:", err);
-        // Handle specific error from service (like expired token)
         res.status(400).send(err.message || "Internal Server Error");
     }
 };
 
-/* =========================
-   LOGOUT
-========================= */
-exports.logout = (req, res) => {
-  // 1. Clear variables from session object
-  req.session.userId = null;
-  req.session.userName = null;
+/* =============================================================================
+   USER PROFILE SECTION (Details & Settings)
+============================================================================= */
 
-  // 2. Destroy the session in MongoDB
-  req.session.destroy((err) => {
-    if (err) {
-      console.log("Logout Error:", err);
-      return res.redirect("/user/home");
-    }
-    // 3. Clear the cookie from the browser
-    res.clearCookie("connect.sid", { path: '/' });
-
-    // 4. Redirect to login
-    res.redirect("/user/login");
-  });
-};
-
-/* =========================
-   GET USER PROFILE 
-========================= */
+/**
+ * @route   GET /user/profile
+ * @desc    Fetch and display user profile, addresses, and success flags
+ * @access  Private
+ */
 exports.getProfile = async (req, res) => {
   try {
     const userId = req.session.userId;
@@ -330,11 +339,9 @@ exports.getProfile = async (req, res) => {
     const user = await User.findById(userId);
     const addresses = await Address.find({ userId: userId });
 
-    // Check flags in the URL
     const emailChanged = req.query.emailChanged === 'true';
     const passwordChanged = req.query.passwordChanged === 'true';
 
-    // Determine which message to show
     let successMessage = null;
     if (emailChanged) {
       successMessage = "Your email has been updated successfully!";
@@ -347,7 +354,7 @@ exports.getProfile = async (req, res) => {
       addresses,
       title: 'My Profile | HOOF',
       layout: 'layouts/user',
-      successMessage: successMessage // Passes the specific message to EJS
+      successMessage: successMessage 
     });
   } catch (err) {
     console.error("Profile Error:", err);
@@ -355,21 +362,21 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-
-// Update profile function
-
+/**
+ * @route   POST /user/profile/update
+ * @desc    Update text-based profile details (AJAX)
+ * @access  Private
+ */
 exports.updateProfile = async (req, res) => {
   try {
     const { fullName, phoneNumber, dateOfBirth } = req.body;
 
-    // Use the Service Layer
     const updatedUser = await userService.updateProfileData(req.session.userId, {
         fullName,
         phoneNumber,
         dateOfBirth
     });
 
-    // Update Session
     req.session.userName = updatedUser.fullName;
 
     res.json({ success: true, message: "Profile updated successfully!" });
@@ -378,7 +385,85 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// Part 1: Sends OTP to the OLD email
+/**
+ * @route   POST /user/profile/update-image
+ * @desc    Upload, crop, and save a new profile image
+ * @access  Private
+ */
+exports.updateProfileImage = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "No file uploaded" });
+        }
+
+        const userId = req.session.userId;
+        const publicRoot = path.join(__dirname, '../public');
+
+        const newImagePath = await userService.updateUserProfileImage(
+            userId, 
+            req.file.filename, 
+            publicRoot
+        );
+
+        if (req.session.user) {
+            req.session.user.profileImage = newImagePath;
+        }
+
+        req.session.save((err) => {
+            if (err) throw err;
+            res.json({ 
+                success: true, 
+                message: "Profile picture updated!", 
+                imagePath: newImagePath 
+            });
+        });
+
+    } catch (error) {
+        console.error("Profile Image Upload Error:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || "Server error during upload" 
+        });
+    }
+};
+
+/**
+ * @route   DELETE /user/profile/delete-image
+ * @desc    Removes profile picture from server and database
+ * @access  Private
+ */
+exports.deleteProfileImage = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const publicRoot = path.join(__dirname, '../public');
+
+        await userService.removeUserProfileImage(userId, publicRoot);
+
+        if (req.session.user) {
+            req.session.user.profileImage = "";
+        }
+
+        return res.json({ success: true, message: "Profile image deleted" });
+
+    } catch (error) {
+        console.error("Delete Image Error:", error);
+        const statusCode = error.message === "No image found to delete" ? 400 : 500;
+        return res.status(statusCode).json({ 
+            success: false, 
+            message: error.message || "Server error" 
+        });
+    }
+};
+
+/* =============================================================================
+   EMAIL & PASSWORD CHANGE FLOW
+============================================================================= */
+
+/**
+ * @route   GET /user/profile/change-email-start
+ * @desc    Sends verification OTP to current email to authorize change
+ * @access  Private
+ */
 exports.getChangeEmailOtp = async (req, res) => {
   try {
     const user = await User.findById(req.session.userId);
@@ -398,7 +483,11 @@ exports.getChangeEmailOtp = async (req, res) => {
   } catch (err) { res.redirect('/user/profile'); }
 };
 
-// Part 2: Sends OTP to the NEW email
+/**
+ * @route   POST /user/profile/change-email-new-otp
+ * @desc    Sends verification OTP to the NEW email address
+ * @access  Private
+ */
 exports.sendNewEmailOtp = async (req, res) => {
   try {
     if (!req.session.emailVerifiedForChange) return res.redirect('/user/profile');
@@ -423,108 +512,35 @@ exports.sendNewEmailOtp = async (req, res) => {
   } catch (err) { res.redirect('/user/profile'); }
 };
 
-/* =========================
-   CHANGE PASSWORD REQUEST
-========================= */
+/**
+ * @route   GET /user/profile/change-password-request
+ * @desc    Initiates password change via reset link sent to email
+ * @access  Private
+ */
 exports.changePasswordRequest = async (req, res) => {
   try {
-    // 1. Find the logged-in user
     const user = await User.findById(req.session.userId);
 
     if (!user || user.authProvider !== "local") {
       return res.redirect('/user/profile');
     }
 
-    // 2. Generate Reset Token (Same logic as forgotPassword)
     const resetToken = crypto.randomBytes(32).toString("hex");
     const hashedToken = crypto
       .createHash("sha256")
       .update(resetToken)
       .digest("hex");
 
-    // 3. Save to User Document
     user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 mins
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; 
     await user.save();
 
-    // 4. Send the Email
     await sendResetPasswordEmail(user.email, resetToken);
 
-    // 5. Redirect back to profile with a success message
     res.redirect('/user/profile?message=reset_link_sent');
 
   } catch (err) {
     console.error("Change password request error:", err);
     res.redirect('/user/profile');
   }
-};
-
-//Profile Picture Updating Logic 
-exports.updateProfileImage = async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: "No file uploaded" });
-        }
-
-        const userId = req.session.userId;
-        // We define the root of our public folder here
-        const publicRoot = path.join(__dirname, '../public');
-
-        // 1. Call Service
-        const newImagePath = await userService.updateUserProfileImage(
-            userId, 
-            req.file.filename, 
-            publicRoot
-        );
-
-        // 2. Sync Session
-        if (req.session.user) {
-            req.session.user.profileImage = newImagePath;
-        }
-
-        // 3. Save Session & Respond
-        req.session.save((err) => {
-            if (err) throw err;
-            res.json({ 
-                success: true, 
-                message: "Profile picture updated!", 
-                imagePath: newImagePath 
-            });
-        });
-
-    } catch (error) {
-        console.error("Profile Image Upload Error:", error);
-        res.status(500).json({ 
-            success: false, 
-            message: error.message || "Server error during upload" 
-        });
-    }
-};
-
-exports.deleteProfileImage = async (req, res) => {
-    try {
-        const userId = req.session.userId;
-        const publicRoot = path.join(__dirname, '../public');
-
-        // 1. Delegate to Service
-        await userService.removeUserProfileImage(userId, publicRoot);
-
-        // 2. Sync Session
-        if (req.session.user) {
-            req.session.user.profileImage = "";
-        }
-
-        // 3. Response
-        return res.json({ success: true, message: "Profile image deleted" });
-
-    } catch (error) {
-        console.error("Delete Image Error:", error);
-        
-        // Handle the "No image found" error as a 400, others as 500
-        const statusCode = error.message === "No image found to delete" ? 400 : 500;
-        return res.status(statusCode).json({ 
-            success: false, 
-            message: error.message || "Server error" 
-        });
-    }
 };

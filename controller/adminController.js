@@ -2,10 +2,17 @@ const Admin = require("../model/Admin");
 const User = require("../model/User");
 const bcrypt = require("bcrypt");
 
-// 1. Load the existing sign-in page
+/* =============================================================================
+   ADMIN AUTHENTICATION SECTION
+============================================================================= */
+
+/**
+ * @route   GET /admin/login
+ * @desc    Renders the admin login page (Redirects if already logged in)
+ * @access  Public (Guest Only)
+ */
 exports.loadLogin = async (req, res) => {
     try {
-        // If already logged in as admin, don't show login page
         if (req.session.adminId) {
             return res.redirect('/admin/dashboard');
         }
@@ -16,7 +23,11 @@ exports.loadLogin = async (req, res) => {
     }
 };
 
-// 2. Handle the sign-in logic
+/**
+ * @route   POST /admin/login
+ * @desc    Verifies admin credentials and establishes an admin session
+ * @access  Public
+ */
 exports.verifyAdmin = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -38,7 +49,31 @@ exports.verifyAdmin = async (req, res) => {
     }
 };
 
-// 3. Load Admin Dashboard (CRITICAL: Added this to fix your crash)
+/**
+ * @route   GET /admin/logout
+ * @desc    Destroys the admin session and clears local cookies
+ * @access  Private (Admin Only)
+ */
+exports.logout = (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            console.log("Logout error:", err);
+            return res.redirect('/admin/dashboard');
+        }
+        res.clearCookie('connect.sid');
+        res.redirect('/admin/login');
+    });
+};
+
+/* =============================================================================
+   ADMIN DASHBOARD & DASHBOARD METRICS
+============================================================================= */
+
+/**
+ * @route   GET /admin/dashboard
+ * @desc    Renders the main admin analytics dashboard
+ * @access  Private (Admin Only)
+ */
 exports.loadDashboard = async (req, res) => {
     try {
         res.render('Admin/admin-dashboard', {
@@ -50,9 +85,15 @@ exports.loadDashboard = async (req, res) => {
     }
 };
 
+/* =============================================================================
+   USER MANAGEMENT SECTION
+============================================================================= */
 
-
-//loadCustomers
+/**
+ * @route   GET /admin/users
+ * @desc    Fetch and display all users with pagination support
+ * @access  Private (Admin Only)
+ */
 exports.loadCustomers = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -60,7 +101,6 @@ exports.loadCustomers = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const totalUsers = await User.countDocuments({});
-
 
         const users = await User.find({})
             .select("-password")
@@ -80,11 +120,14 @@ exports.loadCustomers = async (req, res) => {
     }
 };
 
-// Logic for Blocking/Unblocking
+/**
+ * @route   PATCH /admin/users/:id/:action
+ * @desc    Toggles the isBlocked status of a specific user
+ * @access  Private (Admin Only)
+ */
 exports.toggleUserStatus = async (req, res) => {
     try {
         const { id, action } = req.params;
-
         const blockStatus = (action === 'block');
 
         const updatedUser = await User.findByIdAndUpdate(
@@ -102,18 +145,4 @@ exports.toggleUserStatus = async (req, res) => {
         console.error("Update Error:", error);
         res.status(500).json({ success: false, error: error.message });
     }
-};
-
-// 4. Admin Logout
-exports.logout = (req, res) => {
-    // Destroy the session
-    req.session.destroy((err) => {
-        if (err) {
-            console.log("Logout error:", err);
-            return res.redirect('/admin/dashboard');
-        }
-        // Clear the cookie
-        res.clearCookie('connect.sid');
-        res.redirect('/admin/login');
-    });
 };

@@ -5,12 +5,27 @@ const { isUser, isLoggedOut, isLogin } = require("../middleware/auth");
 const upload = require('../middleware/multer');
 const passport = require("../config/passport");
 
+/* =============================================================================
+   AUTHENTICATION ROUTES (Signup, Login, OTP)
+   Access: Public / Guest (isLoggedOut)
+============================================================================= */
 
-// =================  Normal AUTH PAGES =================
-// Use isLoggedOut so a logged-in user can't sign up again
+/**
+ * @route   GET /user/signup
+ * @desc    Render signup page for new users
+ */
 router.get("/signup", isLoggedOut, userController.signupPage);
+
+/**
+ * @route   POST /user/signup
+ * @desc    Handle user registration data
+ */
 router.post("/signup", isLoggedOut, userController.signup);
 
+/**
+ * @route   GET /user/verify-otp
+ * @desc    Render OTP verification page
+ */
 router.get("/verify-otp", (req, res) => {
   res.render("User/auth/verify-otp", {
     layout: "layouts/user",
@@ -18,21 +33,50 @@ router.get("/verify-otp", (req, res) => {
   });
 });
 
+/**
+ * @route   POST /user/verify-otp
+ * @desc    Verify the submitted OTP code
+ */
 router.post("/verify-otp", userController.verifyOtp);
+
+/**
+ * @route   POST /user/resend-otp
+ * @desc    Trigger a new OTP email
+ */
 router.post("/resend-otp", userController.resendOtp);
 
-// ================= Google AUTH PAGES =================
+/**
+ * @route   GET /user/login
+ * @desc    Render login page
+ */
+router.get("/login", isLoggedOut, userController.loginPage);
 
-// 1. Redirect to Google (isLoggedOut is fine here)
+/**
+ * @route   POST /user/login
+ * @desc    Authenticate user and create session
+ */
+router.post("/login", isLoggedOut, userController.login);
+
+/* =============================================================================
+   GOOGLE OAUTH ROUTES
+   Access: Public / Social Auth
+============================================================================= */
+
+/**
+ * @route   GET /user/auth/google
+ * @desc    Redirect to Google OAuth consent screen
+ */
 router.get("/auth/google", isLoggedOut, 
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-// 2. Google Callback (REMOVE isLoggedOut here)
+/**
+ * @route   GET /user/auth/google/callback
+ * @desc    Handle Google authentication callback and session creation
+ */
 router.get("/auth/google/callback", 
   passport.authenticate("google", { failureRedirect: "/user/login" }),
   (req, res) => {
-    // Manually set session variables
     req.session.userId = req.user._id;
     req.session.userName = req.user.fullName;
     req.session.userEmail = req.user.email;
@@ -47,20 +91,44 @@ router.get("/auth/google/callback",
   }
 );
 
-// ================= LOGIN =================
-// isLoggedOut prevents a logged-in user from seeing the login page
-router.get("/login", isLoggedOut, userController.loginPage);
-router.post("/login", isLoggedOut, userController.login);
+/* =============================================================================
+   PASSWORD RECOVERY ROUTES
+   Access: Public
+============================================================================= */
 
-// ================= FORGOT PASSWORD =================
+/**
+ * @route   GET /user/forgot-password
+ * @desc    Render forgot password request page
+ */
 router.get("/forgot-password", isLoggedOut, userController.forgotPasswordPage);
+
+/**
+ * @route   POST /user/forgot-password
+ * @desc    Handle forgot password email submission
+ */
 router.post("/forgot-password", isLoggedOut, userController.forgotPassword);
 
-// ================= RESET PASSWORD =================
-// Stay public because the user is technically logged out when resetting
+/**
+ * @route   GET /user/reset-password/:token
+ * @desc    Render reset password form via token link
+ */
 router.get("/reset-password/:token", userController.resetPasswordPage);
+
+/**
+ * @route   POST /user/reset-password/:token
+ * @desc    Process the password update
+ */
 router.post("/reset-password/:token", userController.resetPassword);
 
+/* =============================================================================
+   USER PROFILE & ACCOUNT MANAGEMENT
+   Access: Private (isUser)
+============================================================================= */
+
+/**
+ * @route   GET /user/home
+ * @desc    User homepage
+ */
 router.get('/home', isUser, (req, res) => {
   res.render('User/home', {
     title: 'Home - ShoeStore',
@@ -68,43 +136,88 @@ router.get('/home', isUser, (req, res) => {
   });
 });
 
-// ================= USER PROFILE =================
+/**
+ * @route   GET /user/profile
+ * @desc    Render user profile dashboard
+ */
 router.get('/profile', isUser, userController.getProfile);
+
+/**
+ * @route   POST /user/profile/update
+ * @desc    Update user profile details (AJAX)
+ */
 router.post('/profile/update', isUser, userController.updateProfile);
 
-// ================= USER PROFILE =================
+/**
+ * @route   POST /user/profile/update-image
+ * @desc    Upload and crop new profile image
+ */
 router.post('/profile/update-image', isUser, upload.single('profileImage'), userController.updateProfileImage);
+
+/**
+ * @route   DELETE /user/profile/delete-image
+ * @desc    Remove profile image
+ */
 router.delete('/profile/delete-image', isUser, userController.deleteProfileImage);
-// ================= CHANGE EMAIL =================
-// 1. Trigger the process (Send OTP to current email)
+
+/* =============================================================================
+   EMAIL & PASSWORD CHANGE FLOW
+   Access: Private (isUser)
+============================================================================= */
+
+/**
+ * @route   GET /user/profile/change-email-start
+ * @desc    Initiate email change (send OTP to old email)
+ */
 router.get('/profile/change-email-start', isUser, userController.getChangeEmailOtp);
 
-// 2. The page where user types the NEW email (Protected by session)
+/**
+ * @route   GET /user/profile/change-email-form
+ * @desc    Render form to enter new email (session protected)
+ */
 router.get('/profile/change-email-form', isUser, (req, res) => {
     if (!req.session.emailVerifiedForChange) return res.redirect('/user/profile');
     res.render('User/change-email', { layout: 'layouts/user' });
 });
 
-// 3. Process the new email (Send OTP to the new email)
+/**
+ * @route   POST /user/profile/change-email-new-otp
+ * @desc    Send OTP to the new email address
+ */
 router.post('/profile/change-email-new-otp', isUser, userController.sendNewEmailOtp);
 
-
-// ================= CHANGE PASSWORD =================
-// Trigger Change Password (reuses forgot password logic)
+/**
+ * @route   GET /user/profile/change-password-request
+ * @desc    Initiate password change from inside profile
+ */
 router.get('/profile/change-password-request', isUser, userController.changePasswordRequest);
 
-
+/* =============================================================================
+   ADDRESS MANAGEMENT
+   Access: Private (isUser)
+============================================================================= */
 const addressController = require("../controller/addressController");
 
-// ================= ADDRESS =================
-
+/**
+ * @route   POST /user/address/add
+ * @desc    Create new delivery address
+ */
 router.post('/address/add', isUser, addressController.addAddress);
 
+/**
+ * @route   DELETE /user/address/delete/:id
+ * @desc    Remove a specific delivery address
+ */
 router.delete('/address/delete/:id', isUser, addressController.deleteAddress);
 
+/* =============================================================================
+   LOGOUT
+============================================================================= */
 
-// ================= LOGOUT=================
+/**
+ * @route   POST /user/logout
+ * @desc    End user session
+ */
 router.post("/logout", userController.logout);
-
 
 module.exports = router;

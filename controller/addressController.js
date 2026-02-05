@@ -1,11 +1,20 @@
 const Address = require("../model/Address");
 
-// 1. Add Address
+/* =============================================================================
+   ADDRESS MANAGEMENT SECTION
+   Handles user delivery addresses and validation rules
+============================================================================= */
+
+/**
+ * @route   POST /user/address/add
+ * @desc    Validates and saves a new delivery address for the logged-in user
+ * @access  Private (isUser)
+ */
 exports.addAddress = async (req, res) => {
     try {
         const { fullName, mobile, houseName, pincode, city, state, addressType } = req.body;
 
-        // --- VALIDATION LOGIC ---
+        // --- INTERNAL VALIDATION LOGIC ---
         const errors = [];
         if (!fullName || fullName.trim().length < 3) errors.push("Name must be at least 3 characters.");
         if (!/^[6-9]\d{9}$/.test(mobile)) errors.push("Enter a valid 10-digit mobile number.");
@@ -14,12 +23,14 @@ exports.addAddress = async (req, res) => {
         if (!city || city.trim().length < 2) errors.push("City is required.");
         if (!state || state.trim().length < 2) errors.push("State is required.");
 
+        // If any business rules are violated, return the first error found
         if (errors.length > 0) {
             return res.status(400).json({ success: false, message: errors[0] });
         }
 
+        // --- DATA PERSISTENCE ---
         const newAddress = new Address({
-            userId: req.session.userId,
+            userId: req.session.userId, // Linked to the active session
             fullName: fullName.trim(),
             mobile: mobile.trim(),
             houseName: houseName.trim(),
@@ -38,10 +49,16 @@ exports.addAddress = async (req, res) => {
     }
 };
 
-// 2. Delete Address
+/**
+ * @route   DELETE /user/address/delete/:id
+ * @desc    Permanently removes an address. Secured by checking userId against session.
+ * @access  Private (isUser)
+ */
 exports.deleteAddress = async (req, res) => {
     try {
         const addressId = req.params.id;
+        
+        // Ensure the address belongs to the logged-in user before deleting
         await Address.findOneAndDelete({ _id: addressId, userId: req.session.userId });
 
         res.status(200).json({ success: true, message: "Address deleted successfully." });

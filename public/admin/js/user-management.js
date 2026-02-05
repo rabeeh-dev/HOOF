@@ -11,7 +11,7 @@ const createMobileToggle = () => {
         toggleBtn.className = 'sidebar-toggle';
         toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
         mainContent.insertBefore(toggleBtn, mainContent.firstChild);
-        
+
         toggleBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
         mainContent.addEventListener('click', (e) => {
             if (!e.target.closest('.sidebar-toggle') && sidebar.classList.contains('open')) {
@@ -29,13 +29,13 @@ if (searchInput) {
     searchInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
         const rows = document.querySelectorAll('.customers-table tbody tr');
-        
+
         rows.forEach(row => {
             const nameEl = row.querySelector('.customer-info h4');
             const emailEl = row.querySelector('.contact-text');
             if (nameEl && emailEl) {
-                const match = nameEl.textContent.toLowerCase().includes(searchTerm) || 
-                              emailEl.textContent.toLowerCase().includes(searchTerm);
+                const match = nameEl.textContent.toLowerCase().includes(searchTerm) ||
+                    emailEl.textContent.toLowerCase().includes(searchTerm);
                 row.style.display = match ? '' : 'none';
             }
         });
@@ -53,20 +53,24 @@ document.querySelectorAll('.action-btn.block').forEach(btn => {
         const isBlocked = statusBadge.classList.contains('blocked');
         const action = isBlocked ? 'unblock' : 'block';
 
-        if (confirm(`Are you sure you want to ${action} ${customerName}?`)) {
-            try {
-                const response = await fetch(`/admin/users/${action}/${userId}`, { method: 'PATCH' });
-                const data = await response.json();
-                if (data.success) {
-                    statusBadge.className = isBlocked ? 'status-badge active' : 'status-badge blocked';
-                    statusBadge.textContent = isBlocked ? 'Active' : 'Blocked';
-                    btn.innerHTML = isBlocked ? '<i class="fas fa-ban"></i>' : '<i class="fas fa-unlock"></i>';
-                    // showToast(`${customerName} ${action}ed successfully`, 'success');
+        showCustomConfirm(
+            `${action.charAt(0).toUpperCase() + action.slice(1)} Customer`,
+            `Are you sure you want to <strong>${action}</strong> ${customerName}?`,
+            async () => {
+                try {
+                    const response = await fetch(`/admin/users/${action}/${userId}`, { method: 'PATCH' });
+                    const data = await response.json();
+                    if (data.success) {
+                        statusBadge.className = isBlocked ? 'status-badge active' : 'status-badge blocked';
+                        statusBadge.textContent = isBlocked ? 'Active' : 'Blocked';
+                        btn.innerHTML = isBlocked ? '<i class="fas fa-ban"></i>' : '<i class="fas fa-unlock"></i>';
+                        // showToast(`${customerName} ${action}ed successfully`, 'success');
+                    }
+                } catch (err) {
+                    showToast('Server connection failed', 'error');
                 }
-            } catch (err) {
-                showToast('Server connection failed', 'error');
             }
-        }
+        );
     });
 });
 
@@ -96,6 +100,69 @@ function showToast(message, type = 'info') {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+}
+
+// 6. Custom Confirm Modal
+function showCustomConfirm(title, message, onConfirm) {
+    let modalOverlay = document.querySelector('.custom-modal');
+
+    // Create logic
+    if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.className = 'custom-modal';
+        modalOverlay.style.display = 'flex'; // Trigger flex layout from CSS
+        modalOverlay.innerHTML = `
+            <div class="modal-overlay"></div>
+            <div class="modal-container">
+                <div class="modal-header">
+                    <div class="modal-icon-wrapper">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                </div>
+                <h3>${title}</h3>
+                <p>${message}</p>
+                <div class="modal-footer">
+                    <button class="modal-btn confirm">Yes, Proceed</button>
+                    <button class="modal-btn cancel">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalOverlay);
+    } else {
+        // Reuse logic
+        modalOverlay.querySelector('h3').textContent = title;
+        modalOverlay.querySelector('p').innerHTML = message;
+    }
+
+    const cancelBtn = modalOverlay.querySelector('.modal-btn.cancel');
+    const confirmBtn = modalOverlay.querySelector('.modal-btn.confirm');
+
+    // Update Icon based on action (Block vs Unblock)
+    const icon = modalOverlay.querySelector('i');
+    if (title.toLowerCase().includes('block')) {
+        icon.className = 'fas fa-ban';
+    } else {
+        icon.className = 'fas fa-unlock';
+    }
+
+    // Reset Listeners
+    const newCancel = cancelBtn.cloneNode(true);
+    const newConfirm = confirmBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+
+    const closeModal = () => {
+        modalOverlay.remove();
+    };
+
+    newCancel.addEventListener('click', closeModal);
+    // Be able to click overlay to close
+    modalOverlay.querySelector('.modal-overlay').addEventListener('click', closeModal);
+
+    newConfirm.addEventListener('click', () => {
+        closeModal();
+        onConfirm();
+    });
 }
 
 // 6. Keyboard Shortcuts
