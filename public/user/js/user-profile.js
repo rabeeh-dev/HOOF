@@ -62,23 +62,72 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // --- 3. EDIT PROFILE & FORM ---
-    if (editToggleBtn) {
-        editToggleBtn.addEventListener("click", () => {
-            personalInputs.forEach(input => input.disabled = false);
-            formActions.style.display = "flex";
-            editToggleBtn.style.display = "none";
-            showToast("Edit mode enabled.", "info");
-        });
-    }
-    if (cancelEditBtn) {
-        cancelEditBtn.addEventListener("click", () => {
-            personalInputs.forEach(input => input.disabled = true);
-            formActions.style.display = "none";
-            editToggleBtn.style.display = "block";
-            profileForm.reset();
-        });
-    }
+ // --- 3. EDIT PROFILE & FORM ---
+
+// This selector ensures we only target the inputs we want to edit
+const getEditableInputs = () => document.querySelectorAll("#profileForm input:not([type='email']):not([type='password'])");
+
+if (editToggleBtn) {
+    editToggleBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const inputs = getEditableInputs();
+        inputs.forEach(input => input.disabled = false);
+        
+        formActions.style.display = "flex";
+        editToggleBtn.style.display = "none";
+        showToast("Edit mode enabled.", "info");
+    });
+}
+
+if (cancelEditBtn) {
+    cancelEditBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const inputs = getEditableInputs();
+        inputs.forEach(input => input.disabled = true);
+        
+        formActions.style.display = "none";
+        editToggleBtn.style.display = "block";
+        profileForm.reset(); // Reverts to original values
+    });
+}
+
+// ADD THE SUBMIT LISTENER (To prevent URL change and use Service)
+if (profileForm) {
+    profileForm.addEventListener("submit", async (e) => {
+        e.preventDefault(); // This stops the ?fullName=... in URL
+
+        const formData = {
+            fullName: document.getElementById("fullName").value,
+            phoneNumber: document.getElementById("phoneNumber").value,
+            dateOfBirth: document.getElementById("dateOfBirth").value
+        };
+
+        try {
+            const response = await fetch('/user/profile/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message, "success");
+                // Update Sidebar and UI
+                document.getElementById('sidebarName').textContent = formData.fullName;
+                
+                // Lock the form back
+                getEditableInputs().forEach(input => input.disabled = true);
+                formActions.style.display = "none";
+                editToggleBtn.style.display = "block";
+            } else {
+                showToast(result.message, "error");
+            }
+        } catch (err) {
+            showToast("Server error", "error");
+        }
+    });
+}
 
     // --- 4. ADDRESS MODALS ---
     if (openAddressModal) openAddressModal.onclick = () => addressModal.style.display = "flex";

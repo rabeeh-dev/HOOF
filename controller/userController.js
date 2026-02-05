@@ -1,10 +1,14 @@
 const User = require("../model/User");
 const bcrypt = require("bcrypt");
 const Otp = require("../model/Otp");
+const path = require('path');
 const { generateOtp } = require("../utils/generateOtp");
 const { sendOtpEmail, sendResetPasswordEmail } = require("../utils/sendEmail");
 const crypto = require("crypto");
 const Address = require("../model/Address");
+const authService = require("../services/authService");
+const passwordService = require("../services/passwordService");
+const userService = require("../services/userService");
 
 /* =========================
    SIGNUP PAGE
@@ -21,10 +25,10 @@ exports.signupPage = (req, res) => {
    SIGNUP WITH OTP
 ========================= */
 exports.signup = async (req, res) => {
-  try {
-    const { fullName, email, password, confirmPassword } = req.body;
+  const { fullName, email, password, confirmPassword } = req.body;
 
-    // Basic validation
+  try {
+    // 1. Basic Validation (Presentation logic stays in controller)
     if (!fullName || !email || !password || !confirmPassword) {
       return res.render("User/auth/register", {
         layout: "layouts/user",
@@ -36,10 +40,7 @@ exports.signup = async (req, res) => {
     if (password.length < 8) {
       return res.render("User/auth/register", {
         layout: "layouts/user",
-        message: {
-          type: "error",
-          text: "Password must be at least 8 characters",
-        },
+        message: { type: "error", text: "Password must be at least 8 characters" },
         formData: { fullName, email },
       });
     }
@@ -52,49 +53,23 @@ exports.signup = async (req, res) => {
       });
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.render("User/auth/register", {
-        layout: "layouts/user",
-        message: { type: "error", text: "User already exists" },
-        formData: { fullName, email },
-      });
-    }
+    // 2. Call the Service Layer for the "Heavy Lifting"
+    const result = await authService.initiateSignup(fullName, email, password);
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Generate OTP
-    const otp = generateOtp();
-    const hashedOtp = await bcrypt.hash(otp, 10);
-
-    await Otp.deleteMany({ email });
-
-    await Otp.create({
-      email,
-      otp: hashedOtp,
-      expiresAt: Date.now() + 5 * 60 * 1000,
-      lastSentAt: new Date(),
-    });
-
-    await sendOtpEmail(email, otp);
-
-    // Store in session
-    req.session.pendingUser = {
-      fullName,
-      email,
-      password: hashedPassword,
-    };
+    // 3. Handle Session & Navigation
+    req.session.pendingUser = result.pendingUser;
     req.session.otpEmail = email;
 
-    console.log("OTP (DEV):", otp);
+    console.log("OTP (DEV):", result.otp);
     res.redirect("/user/verify-otp");
+
   } catch (err) {
+    // 4. Catch errors thrown by the service (like "User already exists")
     console.error("Signup error:", err);
     res.render("User/auth/register", {
       layout: "layouts/user",
-      message: { type: "error", text: "Something went wrong. Try again." },
-      formData: req.body,
+      message: { type: "error", text: err.message || "Something went wrong. Try again." },
+      formData: { fullName, email },
     });
   }
 };
@@ -103,97 +78,84 @@ exports.signup = async (req, res) => {
    VERIFY OTP
 ========================= */
 exports.verifyOtp = async (req, res) => {
-  try {
-    const { otp } = req.body;
-    const isOld = !!req.session.changeEmailFlow;
-    const isNew = !!req.session.newEmailOtpSent;
+    try {
+        const { otp } = req.body;
+        const isOld = !!req.session.changeEmailFlow;
+        const isNew = !!req.session.newEmailOtpSent;
 
-    let email = isNew ? req.session.tempNewEmail : isOld ? req.session.currentEmailToVerify : req.session.pendingUser?.email;
+        // 1. Determine Mode and Target Email
+        let mode = 'NEW_SIGNUP';
+        let email = req.session.pendingUser?.email;
 
-    if (!email) {
-      return res.status(400).json({ success: false, message: "Session expired" });
+        if (isNew) {
+            mode = 'NEW_EMAIL_UPDATE';
+            email = req.session.tempNewEmail;
+        } else if (isOld) {
+            mode = 'VERIFY_OLD_EMAIL';
+            email = req.session.currentEmailToVerify;
+        }
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: "Session expired" });
+        }
+
+        // 2. Delegate to Service
+        const result = await authService.verifyOtpCode({
+            otp,
+            email,
+            mode,
+            userId: req.session.userId,
+            pendingUserData: req.session.pendingUser
+        });
+
+        // 3. Post-verification session cleanup (Controller responsibility)
+        if (mode === 'NEW_EMAIL_UPDATE') {
+            req.session.emailVerifiedForChange = req.session.newEmailOtpSent = req.session.tempNewEmail = null;
+        } else if (mode === 'VERIFY_OLD_EMAIL') {
+            req.session.emailVerifiedForChange = true;
+            req.session.changeEmailFlow = null;
+        } else {
+            req.session.pendingUser = null;
+        }
+
+        return res.json({ success: true, redirectUrl: result.redirectUrl });
+
+    } catch (err) {
+        console.error("Verification Error:", err);
+        // We catch the "Error" thrown by service and send its message
+        return res.status(400).json({ success: false, message: err.message || "Error during verification." });
     }
-
-    const otpRecord = await Otp.findOne({ email }).sort({ createdAt: -1 });
-
-    if (!otpRecord || otpRecord.expiresAt < Date.now() || !(await bcrypt.compare(otp, otpRecord.otp))) {
-      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
-    }
-
-    await Otp.deleteMany({ email });
-    let redirectUrl = "";
-
-    if (isNew) {
-      await User.findByIdAndUpdate(req.session.userId, { email: req.session.tempNewEmail });
-      req.session.emailVerifiedForChange = req.session.newEmailOtpSent = req.session.tempNewEmail = null;
-      redirectUrl = "/user/profile?emailChanged=true";
-    }
-    else if (isOld) {
-      req.session.emailVerifiedForChange = true;
-      req.session.changeEmailFlow = null;
-      redirectUrl = "/user/profile/change-email-form";
-    }
-    else {
-      const pendingUser = req.session.pendingUser;
-      await User.create({ ...pendingUser, authProvider: "local", isEmailVerified: true });
-      req.session.pendingUser = null;
-      redirectUrl = "/user/login?signupSuccess=true";
-    }
-
-    // ✅ ALWAYS send JSON for AJAX requests
-    return res.json({ success: true, redirectUrl });
-
-  } catch (err) {
-    console.error("Verification Error:", err);
-    return res.status(500).json({ success: false, message: "Error during verification." });
-  }
 };
 
 /* =========================
    RESEND OTP
 ========================= */
 exports.resendOtp = async (req, res) => {
-  try {
-    const email = req.session.otpEmail;
+    try {
+        const email = req.session.otpEmail;
 
-    if (!email) {
-      return res
-        .status(400)
-        .json({ message: "Session expired. Please signup again." });
+        if (!email) {
+            return res.status(400).json({ 
+                message: "Session expired. Please signup again." 
+            });
+        }
+
+        // Delegate the work to the service
+        const otp = await authService.processResendOtp(email);
+
+        console.log("RESEND OTP (DEV):", otp);
+
+        return res.json({ message: "OTP resent successfully" });
+
+    } catch (err) {
+        console.error("Resend OTP error:", err);
+        
+        // Handle the 429 Rate Limit error specifically
+        const status = err.status || 500;
+        const message = err.message || "Failed to resend OTP";
+        
+        return res.status(status).json({ message });
     }
-
-    const existingOtp = await Otp.findOne({ email });
-
-    if (existingOtp?.lastSentAt) {
-      const diff = Date.now() - existingOtp.lastSentAt.getTime();
-      if (diff < 60 * 1000) {
-        return res.status(429).json({
-          message: "Please wait 1 minute before requesting another OTP",
-        });
-      }
-    }
-
-    await Otp.deleteMany({ email });
-
-    const otp = generateOtp();
-    const hashedOtp = await bcrypt.hash(otp, 10);
-
-    await Otp.create({
-      email,
-      otp: hashedOtp,
-      expiresAt: Date.now() + 5 * 60 * 1000,
-      lastSentAt: new Date(),
-    });
-
-    await sendOtpEmail(email, otp);
-
-    console.log("RESEND OTP (DEV):", otp);
-
-    res.json({ message: "OTP resent successfully" });
-  } catch (err) {
-    console.error("Resend OTP error:", err);
-    res.status(500).json({ message: "Failed to resend OTP" });
-  }
 };
 
 /* =========================
@@ -202,67 +164,55 @@ exports.resendOtp = async (req, res) => {
 exports.loginPage = (req, res) => {
   // Check if user just arrived from a successful OTP verification
   const signupSuccess = req.query.signupSuccess === 'true';
+  const resetSuccess = req.query.resetSuccess === 'true';
+
+    let successMessage = null;
+    if (signupSuccess) {
+        successMessage = "Account created successfully! Please log in.";
+    } else if (resetSuccess) {
+        successMessage = "Password reset successful!, Log in Now";
+    }
 
   res.render("User/auth/login", {
     layout: "layouts/user",
     error: null,
     // Pass the success message if the flag is present
-    successMessage: signupSuccess ? "Account created successfully! Please log in." : null,
+    successMessage: successMessage,
   });
 };
 
 /* =========================
    LOGIN
 ========================= */
-// controller/userController.js
 
 exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email }).select("+password");
+    try {
+        const { email, password } = req.body;
 
-    // 1. Basic User/Provider Check
-    if (!user || user.authProvider !== "local") {
-      return res.render("User/auth/login", {
-        layout: "layouts/user",
-        error: "Invalid email or password",
-      });
+        // 1. Call Service for Authentication
+        const user = await authService.authenticateUser(email, password);
+
+        // 2. Controller handles the Session (This is a web-specific task)
+        req.session.userId = user._id;
+        req.session.userName = user.fullName;
+        req.session.userEmail = user.email;
+
+        req.session.save((err) => {
+            if (err) {
+                console.error("Session Save Error:", err);
+                return res.redirect("/user/login");
+            }
+            res.redirect("/user/home");
+        });
+
+    } catch (err) {
+        // 3. Catch errors from Service (Invalid credentials or Banned status)
+        console.error("Login Error:", err);
+        res.render("User/auth/login", {
+            layout: "layouts/user",
+            error: err.message || "Something went wrong. Try again.",
+        });
     }
-
-    // 2. THE BAN CHECK
-    if (user.isBlocked) {
-      return res.render("User/auth/login", {
-        layout: "layouts/user",
-        error: "Your account has been suspended. Please contact support.",
-      });
-    }
-
-    // 3. Password Check
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.render("User/auth/login", {
-        layout: "layouts/user",
-        error: "Invalid email or password",
-      });
-    }
-
-    // 4. Assigning session variables
-    req.session.userId = user._id;
-    req.session.userName = user.fullName;
-    req.session.userEmail = user.email;
-
-    req.session.save((err) => {
-      if (err) return res.redirect("/user/login");
-      res.redirect("/user/home");
-    });
-
-  } catch (err) {
-    console.error("Login Error:", err);
-    res.render("User/auth/login", {
-      layout: "layouts/user",
-      error: "Something went wrong. Try again.",
-    });
-  }
 };
 
 /* =========================
@@ -276,36 +226,25 @@ exports.forgotPasswordPage = (req, res) => {
 };
 
 exports.forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
-    const user = await User.findOne({ email });
+    try {
+        const { email } = req.body;
 
-    if (user && user.authProvider === "local") {
-      const resetToken = crypto.randomBytes(32).toString("hex");
-      const hashedToken = crypto
-        .createHash("sha256")
-        .update(resetToken)
-        .digest("hex");
+        // Call the service to handle tokens, hashing, and emailing
+        await passwordService.initiatePasswordReset(email);
 
-      user.resetPasswordToken = hashedToken;
-      user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
-      await user.save();
+        // Controller only manages the response to the user
+        res.render("User/auth/forgot-password", {
+            layout: "layouts/user",
+            message: "If an account exists, a reset link has been sent.",
+        });
 
-      await sendResetPasswordEmail(email, resetToken);
+    } catch (err) {
+        console.error("Forgot password error:", err);
+        res.render("User/auth/forgot-password", {
+            layout: "layouts/user",
+            message: "Something went wrong. Please try again.",
+        });
     }
-
-    res.render("User/auth/forgot-password", {
-      layout: "layouts/user",
-      message: "If an account exists, a reset link has been sent.",
-    });
-
-  } catch (err) {
-    console.error("Forgot password error:", err);
-    res.render("User/auth/forgot-password", {
-      layout: "layouts/user",
-      message: "Something went wrong. Please try again.",
-    });
-  }
 };
 
 /* =========================
@@ -333,39 +272,29 @@ exports.resetPasswordPage = async (req, res) => {
 };
 
 exports.resetPassword = async (req, res) => {
-  try {
-    const { password, confirmPassword } = req.body;
+    try {
+        const { password, confirmPassword } = req.body;
+        const { token } = req.params;
 
-    if (password !== confirmPassword) {
-      return res.send("Passwords do not match");
+        // 1. Basic UI Validation (Controller's job)
+        if (password !== confirmPassword) {
+            return res.render("User/auth/reset-password", {
+                token,
+                error: "Passwords do not match"
+            });
+        }
+
+        // 2. Call Service to handle the logic
+        await passwordService.resetPassword(token, password);
+
+        // 3. Redirect to Login with a success flag
+        res.redirect("/user/login?resetSuccess=true");
+
+    } catch (err) {
+        console.error("Reset Password Error:", err);
+        // Handle specific error from service (like expired token)
+        res.status(400).send(err.message || "Internal Server Error");
     }
-
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(req.params.token)
-      .digest("hex");
-
-    const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpires: { $gt: Date.now() },
-    });
-
-    if (!user) return res.send("Invalid or expired token");
-
-    // Update password
-    user.password = await bcrypt.hash(password, 10);
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-
-    await user.save({ validateBeforeSave: false });
-
-    // ✅ MODIFIED: Redirect to profile with a success flag
-    res.redirect("/user/profile?passwordChanged=true");
-
-  } catch (err) {
-    console.error("Reset Password Error:", err);
-    res.status(500).send("Internal Server Error");
-  }
 };
 
 /* =========================
@@ -426,28 +355,26 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// Handle AJAX Profile Update
+
+// Update profile function
+
 exports.updateProfile = async (req, res) => {
   try {
-    // console.log("Update Data received:", req.body);
-
     const { fullName, phoneNumber, dateOfBirth } = req.body;
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.session.userId,
-      {
-        fullName: fullName,
-        phone: phoneNumber,
-        dob: dateOfBirth
-      },
-      { new: true }
-    );
+    // Use the Service Layer
+    const updatedUser = await userService.updateProfileData(req.session.userId, {
+        fullName,
+        phoneNumber,
+        dateOfBirth
+    });
 
+    // Update Session
     req.session.userName = updatedUser.fullName;
+
     res.json({ success: true, message: "Profile updated successfully!" });
   } catch (err) {
-    console.error("Update Error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -535,45 +462,29 @@ exports.changePasswordRequest = async (req, res) => {
 //Profile Picture Updating Logic 
 exports.updateProfileImage = async (req, res) => {
     try {
-        const fs = require('fs');
-        const path = require('path');
-
         if (!req.file) {
             return res.status(400).json({ success: false, message: "No file uploaded" });
         }
 
-        const userId = req.session.userId; 
-        const newImagePath = `/uploads/profile/${req.file.filename}`;
+        const userId = req.session.userId;
+        // We define the root of our public folder here
+        const publicRoot = path.join(__dirname, '../public');
 
-        // 1. Find and Update the User
-        const user = await User.findById(userId);
-        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        // 1. Call Service
+        const newImagePath = await userService.updateUserProfileImage(
+            userId, 
+            req.file.filename, 
+            publicRoot
+        );
 
-        // 2. Delete old image (to prevent server clutter)
-        if (user.profileImage && user.profileImage.startsWith('/uploads/profile/')) {
-            const oldPath = path.join(__dirname, '../public', user.profileImage);
-            if (fs.existsSync(oldPath)) {
-                fs.unlinkSync(oldPath);
-            }
-        }
-
-        // 3. Update the database field
-        user.profileImage = newImagePath;
-        await user.save(); // Await is crucial here!
-
-        // 4. IMPORTANT: Update the topbar/navbar avatar instantly
-        // If your navbar uses user.profileImage from the session, update it here:
+        // 2. Sync Session
         if (req.session.user) {
             req.session.user.profileImage = newImagePath;
         }
 
-        // 5. Explicitly save the session before sending the response
+        // 3. Save Session & Respond
         req.session.save((err) => {
-            if (err) {
-                console.error("Session Save Error:", err);
-                return res.status(500).json({ success: false, message: "Session update failed" });
-            }
-            // Send success only AFTER session is saved
+            if (err) throw err;
             res.json({ 
                 success: true, 
                 message: "Profile picture updated!", 
@@ -583,37 +494,37 @@ exports.updateProfileImage = async (req, res) => {
 
     } catch (error) {
         console.error("Profile Image Upload Error:", error);
-        res.status(500).json({ success: false, message: "Server error during upload" });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || "Server error during upload" 
+        });
     }
 };
 
 exports.deleteProfileImage = async (req, res) => {
     try {
-        const fs = require('fs');
-        const path = require('path');
         const userId = req.session.userId;
+        const publicRoot = path.join(__dirname, '../public');
 
-        const user = await User.findById(userId);
-        if (!user || !user.profileImage) {
-            return res.status(400).json({ success: false, message: "No image to delete" });
+        // 1. Delegate to Service
+        await userService.removeUserProfileImage(userId, publicRoot);
+
+        // 2. Sync Session
+        if (req.session.user) {
+            req.session.user.profileImage = "";
         }
 
-        // 1. Delete the file from the server
-        const imagePath = path.join(__dirname, '../public', user.profileImage);
-        if (fs.existsSync(imagePath)) {
-            fs.unlinkSync(imagePath);
-        }
+        // 3. Response
+        return res.json({ success: true, message: "Profile image deleted" });
 
-        // 2. Clear the field in MongoDB
-        user.profileImage = "";
-        await user.save();
-
-        // 3. Update session if necessary
-        if (req.session.user) req.session.user.profileImage = "";
-
-        res.json({ success: true, message: "Profile image deleted" });
     } catch (error) {
         console.error("Delete Image Error:", error);
-        res.status(500).json({ success: false, message: "Server error" });
+        
+        // Handle the "No image found" error as a 400, others as 500
+        const statusCode = error.message === "No image found to delete" ? 400 : 500;
+        return res.status(statusCode).json({ 
+            success: false, 
+            message: error.message || "Server error" 
+        });
     }
 };

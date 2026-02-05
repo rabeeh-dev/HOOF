@@ -70,7 +70,7 @@ router.get('/home', isUser, (req, res) => {
 
 // ================= USER PROFILE =================
 router.get('/profile', isUser, userController.getProfile);
-router.patch('/profile/update', isUser, userController.updateProfile);
+router.post('/profile/update', isUser, userController.updateProfile);
 
 // ================= USER PROFILE =================
 router.post('/profile/update-image', isUser, upload.single('profileImage'), userController.updateProfileImage);
