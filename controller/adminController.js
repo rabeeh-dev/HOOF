@@ -1,6 +1,7 @@
 const Admin = require("../model/Admin");
 const User = require("../model/User");
 const bcrypt = require("bcrypt");
+const PDFDocument = require("pdfkit-table");
 
 /* =============================================================================
    ADMIN AUTHENTICATION SECTION
@@ -144,5 +145,73 @@ exports.toggleUserStatus = async (req, res) => {
     } catch (error) {
         console.error("Update Error:", error);
         res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+/**
+ * @route   GET /admin/users/export-pdf
+ * @desc    Generates and downloads a PDF report of all users
+ * @access  Private (Admin Only)
+ */
+exports.exportUsersPDF = async (req, res) => {
+    try {
+        const users = await User.find({}).sort({ createdAt: -1 });
+
+        // Create a new PDF document
+        const doc = new PDFDocument({ margin: 30, size: 'A4' });
+
+        // Set response headers
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", "attachment; filename=customers-report.pdf");
+
+        // Pipe the PDF into the response
+        doc.pipe(res);
+
+        // --- HEADER ---
+        doc.fontSize(20).text("HOOF - Customer Report", { align: "center" });
+        doc.moveDown();
+        doc.fontSize(10).text(`Generated on: ${new Date().toLocaleString()}`, { align: "center" });
+        doc.moveDown(2);
+
+        // --- TABLE ---
+        const table = {
+            title: "User List",
+            headers: [
+                { label: "Name", property: "name", width: 100 },
+                { label: "Email", property: "email", width: 150 },
+                { label: "Phone", property: "phone", width: 100 },
+                { label: "Joined Date", property: "date", width: 100 },
+                { label: "Status", property: "status", width: 80 }
+            ],
+            rows: users.map(user => [
+                user.fullName || "N/A",
+                user.email || "N/A",
+                user.phone || "N/A",
+                new Date(user.createdAt).toLocaleDateString(),
+                user.isBlocked ? "Blocked" : "Active"
+            ])
+        };
+
+        // Draw the table
+        // pdfkit-table's table() method automatically handles new pages
+        await doc.table(table, {
+            prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10),
+            prepareRow: (row, indexColumn, indexRow, rect, rowData) => {
+                doc.font("Helvetica").fontSize(10);
+                // Optional: Stripe rows
+                if (indexRow % 2 === 0) {
+                    doc.addBackground(rect, '#f0f0f0', 0.15); // light gray
+                }
+
+                // Color status text if needed (simulated by checking value in renderer - pdfkit-table is simpler)
+            }
+        });
+
+        // Finalize the PDF and end the stream
+        doc.end();
+
+    } catch (error) {
+        console.error("PDF Export Error:", error);
+        res.status(500).send("Error generating PDF");
     }
 };

@@ -42,6 +42,13 @@ router.get('/dashboard', adminAuth.isLogin, adminController.loadDashboard);
 router.get('/customers', adminAuth.isLogin, adminController.loadCustomers);
 
 /**
+ * @route   GET /admin/users/export-pdf
+ * @desc    Generate and download PDF report of all users
+ * @access  Private (Admin Only)
+ */
+router.get('/users/export-pdf', adminAuth.isLogin, adminController.exportUsersPDF);
+
+/**
  * @route   PATCH /admin/users/:action/:id
  * @desc    Block or Unblock a user based on action parameter
  * @access  Private (Admin Only)

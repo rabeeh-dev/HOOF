@@ -23,7 +23,16 @@ const createMobileToggle = () => {
 createMobileToggle();
 window.addEventListener('resize', createMobileToggle);
 
-// 2. Search Logic (Filtered to current view)
+// 2. Export Button Logic
+const exportBtn = document.querySelector('.btn-export');
+if (exportBtn) {
+    exportBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = '/admin/users/export-pdf';
+    });
+}
+
+// 3. Search Logic (Filtered to current view)
 const searchInput = document.getElementById('searchInput');
 if (searchInput) {
     searchInput.addEventListener('input', (e) => {
