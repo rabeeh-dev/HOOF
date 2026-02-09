@@ -56,6 +56,39 @@ router.get('/users/export-pdf', adminAuth.isLogin, adminController.exportUsersPD
 router.patch('/users/:action/:id', adminAuth.isLogin, adminController.toggleUserStatus);
 
 /* =============================================================================
+   CATEGORY MANAGEMENT SECTION
+   Access: Private (isLogin)
+============================================================================= */
+
+/**
+ * @route   GET /admin/categories
+ * @desc    Load category management list
+ * @access  Private (Admin Only)
+ */
+router.get('/categories', adminAuth.isLogin, adminController.loadCategories);
+
+/**
+ * @route   POST /admin/categories/add
+ * @desc    Add a new category
+ * @access  Private (Admin Only)
+ */
+router.post('/categories/add', adminAuth.isLogin, adminController.addCategory);
+
+/**
+ * @route   PATCH /admin/categories/edit/:id
+ * @desc    Update category details
+ * @access  Private (Admin Only)
+ */
+router.patch('/categories/edit/:id', adminAuth.isLogin, adminController.updateCategory);
+
+/**
+ * @route   PATCH /admin/categories/toggle-status/:id
+ * @desc    Toggle category listing status
+ * @access  Private (Admin Only)
+ */
+router.patch('/categories/toggle-status/:id', adminAuth.isLogin, adminController.toggleCategoryStatus);
+
+/* =============================================================================
    LOGOUT
    Access: Private (isLogin)
 ============================================================================= */
@@ -67,4 +100,4 @@ router.patch('/users/:action/:id', adminAuth.isLogin, adminController.toggleUser
  */
 router.get('/logout', adminAuth.isLogin, adminController.logout);
 
-module.exports = router;
+module.exports = router;  

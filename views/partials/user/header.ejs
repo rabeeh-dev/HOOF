@@ -1,0 +1,98 @@
+<header class="topbar">
+    <div class="container nav-inner">
+        <% if (locals.showBackButton) { %>
+            <a href="javascript:history.back()" class="nav-back" aria-label="Go back">
+                <i class="fa-solid fa-arrow-left" style="color: black; margin-right: 15px;"></i>
+            </a>
+            <% } %>
+                <div class="logo">HOOF</div>
+                <nav class="nav">
+                    <ul class="nav-links">
+                        <li><a href="/user/home">Home</a></li>
+                        <li><a href="/user/about">About</a></li>
+                        <li><a href="/user/shop">Shop</a></li>
+                        <li><a href="/user/contact">Contact</a></li>
+                        <% if (!user) { %>
+                            <li><a href="/user/login" style="color: #ff4d4d;">Log In</a></li>
+                            <% } %>
+                    </ul>
+                    <div class="nav-actions">
+                        <a href="#" class="nav-icon" title="Wishlist">
+                            <i class="far fa-heart"></i>
+                            <span class="nav-badge">0</span>
+                        </a>
+                        <a href="#" class="nav-icon cart-icon" title="Cart">
+                            <i class="fas fa-shopping-bag"></i>
+                            <span class="nav-badge cart-count">0</span>
+                        </a>
+
+                        <% if (locals.user) { %>
+                            <div class="profile-dropdown-wrapper">
+                                <a href="#" class="nav-icon profile-icon" title="Profile" id="profileToggle">
+                                    <i class="fas fa-user"></i>
+                                </a>
+                                <div class="profile-dropdown" id="profileDropdown">
+                                    <div class="dropdown-header">
+                                        <div class="dropdown-avatar">
+                                            <i class="fas fa-user" style="color: #ff4d4d;"></i>
+                                        </div>
+                                        <div class="dropdown-user-info">
+                                            <h4>
+                                                <%= user.name || user.userName %>
+                                            </h4>
+                                        </div>
+                                    </div>
+                                    <div class="dropdown-divider"></div>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a href="/user/profile" class="dropdown-item">
+                                                <i class="fas fa-user-circle"></i>
+                                                <span>Profile</span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#" class="dropdown-item">
+                                                <i class="fas fa-box"></i>
+                                                <span>Orders</span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#" class="dropdown-item">
+                                                <i class="fas fa-wallet"></i>
+                                                <span>Wallet</span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#" class="dropdown-item">
+                                                <i class="fas fa-gift"></i>
+                                                <span>Referral</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <div class="dropdown-divider"></div>
+                                    <div class="dropdown-footer">
+                                        <form action="/user/logout" method="POST" id="logoutForm">
+                                            <button type="submit" class="dropdown-item logout" style="
+                    width: 100%;
+                    border: none;
+                    background: none;
+                    text-align: left;
+                    cursor: pointer;
+                    font-family: inherit;
+                    font-size: inherit;
+                  ">
+                                                <i class="fas fa-sign-out-alt"></i>
+                                                <span>Logout</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <% } %>
+                    </div>
+                    <button class="nav-toggle" id="nav-toggle">
+                        <span></span><span></span><span></span>
+                    </button>
+                </nav>
+    </div>
+</header>

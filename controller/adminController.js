@@ -1,5 +1,6 @@
 const Admin = require("../model/Admin");
 const User = require("../model/User");
+const Category = require("../model/Category");
 const bcrypt = require("bcrypt");
 const PDFDocument = require("pdfkit-table");
 
@@ -17,7 +18,7 @@ exports.loadLogin = async (req, res) => {
         if (req.session.adminId) {
             return res.redirect('/admin/dashboard');
         }
-        res.render('Admin/auth/login', { message: null });
+        res.render('Admin/auth/login', { layout: false, message: null });
     } catch (error) {
         console.error("Load Login Error:", error.message);
         res.status(500).send("Internal Server Error");
@@ -78,7 +79,8 @@ exports.logout = (req, res) => {
 exports.loadDashboard = async (req, res) => {
     try {
         res.render('Admin/admin-dashboard', {
-            title: "Admin Dashboard | HOOF"
+            title: "Admin Dashboard | HOOF",
+            layout: false
         });
     } catch (error) {
         console.error("Load Dashboard Error:", error.message);
@@ -113,7 +115,8 @@ exports.loadCustomers = async (req, res) => {
             users,
             currentPage: page,
             totalPages: Math.ceil(totalUsers / limit) || 1,
-            title: "Customers | HOOF Admin"
+            title: "Customers | HOOF Admin",
+            layout: false
         });
     } catch (error) {
         console.error("Load Customers Error:", error.message);
@@ -213,5 +216,118 @@ exports.exportUsersPDF = async (req, res) => {
     } catch (error) {
         console.error("PDF Export Error:", error);
         res.status(500).send("Error generating PDF");
+    }
+};
+
+/* =============================================================================
+   CATEGORY MANAGEMENT SECTION
+============================================================================= */
+
+/**
+ * @route   GET /admin/categories
+ * @desc    Fetch and display all categories
+ * @access  Private (Admin Only)
+ */
+exports.loadCategories = async (req, res) => {
+    try {
+        const categories = await Category.find({}).sort({ createdAt: -1 });
+        res.render('Admin/category-management', {
+            categories,
+            title: "Category Management | HOOF Admin",
+            layout: false
+        });
+    } catch (error) {
+        console.error("Load Categories Error:", error.message);
+        res.status(500).send("Error loading categories");
+    }
+};
+
+/**
+ * @route   POST /admin/categories/add
+ * @desc    Create a new category
+ * @access  Private (Admin Only)
+ */
+exports.addCategory = async (req, res) => {
+    try {
+        const { name, description } = req.body;
+        const normalizedName = name.trim();
+
+        const existingCategory = await Category.findOne({
+            name: { $regex: new RegExp(`^${normalizedName}$`, 'i') }
+        });
+
+        if (existingCategory) {
+            return res.status(400).json({ success: false, message: "Category already exists" });
+        }
+
+        const newCategory = new Category({
+            name: normalizedName,
+            description: description.trim()
+        });
+
+        await newCategory.save();
+        res.status(201).json({ success: true, message: "Category added successfully" });
+
+    } catch (error) {
+        console.error("Add Category Error:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+/**
+ * @route   PATCH /admin/categories/edit/:id
+ * @desc    Update an existing category's details
+ * @access  Private (Admin Only)
+ */
+exports.updateCategory = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, description } = req.body;
+        const normalizedName = name.trim();
+
+        const existingCategory = await Category.findOne({
+            name: { $regex: new RegExp(`^${normalizedName}$`, 'i') },
+            _id: { $ne: id }
+        });
+
+        if (existingCategory) {
+            return res.status(400).json({ success: false, message: "Another category with this name already exists" });
+        }
+
+        await Category.findByIdAndUpdate(id, {
+            name: normalizedName,
+            description: description.trim()
+        });
+
+        res.json({ success: true, message: "Category updated successfully" });
+
+    } catch (error) {
+        console.error("Update Category Error:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+/**
+ * @route   PATCH /admin/categories/toggle-status/:id
+ * @desc    Toggle the isListed status of a category
+ * @access  Private (Admin Only)
+ */
+exports.toggleCategoryStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const category = await Category.findById(id);
+
+        if (!category) {
+            return res.status(404).json({ success: false, message: "Category not found" });
+        }
+
+        category.isListed = !category.isListed;
+        await category.save();
+
+        res.json({ success: true, message: `Category ${category.isListed ? 'listed' : 'unlisted'} successfully` });
+
+    } catch (error) {
+        console.error("Toggle Category Status Error:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };

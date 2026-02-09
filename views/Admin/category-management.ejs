@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Category Management | HOOF Admin</title>
+    <link rel="stylesheet" href="/admin/css/category-management.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">HOOF</div>
+            <p class="admin-label">Admin</p>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/admin/dashboard" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-box"></i>
+                <span>Products</span>
+            </a>
+            <a href="/admin/categories" class="nav-item active">
+                <i class="fas fa-tags"></i>
+                <span>Categories</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Orders</span>
+            </a>
+            <a href="/admin/customers" class="nav-item">
+                <i class="fas fa-users"></i>
+                <span>Customers</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-ticket-alt"></i>
+                <span>Coupons</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="admin-profile">
+                <div class="admin-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="admin-info">
+                    <h4>Admin User</h4>
+                    <p>View Profile</p>
+                </div>
+                <button class="logout-btn" onclick="window.location.href='/admin/logout'" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <header class="page-header">
+            <div>
+                <h1>Category Management</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn-add" onclick="openAddModal()">
+                    <i class="fas fa-plus"></i>
+                    Add Category
+                </button>
+            </div>
+        </header>
+
+        <div class="categories-card">
+            <!-- SEARCH BAR -->
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search categories..." id="categorySearch"
+                    onkeyup="searchCategories()" />
+            </div>
+
+            <div class="table-container">
+                <table class="categories-table">
+                    <thead>
+                        <tr>
+                            <th>Category Name</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoryTableBody">
+                        <% if(categories && categories.length> 0) { %>
+                            <% categories.forEach((category, index)=> { %>
+                                <tr data-id="<%= category._id %>">
+                                    <td>
+                                        <h4 class="category-name">
+                                            <%= category.name %>
+                                        </h4>
+                                    </td>
+                                    <td>
+                                        <p class="category-desc">
+                                            <%= category.description %>
+                                        </p>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge <%= category.isListed ? 'listed' : 'unlisted' %>">
+                                            <%= category.isListed ? 'Listed' : 'Unlisted' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn edit"
+                                                onclick="openEditModal('<%= category._id %>', '<%= category.name %>', '<%= category.description %>')"
+                                                title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button
+                                                class="action-btn toggle <%= category.isListed ? 'unlist' : 'list' %>"
+                                                onclick="toggleStatus('<%= category._id %>')"
+                                                title="<%= category.isListed ? 'Unlist' : 'List' %> Category">
+                                                <i class="fas <%= category.isListed ? 'fa-eye-slash' : 'fa-eye' %>"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="4" style="text-align: center; padding: 2rem;">No categories
+                                                found.</td>
+                                        </tr>
+                                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- ADD/EDIT MODAL -->
+    <div id="categoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Category</h2>
+                <span class="close-modal" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="categoryForm">
+                <input type="hidden" id="categoryId" name="categoryId">
+                <div class="form-group">
+                    <label for="categoryName">Category Name</label>
+                    <input type="text" id="categoryName" name="name" placeholder="e.g. Running Shoes" required>
+                    <small class="error-msg" id="nameError"></small>
+                </div>
+                <div class="form-group">
+                    <label for="categoryDescription">Description</label>
+                    <textarea id="categoryDescription" name="description"
+                        placeholder="Briefly describe what this category includes..." required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn-save" id="saveBtn">Save Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('categoryModal');
+        const form = document.getElementById('categoryForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const categoryIdInput = document.getElementById('categoryId');
+        const nameInput = document.getElementById('categoryName');
+        const descInput = document.getElementById('categoryDescription');
+
+        function openAddModal() {
+            modalTitle.innerText = "Add New Category";
+            form.reset();
+            categoryIdInput.value = "";
+            modal.style.display = 'flex';
+        }
+
+        function openEditModal(id, name, desc) {
+            modalTitle.innerText = "Edit Category";
+            categoryIdInput.value = id;
+            nameInput.value = name;
+            descInput.value = desc;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+            document.getElementById('nameError').innerText = "";
+        }
+
+        window.onclick = (e) => { if (e.target == modal) closeModal(); }
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = categoryIdInput.value;
+            const url = id ? `/admin/categories/edit/${id}` : '/admin/categories/add';
+            const method = id ? 'PATCH' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: nameInput.value,
+                        description: descInput.value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: data.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => window.location.reload());
+                } else {
+                    document.getElementById('nameError').innerText = data.message;
+                }
+            } catch (err) {
+                console.error("Submit Error:", err);
+                Swal.fire('Error', 'Something went wrong', 'error');
+            }
+        };
+
+        async function toggleStatus(id) {
+            const result = await Swal.fire({
+                title: 'Are you sure?',
+                text: "You want to change this category's listing status!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#c41e3a',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, change it!'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/categories/toggle-status/${id}`, { method: 'PATCH' });
+                    const data = await response.json();
+                    if (data.success) {
+                        Swal.fire('Updated!', data.message, 'success').then(() => window.location.reload());
+                    }
+                } catch (err) {
+                    Swal.fire('Error', 'Update failed', 'error');
+                }
+            }
+        }
+
+        function searchCategories() {
+            const input = document.getElementById('categorySearch');
+            const filter = input.value.toLowerCase();
+            const tbody = document.getElementById('categoryTableBody');
+            const rows = tbody.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const nameCol = rows[i].getElementsByClassName('category-name')[0];
+                const descCol = rows[i].getElementsByClassName('category-desc')[0];
+                if (nameCol || descCol) {
+                    const nameText = nameCol.textContent || nameCol.innerText;
+                    const descText = descCol.textContent || descCol.innerText;
+                    if (nameText.toLowerCase().indexOf(filter) > -1 || descText.toLowerCase().indexOf(filter) > -1) {
+                        rows[i].style.display = "";
+                    } else {
+                        rows[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard Overview | HOOF Admin</title>
   <link rel="stylesheet" href="/admin/css/admin-dashboard.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
 </head>
+
 <body>
   <!-- SIDEBAR -->
   <aside class="sidebar">
@@ -26,6 +29,10 @@
       <a href="#" class="nav-item">
         <i class="fas fa-box"></i>
         <span>Products</span>
+      </a>
+      <a href="/admin/categories" class="nav-item">
+        <i class="fas fa-tags"></i>
+        <span>Categories</span>
       </a>
       <a href="#" class="nav-item">
         <i class="fas fa-shopping-cart"></i>
@@ -251,14 +258,15 @@
 
   <script src="/admin/js/admin-dashboard.js" defer></script>
   <script>
-  window.addEventListener("pageshow", function (event) {
-    const navEntries = performance.getEntriesByType('navigation');
-    const isBackForward = navEntries.length > 0 && navEntries[0].type === 'back_forward';
+    window.addEventListener("pageshow", function (event) {
+      const navEntries = performance.getEntriesByType('navigation');
+      const isBackForward = navEntries.length > 0 && navEntries[0].type === 'back_forward';
 
-    if (event.persisted || isBackForward) {
-      window.location.reload();
-    }
-  });
-</script>
+      if (event.persisted || isBackForward) {
+        window.location.reload();
+      }
+    });
+  </script>
 </body>
+
 </html>

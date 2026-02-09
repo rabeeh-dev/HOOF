@@ -1,210 +1,208 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HOOF | Official</title>
+<link rel="stylesheet" href="/user/css/landing.css" />
 
-    <link rel="stylesheet" href="/user/css/landing.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+<!-- HERO SECTION -->
+<!-- HERO SECTION -->
+<section class="section hero" id="home">
+  <div class="container hero-inner">
+    <div class="hero-left">
+      <p class="welcome">WELCOME TO HOOF</p>
+      <h1>FIND YOUR<br /><span>PERFECT PAIR</span></h1>
+      <p class="hero-sub">
+        Premium sneakers for every style and stride.
+      </p>
 
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
-
-    <link rel="icon" href="/favicon.ico">
-
-  </head>
-  <body>
-    <!-- TOP BAR / NAV -->
-    <header class="topbar">
-      <div class="container nav-inner">
-        <div class="logo">HOOF</div>
-        <nav class="nav">
-          <ul class="nav-links">
-            <li><a href="#home">Home</a></li>
-            <li><a href="">About us</a></li>
-            <li><a href="">Shop</a></li>
-            <li><a href="">Contact</a></li>
-            <li><a href="/user/login" style="color: rgb(213, 0, 0)">Log In</a></li>
-          </ul>
-          <button class="nav-toggle" id="nav-toggle">
-            <span></span><span></span><span></span>
-          </button>
-        </nav>
+      <div class="hero-search-minimal" style="margin-top: 2rem; max-width: 400px;">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" placeholder="Search sneakers..." class="search-input-minimal" />
       </div>
-    </header>
+    </div>
 
-    <!-- HERO SECTION -->
-    <section class="section hero" id="home">
-      <div class="container hero-inner">
-        <div class="hero-left">
-          <p class="welcome">WELCOME TO HOOF</p>
-          <h1>IT'S ALL<br />ABOUT<br /><span>SNEAKERS</span></h1>
-          <p class="hero-sub">
-            Experience sneakers built for style, comfort, and everyday movement.
-          </p>
-          <div class="hero-buttons">
-            <button class="btn primary">Shop now</button>
-            <button class="btn outline">Contact</button>
-          </div>
-        </div>
-
-        <div class="hero-right">
-          <div class="hero-shoe-card floating">
-            <img src="/user/images/Homeshoe.png" alt="Sneaker main" />
-          </div>
-          <div class="hero-badge">
-            <div class="badge-number">2000+</div>
-            <p class="badge-text">Happy customers</p>
-            <button class="badge-btn"><a href="/user/signup" style="color: rgb(213, 0, 0)">Sign Up</a></button>
-          </div>
-        </div>
+    <div class="hero-right">
+      <div class="hero-shoe-card floating">
+        <img src="/user/images/Homeshoe.png" alt="Sneaker main" />
       </div>
-    </section>
+      <div class="hero-badge">
+        <div class="badge-number">2000+</div>
+        <p class="badge-text">Happy customers</p>
+        <button class="badge-btn"><a href="/user/signup" style="color: rgb(213, 0, 0)">Sign Up</a></button>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <!-- VISION / MISSION SECTION -->
-    <section class="section band about-band" id="about">
-      <div class="container about-inner">
-        <div class="about-image">
-          <img src="/user/images/shoe3.jpg" alt="Sneaker portrait" />
+<!-- VISION / MISSION SECTION -->
+<section class="section band about-band" id="about">
+  <div class="container about-inner">
+    <div class="about-image">
+      <img src="/user/images/shoe3.jpg" alt="Sneaker portrait" />
+    </div>
+    <div class="about-text">
+      <p class="band-label">QUALITY YOU CAN FEEL IN EVERY STEP</p>
+
+      <div class="about-block">
+        <h3>Our Vision</h3>
+        <p>
+          We craft sneakers that fuse modern aesthetics with all-day
+          comfort, giving you confidence in every step you take.
+        </p>
+      </div>
+      <br />
+      <button class="btn light">Read more</button>
+      <hr />
+
+      <div class="about-block">
+        <h3>Our Mission</h3>
+        <p>
+          To deliver durable, premium-quality sneakers that keep you light,
+          agile, and ready for anything your day brings.
+        </p>
+      </div>
+      <br />
+      <button class="btn light">Read more</button>
+    </div>
+  </div>
+</section>
+
+<!-- COLLECTION SECTION -->
+<!-- NEW ARRIVALS SECTION (Ported from Home) -->
+<section class="section products-section reveal" id="collection">
+  <div class="container">
+    <div class="section-header" style="text-align: center; margin-bottom: 3rem;">
+      <p class="band-label" style="color: var(--text-light); opacity: 0.7; letter-spacing: 0.2em;">FEATURED</p>
+      <h2 style="font-family: silver; font-size: 3rem; color: var(--text-light);">NEW ARRIVALS</h2>
+    </div>
+
+    <div class="products-grid">
+      <!-- Product 1 -->
+      <div class="product-card-home">
+        <div class="product-image-home">
+          <img src="/user/images/home-images/shoe4.jpg" alt="Urban Drift" onerror="this.src='/user/images/shoe4.jpg'" />
+          <div class="product-badge">New</div>
+          <div class="product-actions">
+            <button class="action-btn wishlist"><i class="far fa-heart"></i></button>
+            <button class="action-btn cart"><i class="fas fa-shopping-bag"></i></button>
+            <button class="action-btn view"><i class="fas fa-eye"></i></button>
+          </div>
         </div>
-        <div class="about-text">
-          <p class="band-label">QUALITY YOU CAN FEEL IN EVERY STEP</p>
-
-          <div class="about-block">
-            <h3>Our Vision</h3>
-            <p>
-              We craft sneakers that fuse modern aesthetics with all-day
-              comfort, giving you confidence in every step you take.
-            </p>
-          </div>
-          <br />
-          <button class="btn light">Read more</button>
-          <hr />
-
-          <div class="about-block">
-            <h3>Our Mission</h3>
-            <p>
-              To deliver durable, premium-quality sneakers that keep you light,
-              agile, and ready for anything your day brings.
-            </p>
-          </div>
-          <br />
-          <button class="btn light">Read more</button>
+        <div class="product-info">
+          <h3>Urban Drift</h3>
+          <p class="product-price">₹4,999</p>
+          <button class="btn primary product-btn">Add to Cart</button>
         </div>
       </div>
-    </section>
 
-    <!-- COLLECTION SECTION -->
-    <section class="section band collection-band" id="collection">
-      <div class="container collection-inner">
-        <div class="collection-left">
-          <p class="band-label">COLLECTION</p>
-          <h2>THE MORE YOU WANT<br />THE MORE WE HAVE</h2>
-          <button class="btn primary">Buy now</button>
-        </div>
-
-        <div class="collection-right">
-          <div class="product-card round">
-            <div class="product-image floating-slow">
-              <img src="/user/images/shoe4.jpg" alt="Sneaker 1" />
-            </div>
+      <!-- Product 2 -->
+      <div class="product-card-home">
+        <div class="product-image-home">
+          <img src="/user/images/home-images/shoe7.jpg" alt="Street Sonic"
+            onerror="this.src='/user/images/shoe7.jpg'" />
+          <div class="product-badge orange">Hot</div>
+          <div class="product-actions">
+            <button class="action-btn wishlist"><i class="far fa-heart"></i></button>
+            <button class="action-btn cart"><i class="fas fa-shopping-bag"></i></button>
+            <button class="action-btn view"><i class="fas fa-eye"></i></button>
           </div>
+        </div>
+        <div class="product-info">
+          <h3>Street Sonic</h3>
+          <p class="product-price">₹5,499</p>
+          <button class="btn primary product-btn">Add to Cart</button>
+        </div>
+      </div>
 
-          <div class="product-card round orange">
-            <div class="product-image floating-alt">
-              <img src="/user/images/shoe7.jpg" alt="Sneaker 2" />
-            </div>
+      <!-- Product 3 -->
+      <div class="product-card-home">
+        <div class="product-image-home">
+          <img src="/user/images/home-images/shoe3.jpg" alt="Night Runner"
+            onerror="this.src='/user/images/shoe3.jpg'" />
+          <div class="product-badge">New</div>
+          <div class="product-actions">
+            <button class="action-btn wishlist"><i class="far fa-heart"></i></button>
+            <button class="action-btn cart"><i class="fas fa-shopping-bag"></i></button>
+            <button class="action-btn view"><i class="fas fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="product-info">
+          <h3>Night Runner</h3>
+          <p class="product-price">₹6,299</p>
+          <button class="btn primary product-btn">Add to Cart</button>
+        </div>
+      </div>
+
+      <!-- Product 4 -->
+      <div class="product-card-home">
+        <div class="product-image-home">
+          <img src="/user/images/home-images/Homeshoe.png" alt="Cloud Pace"
+            onerror="this.src='/user/images/Homeshoe.png'" />
+          <div class="product-badge">Sale</div>
+          <div class="product-actions">
+            <button class="action-btn wishlist"><i class="far fa-heart"></i></button>
+            <button class="action-btn cart"><i class="fas fa-shopping-bag"></i></button>
+            <button class="action-btn view"><i class="fas fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="product-info">
+          <h3>Cloud Pace</h3>
+          <p class="product-price"><span class="old-price"
+              style="text-decoration: line-through; opacity: 0.6; margin-right: 5px;">₹7,999</span> ₹5,999</p>
+          <button class="btn primary product-btn">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-footer" style="text-align: center; margin-top: 2rem;">
+      <button class="btn outline">View All Products</button>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIAL SECTION -->
+<section class="section band testimonial-band" id="testimonials">
+  <div class="container testimonial-inner">
+    <div class="testimonial-left">
+      <p class="band-label">TESTIMONIAL</p>
+      <h2>HEAR FROM OUR PEOPLE</h2>
+      <div class="rating-pill">
+        <div class="rating-big">4.5</div>
+        <div class="rating-text">
+          <p>Rating</p>
+          <p>Trusted by 2000+ customers</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="testimonial-right">
+      <div class="testimonial-card">
+        <p class="testimonial-quote">
+          “These sneakers feel amazing. The cushioning, grip, and design all
+          work together. I can wear them the whole day without getting
+          tired.”
+        </p>
+        <div class="testimonial-user">
+          <img src="/user/images/person.jpg" alt="User" />
+          <div>
+            <h4>Akram Ali</h4>
+            <p>Verified customer</p>
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- TESTIMONIAL SECTION -->
-    <section class="section band testimonial-band" id="testimonials">
-      <div class="container testimonial-inner">
-        <div class="testimonial-left">
-          <p class="band-label">TESTIMONIAL</p>
-          <h2>HEAR FROM OUR PEOPLE</h2>
-          <div class="rating-pill">
-            <div class="rating-big">4.5</div>
-            <div class="rating-text">
-              <p>Rating</p>
-              <p>Trusted by 2000+ customers</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="testimonial-right">
-          <div class="testimonial-card">
-            <p class="testimonial-quote">
-              “These sneakers feel amazing. The cushioning, grip, and design all
-              work together. I can wear them the whole day without getting
-              tired.”
-            </p>
-            <div class="testimonial-user">
-              <img src="/user/images/person.jpg" alt="User" />
-              <div>
-                <h4>Akram Ali</h4>
-                <p>Verified customer</p>
-              </div>
-            </div>
-          </div>
-          <br /><br />
-          <div class="testimonial-card">
-            <p class="testimonial-quote">
-              “These sneakers feel amazing. The cushioning, grip, and design all
-              work together. I can wear them the whole day without getting
-              tired.”
-            </p>
-            <div class="testimonial-user">
-              <img src="/user/images/person.jpg" alt="User" />
-              <div>
-                <h4>Vignesh Muthu</h4>
-                <p>Verified customer</p>
-              </div>
-            </div>
+      <br /><br />
+      <div class="testimonial-card">
+        <p class="testimonial-quote">
+          “These sneakers feel amazing. The cushioning, grip, and design all
+          work together. I can wear them the whole day without getting
+          tired.”
+        </p>
+        <div class="testimonial-user">
+          <img src="/user/images/person.jpg" alt="User" />
+          <div>
+            <h4>Vignesh Muthu</h4>
+            <p>Verified customer</p>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <!-- FOOTER / CONTACT -->
-    <footer class="section footer" id="contact">
-      <div class="container footer-inner">
-        <div class="footer-left">
-          <div class="logo">HOOF</div>
-          <p class="footer-text">
-            Premium sneakers designed to complement your everyday journey with
-            style, comfort, and durability.
-          </p>
-          <div class="footer-social">
-            <a href="#"><i class="fa-brands fa-instagram"></i></a>
-            <a href="#"><i class="fa-solid fa-phone"></i></a>
-            <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
-          </div>
-        </div>
-
-        <div class="footer-center">
-          <h3>Have questions? Our team is ready to assist.</h3>
-          <button class="btn outline">Contact</button>
-        </div>
-
-        <div class="footer-right">
-          <h4>Malappuram</h4>
-          <p>HOOF Sneaker House</p>
-          <p>+91 98765 43210</p>
-          <p>support@hoofsnkrs.com</p>
-        </div>
-      </div>
-    </footer>
-
-    <script src="user/js/landing.js" defer></script>
-  </body>
-</html>
+<script src="/user/js/landing.js" defer></script>

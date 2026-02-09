@@ -220,4 +220,18 @@ router.delete('/address/delete/:id', isUser, addressController.deleteAddress);
  */
 router.post("/logout", userController.logout);
 
+
+/* =============================================================================
+   SHOP / PRODUCT LISTING
+============================================================================= */
+const productController = require("../controller/productController");
+
+/**
+ * @route   GET /shop
+ * @desc    Display the product listing page
+ */
+router.get('/shop', productController.listProducts);
+
+
+
 module.exports = router;

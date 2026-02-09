@@ -1,42 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verify OTP | HOOF</title>
+<% locals.showBackButton=true %>
   <link rel="stylesheet" href="/user/css/verify-otp.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="icon" type="image/x-icon" href="./images/favicon.ico">
-</head>
-<body>
-  <!-- NAVBAR (EXACT SAME) -->
-  <header class="topbar">
-    <div class="container nav-inner">
-      <a href="javascript:history.back()" class="nav-back" aria-label="Go back">
-        <i class="fa-solid fa-arrow-left"></i>
-      </a>
-      <div class="logo">HOOF</div>
-      <nav class="nav">
-        <ul class="nav-links">
-          <li><a href="home.html#home">Home</a></li>
-          <li><a href="index.html#about">About</a></li>
-          <li><a href="home.html#products">Shop</a></li>
-          <li><a href="index.html#contact">Contact</a></li>
-        </ul>
-        <div class="nav-actions">
-          <a href="#" class="nav-icon" title="Wishlist"><i class="far fa-heart"></i><span class="nav-badge">0</span></a>
-          <a href="#" class="nav-icon cart-icon" title="Cart"><i class="fas fa-shopping-bag"></i><span class="nav-badge cart-count">0</span></a>
-        </div>
-        <button class="nav-toggle" id="nav-toggle">
-          <span></span><span></span><span></span>
-        </button>
-      </nav>
-    </div>
-  </header>
 
-  <!-- OTP SECTION (EXACT SAME LAYOUT) -->
   <section class="section otp-hero reveal">
     <div class="container">
       <div class="otp-container">
@@ -50,44 +14,41 @@
           </div>
 
           <form class="otp-form" id="otpForm" action="/user/verify-otp" method="POST">
-  
-  <div class="otp-inputs">
-    <div class="otp-input-group">
-      <input type="text" class="otp-input" maxlength="1" data-index="0" required />
-    </div>
-    <div class="otp-input-group">
-      <input type="text" class="otp-input" maxlength="1" data-index="1" required />
-    </div>
-    <div class="otp-input-group">
-      <input type="text" class="otp-input" maxlength="1" data-index="2" required />
-    </div>
-    <div class="otp-input-group">
-      <input type="text" class="otp-input" maxlength="1" data-index="3" required />
-    </div>
-    <div class="otp-input-group">
-      <input type="text" class="otp-input" maxlength="1" data-index="4" required />
-    </div>
-    <div class="otp-input-group">
-      <input type="text" class="otp-input" maxlength="1" data-index="5" required />
-    </div>
-  </div>
+            <div class="otp-inputs">
+              <div class="otp-input-group">
+                <input type="text" class="otp-input" maxlength="1" data-index="0" required />
+              </div>
+              <div class="otp-input-group">
+                <input type="text" class="otp-input" maxlength="1" data-index="1" required />
+              </div>
+              <div class="otp-input-group">
+                <input type="text" class="otp-input" maxlength="1" data-index="2" required />
+              </div>
+              <div class="otp-input-group">
+                <input type="text" class="otp-input" maxlength="1" data-index="3" required />
+              </div>
+              <div class="otp-input-group">
+                <input type="text" class="otp-input" maxlength="1" data-index="4" required />
+              </div>
+              <div class="otp-input-group">
+                <input type="text" class="otp-input" maxlength="1" data-index="5" required />
+              </div>
+            </div>
 
-  <!-- ✅ THIS IS THE KEY FIX -->
-  <input type="hidden" name="otp" id="otpHidden" />
+            <input type="hidden" name="otp" id="otpHidden" />
 
-  <div class="otp-timer">
-    <span id="timer">02:00</span>
-    <button type="button" class="resend-otp" id="resendOtp">Resend Code</button>
-  </div>
+            <div class="otp-timer">
+              <span id="timer">02:00</span>
+              <button type="button" class="resend-otp" id="resendOtp">Resend Code</button>
+            </div>
 
-  <button type="submit" class="btn primary otp-btn">Verify OTP</button>
-</form>
-
+            <button type="submit" class="btn primary otp-btn">Verify OTP</button>
+          </form>
 
           <div class="otp-divider">
             <span>or</span>
           </div>
-          
+
           <button type="button" class="btn google-signup">
             <i class="fab fa-google"></i> Continue with Google
           </button>
@@ -100,27 +61,4 @@
     </div>
   </section>
 
-  <!-- FOOTER (EXACT SAME 2-COLUMN) -->
-  <footer class="section footer">
-    <div class="container footer-inner">
-      <div class="footer-left">
-        <div class="logo">HOOF</div>
-        <p class="footer-text">Premium sneakers designed to complement your everyday journey with style, comfort, and durability.</p>
-        <div class="footer-social">
-          <a href="#"><i class="fa-brands fa-instagram"></i></a>
-          <a href="#"><i class="fa-solid fa-phone"></i></a>
-          <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
-        </div>
-      </div>
-      <div class="footer-right">
-        <h4>Malappuram</h4>
-        <p>HOOF Sneaker House</p>
-        <p>+91 98765 43210</p>
-        <p>support@hoofsnkrs.com</p>
-      </div>
-    </div>
-  </footer>
-
   <script src="/user/js/verify-otp.js" defer></script>
-</body>
-</html>

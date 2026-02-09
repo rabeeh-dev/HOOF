@@ -1,0 +1,153 @@
+<link rel="stylesheet" href="/user/css/shop.css" />
+
+<!-- PAGE HEADER -->
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title">EXPLORE COLLECTION</h1>
+    <p class="page-subtitle">Discover premium sneakers that match your style</p>
+  </div>
+</section>
+
+<!-- MAIN PRODUCTS SECTION -->
+<section class="products-main-section">
+  <div class="container">
+    <div class="products-layout">
+
+      <!-- SIDEBAR - CATEGORIES & FILTERS -->
+      <aside class="products-sidebar">
+        <div class="sidebar-sticky">
+
+          <button class="filter-toggle" id="filterToggle">
+            <i class="fas fa-filter"></i>
+            <span>Filters</span>
+          </button>
+
+          <div class="sidebar-content" id="sidebarContent">
+            <!-- Categories -->
+            <div class="filter-section">
+              <h3 class="filter-title"><i class="fas fa-th-large"></i> Categories</h3>
+              <ul class="category-list">
+                <li class="category-item <%= !selectedCategory ? 'active' : '' %>"
+                  onclick="window.location.href='/user/shop'">
+                  <span class="category-name">All Products</span>
+                </li>
+                <% categories.forEach(cat=> { %>
+                  <li class="category-item <%= selectedCategory == cat._id ? 'active' : '' %>"
+                    onclick="window.location.href='/user/shop?category=<%= cat._id %>&sort=<%= selectedSort %>'">
+                    <span class="category-name">
+                      <%= cat.name %>
+                    </span>
+                  </li>
+                  <% }) %>
+              </ul>
+            </div>
+
+            <!-- Price Range -->
+            <div class="filter-section">
+              <h3 class="filter-title"><i class="fas fa-rupee-sign"></i> Price Range</h3>
+              <div class="price-inputs">
+                <div class="price-input-group">
+                  <label>Max</label>
+                  <input type="number" id="maxPriceDisplay" value="<%= maxPrice || 20000 %>" readonly>
+                </div>
+              </div>
+              <div class="price-slider">
+                <input type="range" id="priceRange" min="0" max="20000" step="500" value="<%= maxPrice || 20000 %>"
+                  onchange="applyFilters()">
+              </div>
+            </div>
+
+            <!-- Clear Filters -->
+            <button class="btn outline clear-filters" onclick="window.location.href='/user/shop'">
+              <i class="fas fa-redo"></i> Clear All Filters
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- PRODUCTS CONTENT -->
+      <main class="products-content">
+        <div class="products-toolbar">
+          <div class="toolbar-left">
+            <p class="results-count">Showing <span>
+                <%= products.length %>
+              </span> products</p>
+          </div>
+          <div class="toolbar-right">
+            <div class="product-search">
+              <input type="text" id="searchInput" placeholder="Search products..."
+                value="<%= typeof search !== 'undefined' ? search : '' %>">
+              <button onclick="applyFilters()"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="sort-dropdown">
+              <select id="sortSelect" class="sort-select" onchange="applyFilters()">
+                <option value="newest" <%=selectedSort==='newest' ? 'selected' : '' %>>Newest First</option>
+                <option value="price-low" <%=selectedSort==='price-low' ? 'selected' : '' %>>Price: Low to High
+                </option>
+                <option value="price-high" <%=selectedSort==='price-high' ? 'selected' : '' %>>Price: High to Low
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="products-grid" id="productsGrid">
+          <% if (products.length> 0) { %>
+            <% products.forEach(product=> { %>
+              <div class="product-card">
+                <div class="product-image">
+                  <img src="<%= product.productImage[0] %>" alt="<%= product.productName %>" />
+                  <button class="wishlist-btn"><i class="far fa-heart"></i></button>
+                </div>
+                <div class="product-info">
+                  <h3 class="product-name">
+                    <%= product.productName %>
+                  </h3>
+                  <p class="product-category">
+                    <%= product.category.name %>
+                  </p>
+                  <div class="product-footer">
+                    <p class="product-price">
+                      <% if (product.salePrice < product.regularPrice) { %>
+                        <span class="old-price">₹<%= product.regularPrice %></span>
+                        <% } %>
+                          ₹<%= product.salePrice %>
+                    </p>
+                    <button class="add-to-cart-btn" onclick="addToCart('<%= product._id %>')">
+                      <i class="fas fa-shopping-bag"></i> Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <% }) %>
+                <% } else { %>
+                  <div class="empty-state">
+                    <p>No products found matching your filters.</p>
+                  </div>
+                  <% } %>
+        </div>
+
+        <% if (totalPages> 1) { %>
+          <div class="pagination">
+            <% for(let i=1; i <=totalPages; i++) { %>
+              <button class="page-btn <%= currentPage == i ? 'active' : '' %>"
+                onclick="window.location.href='/user/shop?page=<%= i %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>'">
+                <%= i %>
+              </button>
+              <% } %>
+          </div>
+          <% } %>
+      </main>
+
+    </div>
+  </div>
+</section>
+
+<script src="/user/js/shop.js" defer></script>
+<script>
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted || (typeof window.performance != "undefined" && window.performance.navigation.type === 2)) {
+      window.location.reload();
+    }
+  });
+</script>
