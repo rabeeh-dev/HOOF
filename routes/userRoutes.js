@@ -66,7 +66,7 @@ router.post("/login", isLoggedOut, userController.login);
  * @route   GET /user/auth/google
  * @desc    Redirect to Google OAuth consent screen
  */
-router.get("/auth/google", isLoggedOut, 
+router.get("/auth/google", isLoggedOut,
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
@@ -74,7 +74,7 @@ router.get("/auth/google", isLoggedOut,
  * @route   GET /user/auth/google/callback
  * @desc    Handle Google authentication callback and session creation
  */
-router.get("/auth/google/callback", 
+router.get("/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/user/login" }),
   (req, res) => {
     req.session.userId = req.user._id;
@@ -176,8 +176,8 @@ router.get('/profile/change-email-start', isUser, userController.getChangeEmailO
  * @desc    Render form to enter new email (session protected)
  */
 router.get('/profile/change-email-form', isUser, (req, res) => {
-    if (!req.session.emailVerifiedForChange) return res.redirect('/user/profile');
-    res.render('User/change-email', { layout: 'layouts/user' });
+  if (!req.session.emailVerifiedForChange) return res.redirect('/user/profile');
+  res.render('User/change-email', { layout: 'layouts/user' });
 });
 
 /**
@@ -231,6 +231,12 @@ const productController = require("../controller/productController");
  * @desc    Display the product listing page
  */
 router.get('/shop', productController.listProducts);
+
+/**
+ * @route   GET /product-details/:id
+ * @desc    View single product
+ */
+router.get('/product-details/:id', productController.loadProductDetails);
 
 
 

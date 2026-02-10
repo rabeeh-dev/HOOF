@@ -1,0 +1,266 @@
+<link rel="stylesheet" href="/user/css/product-details.css">
+
+<section class="product-details-section">
+    <div class="container">
+        <div class="product-details-container">
+            <!-- Left: Image Gallery -->
+            <div class="product-gallery">
+                <div class="main-image">
+                    <img src="<%= product.productImage[0] %>" alt="<%= product.productName %>" id="mainImage">
+                    <div id="outOfStockOverlay" class="stock-overlay" style="display: none;">
+                        <span>Out of Stock</span>
+                    </div>
+                </div>
+                <div class="thumbnail-list">
+                    <% product.productImage.forEach((img, index)=> { %>
+                        <div class="thumbnail <%= index === 0 ? 'active' : '' %>"
+                            onclick="changeImage(this, '<%= img %>')">
+                            <img src="<%= img %>" alt="Thumbnail">
+                        </div>
+                        <% }) %>
+                </div>
+            </div>
+
+            <!-- Right: Product Info -->
+            <div class="product-info-col">
+                <p class="product-brand">
+                    <%= product.brand %>
+                </p>
+                <h1 class="product-title">
+                    <%= product.productName %>
+                </h1>
+
+                <div class="product-rating">
+                    <div class="stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <span class="review-count">(120 Reviews)</span>
+                </div>
+
+                <div class="product-price">
+                    <% if (product.salePrice < product.regularPrice) { %>
+                        <span class="sale-price">₹<%= product.salePrice.toLocaleString() %></span>
+                        <span class="regular-price">₹<%= product.regularPrice.toLocaleString() %></span>
+                        <span class="discount-badge">
+                            <%= Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100) %>
+                                % OFF
+                        </span>
+                        <% } else { %>
+                            <span class="sale-price">₹<%= product.regularPrice.toLocaleString() %></span>
+                            <% } %>
+                </div>
+
+                <div class="product-description">
+                    <%= product.description %>
+                </div>
+
+                <div class="product-variants">
+                    <label class="variant-label"><i class="fas fa-ruler"></i> Select Size:</label>
+                    <div class="size-selector">
+                        <% const sizes=[6, 7, 8, 9]; %>
+                            <% sizes.forEach(size=> {
+                                const variant = product.variants.find(v => v.size == size);
+                                const stock = variant ? variant.quantity : 0;
+                                %>
+                                <div class="size-option" data-size="<%= size %>" data-stock="<%= stock %>"
+                                    onclick="selectSize(this)">
+                                    <%= size %>
+                                </div>
+                                <% }) %>
+                    </div>
+                    <p id="stockStatus" class="stock-status">Select a size to see availability</p>
+                </div>
+
+                <div class="product-actions">
+                    <div class="quantity-selector">
+                        <button onclick="updateQuantity(-1)"><i class="fas fa-minus"></i></button>
+                        <input type="number" id="quantity" value="1" min="1" max="5" readonly>
+                        <button onclick="updateQuantity(1)"><i class="fas fa-plus"></i></button>
+                    </div>
+
+                    <div class="action-buttons-group">
+                        <button class="btn btn-add-cart" id="addToCartBtn" onclick="addToCart('<%= product._id %>')"
+                            disabled>
+                            <i class="fas fa-shopping-bag"></i>
+                        </button>
+                        <button class="btn btn-buy-now" id="buyNowBtn" onclick="buyNow('<%= product._id %>')" disabled>
+                            Buy Now
+                        </button>
+                    </div>
+
+                    <button class="btn btn-wishlist" onclick="toggleWishlist('<%= product._id %>')">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+
+                <div class="product-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-truck"></i>
+                        <span>Free Delivery</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-undo"></i>
+                        <span>30 Days Return</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>1 Year Warranty</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Products -->
+        <% if (relatedProducts && relatedProducts.length> 0) { %>
+            <div class="related-products-section">
+                <h2 class="section-title">You May Also Like</h2>
+                <div class="related-products-grid">
+                    <% relatedProducts.forEach(prod=> { %>
+                        <div class="product-card"
+                            onclick="window.location.href='/user/product-details/<%= prod._id %>'">
+                            <div class="product-image-wrapper">
+                                <img src="<%= prod.productImage[0] %>" alt="<%= prod.productName %>">
+                                <button class="card-wishlist-btn"
+                                    onclick="event.stopPropagation(); toggleWishlist('<%= prod._id %>')">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                                <% if (prod.salePrice < prod.regularPrice) { %>
+                                    <span class="card-badge">Sale</span>
+                                    <% } %>
+                            </div>
+                            <div class="product-card-info">
+                                <h3 class="product-name">
+                                    <%= prod.productName %>
+                                </h3>
+                                <div class="price-row">
+                                    <span class="current-price">₹<%= prod.salePrice.toLocaleString() %></span>
+                                    <% if (prod.salePrice < prod.regularPrice) { %>
+                                        <span class="original-price">₹<%= prod.regularPrice.toLocaleString() %></span>
+                                        <% } %>
+                                </div>
+                            </div>
+                        </div>
+                        <% }) %>
+                </div>
+            </div>
+            <% } %>
+    </div>
+</section>
+
+<script>
+    let selectedSize = null;
+    let maxStock = 0;
+
+    function changeImage(thumb, src) {
+        document.getElementById('mainImage').src = src;
+        document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+    }
+
+    function selectSize(element) {
+        // Reset styles
+        document.querySelectorAll('.size-option').forEach(opt => opt.classList.remove('active'));
+        element.classList.add('active');
+
+        selectedSize = element.dataset.size;
+        maxStock = parseInt(element.dataset.stock);
+
+        const stockStatus = document.getElementById('stockStatus');
+        const addToCartBtn = document.getElementById('addToCartBtn');
+        const buyNowBtn = document.getElementById('buyNowBtn');
+        const overlay = document.getElementById('outOfStockOverlay');
+
+        if (maxStock > 0) {
+            stockStatus.innerHTML = `<span class="in-stock"><i class="fas fa-check-circle"></i> In Stock (${maxStock} available)</span>`;
+            stockStatus.className = 'stock-status visible received';
+
+            addToCartBtn.disabled = false;
+            addToCartBtn.innerHTML = '<i class="fas fa-shopping-bag"></i>';
+
+            buyNowBtn.disabled = false;
+
+            overlay.style.display = 'none';
+        } else {
+            stockStatus.innerHTML = `<span class="out-of-stock"><i class="fas fa-times-circle"></i> Not Available / Out of Stock</span>`;
+            stockStatus.className = 'stock-status visible out';
+
+            addToCartBtn.disabled = true;
+            addToCartBtn.innerHTML = 'Out of Stock';
+
+            buyNowBtn.disabled = true;
+
+            overlay.style.display = 'flex'; // Show overlay
+        }
+    }
+
+    function updateQuantity(change) {
+        if (!selectedSize || maxStock === 0) return;
+
+        const input = document.getElementById('quantity');
+        let newVal = parseInt(input.value) + change;
+        if (newVal >= 1 && newVal <= 5 && newVal <= maxStock) {
+            input.value = newVal;
+        }
+    }
+
+    function addToCart(productId) {
+        if (!selectedSize) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Select Size',
+                text: 'Please select a size before adding to cart',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+            return;
+        }
+
+        // Add logic to call add-to-cart API
+        console.log('Adding to cart:', productId, selectedSize, document.getElementById('quantity').value);
+        Swal.fire({
+            icon: 'success',
+            title: 'Added to Cart',
+            text: 'Product added to your cart successfully',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+        });
+    }
+
+    function buyNow(productId) {
+        if (!selectedSize) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Select Size',
+                text: 'Please select a size before proceeding',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+            return;
+        }
+        console.log('Buy Now:', productId, selectedSize, document.getElementById('quantity').value);
+        // Redirect to checkout or checkout confirmation
+        window.location.href = '/user/checkout?productId=' + productId + '&size=' + selectedSize + '&qty=' + document.getElementById('quantity').value;
+    }
+
+    function toggleWishlist(productId) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Wishlist',
+            text: 'Added to wishlist',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+        });
+    }
+</script>
