@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controller/adminController');
+const adminProductController = require('../controller/adminProductController');
 const adminAuth = require('../middleware/adminAuth');
+const upload = require('../middleware/productMulter');
 
 /* =============================================================================
    ADMIN AUTHENTICATION ROUTES
@@ -53,7 +55,7 @@ router.get('/users/export-pdf', adminAuth.isLogin, adminController.exportUsersPD
  * @desc    Block or Unblock a user based on action parameter
  * @access  Private (Admin Only)
  */
-router.patch('/users/:action/:id', adminAuth.isLogin, adminController.toggleUserStatus);
+router.patch('/users/:id/:action', adminAuth.isLogin, adminController.toggleUserStatus);
 
 /* =============================================================================
    CATEGORY MANAGEMENT SECTION
@@ -87,6 +89,43 @@ router.patch('/categories/edit/:id', adminAuth.isLogin, adminController.updateCa
  * @access  Private (Admin Only)
  */
 router.patch('/categories/toggle-status/:id', adminAuth.isLogin, adminController.toggleCategoryStatus);
+
+
+
+
+/* =============================================================================
+   PRODUCT MANAGEMENT SECTION
+   Access: Private (isLogin)
+ ============================================================================= */
+
+/**
+ * @route   GET /admin/products
+ * @desc    Load product management list
+ * @access  Private (Admin Only)
+ */
+router.get('/products', adminAuth.isLogin, adminProductController.listProductsAdmin);
+
+/**
+ * @route   GET /admin/products/add
+ * @desc    Render the add product form
+ * @access  Private (Admin Only)
+ */
+router.get('/products/add', adminAuth.isLogin, adminProductController.loadAddProduct);
+
+/**
+ * @route   POST /admin/products/add
+ * @desc    Add a new product with multiple images
+ * @access  Private (Admin Only)
+ */
+router.post('/products/add', adminAuth.isLogin, upload.array('productImages', 4), adminProductController.addProduct);
+
+/**
+ * @route   PATCH /admin/products/toggle-status/:id
+ * @desc    Toggle product blocked status
+ * @access  Private (Admin Only)
+ */
+router.patch('/products/toggle-status/:id', adminAuth.isLogin, adminProductController.toggleProductStatus);
+
 
 /* =============================================================================
    LOGOUT

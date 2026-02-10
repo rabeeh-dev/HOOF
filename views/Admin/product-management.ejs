@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="/admin/css/product-management.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">HOOF</div>
+            <p class="admin-label">Admin</p>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/admin/dashboard" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/admin/products" class="nav-item active">
+                <i class="fas fa-box"></i>
+                <span>Products</span>
+            </a>
+            <a href="/admin/categories" class="nav-item">
+                <i class="fas fa-tags"></i>
+                <span>Categories</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Orders</span>
+            </a>
+            <a href="/admin/customers" class="nav-item">
+                <i class="fas fa-users"></i>
+                <span>Customers</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-ticket-alt"></i>
+                <span>Coupons</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="admin-profile">
+                <div class="admin-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="admin-info">
+                    <h4>Admin User</h4>
+                    <p>View Profile</p>
+                </div>
+                <button class="logout-btn" onclick="window.location.href='/admin/logout'" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <header class="page-header">
+            <div>
+                <h1>Product Management</h1>
+            </div>
+            <div class="header-actions">
+                <a href="/admin/products/add" class="btn-add">
+                    <i class="fas fa-plus"></i>
+                    Add Product
+                </a>
+            </div>
+        </header>
+
+        <div class="categories-card">
+            <!-- SEARCH BAR -->
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search products by name or brand..." id="productSearch"
+                    onkeyup="searchProducts()" />
+            </div>
+
+            <div class="table-container">
+                <table class="categories-table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Product Name</th>
+                            <th>Category</th>
+                            <th>Brand</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTableBody">
+                        <% if(products && products.length> 0) { %>
+                            <% products.forEach((product)=> { %>
+                                <tr data-id="<%= product._id %>">
+                                    <td class="product-image-td">
+                                        <img src="<%= product.productImage[0] || '/admin/images/placeholder.jpg' %>"
+                                            alt="<%= product.productName %>" class="product-img">
+                                    </td>
+                                    <td>
+                                        <h4 class="category-name">
+                                            <%= product.productName %>
+                                        </h4>
+                                        <span class="variant-count">
+                                            <%= product.variants.length %> Variants
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <%= product.category ? product.category.name : 'N/A' %>
+                                    </td>
+                                    <td>
+                                        <%= product.brand %>
+                                    </td>
+                                    <td>
+                                        <div class="price-container">
+                                            <span class="sale-price">₹<%= product.salePrice %></span>
+                                            <span class="regular-price">₹<%= product.regularPrice %></span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <%= product.quantity %>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge <%= product.isBlocked ? 'unlisted' : 'listed' %>">
+                                            <%= product.isBlocked ? 'Blocked' : 'Active' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn edit"
+                                                onclick="window.location.href='/admin/products/edit/<%= product._id %>'"
+                                                title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button
+                                                class="action-btn toggle <%= product.isBlocked ? 'list' : 'unlist' %>"
+                                                onclick="toggleProductStatus('<%= product._id %>')"
+                                                title="<%= product.isBlocked ? 'Unblock' : 'Block' %> Product">
+                                                <i class="fas <%= product.isBlocked ? 'fa-eye' : 'fa-eye-slash' %>"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="8" style="text-align: center; padding: 2rem;">No products
+                                                found.</td>
+                                        </tr>
+                                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PAGINATION -->
+            <div class="pagination-container"
+                style="padding: 1rem; display: flex; justify-content: center; gap: 0.5rem;">
+                <% for(let i=1; i <=totalPages; i++) { %>
+                    <a href="/admin/products?page=<%= i %>"
+                        class="pagination-link <%= currentPage == i ? 'active' : '' %>"
+                        style="padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; <%= currentPage == i ? 'background: var(--admin-primary); color: white;' : 'background: #f1f5f9; color: var(--admin-text);' %>">
+                        <%= i %>
+                    </a>
+                    <% } %>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function toggleProductStatus(id) {
+            const result = await Swal.fire({
+                title: 'Are you sure?',
+                text: "You want to change this product's status!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#c41e3a',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, change it!'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/products/toggle-status/${id}`, { method: 'PATCH' });
+                    const data = await response.json();
+                    if (data.success) {
+                        Swal.fire('Updated!', data.message, 'success').then(() => window.location.reload());
+                    }
+                } catch (err) {
+                    Swal.fire('Error', 'Update failed', 'error');
+                }
+            }
+        }
+
+        function searchProducts() {
+            const input = document.getElementById('productSearch');
+            const filter = input.value.toLowerCase();
+            const tbody = document.getElementById('productTableBody');
+            const rows = tbody.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const nameCol = rows[i].getElementsByTagName('td')[1];
+                const brandCol = rows[i].getElementsByTagName('td')[3];
+                if (nameCol || brandCol) {
+                    const nameText = nameCol.textContent || nameCol.innerText;
+                    const brandText = brandCol.textContent || brandCol.innerText;
+                    if (nameText.toLowerCase().indexOf(filter) > -1 || brandText.toLowerCase().indexOf(filter) > -1) {
+                        rows[i].style.display = "";
+                    } else {
+                        rows[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

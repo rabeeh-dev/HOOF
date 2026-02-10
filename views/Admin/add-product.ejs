@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="/admin/css/product-management.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .error-msg {
+            color: var(--admin-danger);
+            font-size: 0.8rem;
+            display: none;
+            margin-top: 0.2rem;
+        }
+
+        .is-invalid {
+            border-color: var(--admin-danger) !important;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">HOOF</div>
+            <p class="admin-label">Admin</p>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/admin/dashboard" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/admin/products" class="nav-item active">
+                <i class="fas fa-box"></i>
+                <span>Products</span>
+            </a>
+            <a href="/admin/categories" class="nav-item">
+                <i class="fas fa-tags"></i>
+                <span>Categories</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Orders</span>
+            </a>
+            <a href="/admin/customers" class="nav-item">
+                <i class="fas fa-users"></i>
+                <span>Customers</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-ticket-alt"></i>
+                <span>Coupons</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="admin-profile">
+                <div class="admin-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="admin-info">
+                    <h4>Admin User</h4>
+                    <p>View Profile</p>
+                </div>
+                <button class="logout-btn" onclick="window.location.href='/admin/logout'" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <header class="page-header">
+            <div>
+                <a href="/admin/products"
+                    style="text-decoration: none; color: var(--admin-text-light); font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">
+                    <i class="fas fa-arrow-left"></i> Back to Products
+                </a>
+                <h1>Add New Product</h1>
+            </div>
+        </header>
+
+        <form id="productForm" action="/admin/products/add" method="POST" enctype="multipart/form-data">
+            <div class="form-grid">
+                <!-- LEFT COLUMN: Basic Info & Branding -->
+                <div class="form-section">
+                    <div class="form-container">
+                        <div class="form-section-title">General Information</div>
+                        <div class="form-group">
+                            <label for="productName">Product Name</label>
+                            <input type="text" id="productName" name="productName" placeholder="e.g. Air Jordan 1 Retro"
+                                required>
+                            <small class="error-msg" id="nameError">Product name is required</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description" placeholder="Enter product details..."
+                                required></textarea>
+                            <small class="error-msg" id="descError">Description is required</small>
+                        </div>
+                        <div class="form-grid" style="gap: 1rem;">
+                            <div class="form-group">
+                                <label for="category">Category</label>
+                                <select id="category" name="category" required
+                                    style="width: 100%; padding: 0.8rem; border-radius: 10px; border: 1px solid var(--admin-border);">
+                                    <option value="">Select Category</option>
+                                    <% categories.forEach(cat=> { %>
+                                        <option value="<%= cat._id %>">
+                                            <%= cat.name %>
+                                        </option>
+                                        <% }) %>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="brand">Brand</label>
+                                <input type="text" id="brand" name="brand" placeholder="e.g. Nike" required>
+                                <small class="error-msg" id="brandError">Brand is required</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-container" style="margin-top: 1.5rem;">
+                        <div class="form-section-title">Pricing</div>
+                        <div class="form-grid" style="gap: 1rem;">
+                            <div class="form-group">
+                                <label for="regularPrice">Regular Price (₹)</label>
+                                <input type="number" id="regularPrice" name="regularPrice" placeholder="0.00" min="0"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="salePrice">Sale Price (₹)</label>
+                                <input type="number" id="salePrice" name="salePrice" placeholder="0.00" min="0"
+                                    required>
+                                <small class="error-msg" id="priceError">Sale price cannot be higher than regular
+                                    price</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: Images & Variants -->
+                <div class="form-section">
+                    <div class="form-container">
+                        <div class="form-section-title">Product Images</div>
+                        <div class="image-upload-area" onclick="document.getElementById('imageFiles').click()">
+                            <i class="fas fa-cloud-upload-alt"
+                                style="font-size: 2rem; color: var(--admin-primary); margin-bottom: 0.5rem;"></i>
+                            <p>Click to upload images</p>
+                            <span style="font-size: 0.8rem; color: var(--admin-text-light);">JPG, PNG or WEBP (Max 4
+                                images)</span>
+                            <input type="file" id="imageFiles" name="productImages" multiple accept="image/*"
+                                style="display: none;" onchange="previewImages(event)">
+                        </div>
+                        <div class="preview-container" id="imagePreview"></div>
+                        <small class="error-msg" id="imageError">Please upload at least 1 image</small>
+                    </div>
+
+                    <div class="form-container" style="margin-top: 1.5rem;">
+                        <div class="form-section-title">Stocks & Variants</div>
+                        <div class="form-group">
+                            <label for="totalStock">Total Base Stock</label>
+                            <input type="number" id="totalStock" name="quantity" value="0" min="0">
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                            <h4 style="font-size: 0.9rem; font-weight: 600;">Manage Variants (Optional)</h4>
+                            <button type="button" class="btn-add-variant" onclick="addVariantRow()">+ Add
+                                Variant</button>
+                        </div>
+
+                        <table class="variants-table">
+                            <thead>
+                                <tr>
+                                    <th>Size</th>
+                                    <th>Color</th>
+                                    <th>Stock</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="variantBody">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions" style="justify-content: flex-end; margin-top: 2rem;">
+                <button type="button" class="btn-cancel" style="max-width: 150px;"
+                    onclick="window.location.href='/admin/products'">Cancel</button>
+                <button type="submit" class="btn-save" style="max-width: 200px;">Publish Product</button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        let selectedImages = [];
+
+        function previewImages(event) {
+            const preview = document.getElementById('imagePreview');
+            const files = event.target.files;
+
+            if (selectedImages.length + files.length > 4) {
+                Swal.fire('Limit exceeded', 'You can only upload up to 4 images', 'warning');
+                return;
+            }
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                selectedImages.push(file);
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const div = document.createElement('div');
+                    div.className = 'preview-item';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview">
+                        <span class="remove-img" onclick="removeImage(${selectedImages.length - 1})">&times;</span>
+                    `;
+                    preview.appendChild(div);
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeImage(index) {
+            selectedImages.splice(index, 1);
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+            selectedImages.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const div = document.createElement('div');
+                    div.className = 'preview-item';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview">
+                        <span class="remove-img" onclick="removeImage(${index})">&times;</span>
+                    `;
+                    preview.appendChild(div);
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function addVariantRow() {
+            const tbody = document.getElementById('variantBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" name="variantSize[]" placeholder="e.g. 8" required style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--admin-border);"></td>
+                <td><input type="text" name="variantColor[]" placeholder="Red" required style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--admin-border);"></td>
+                <td><input type="number" name="variantStock[]" value="0" min="0" required style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--admin-border);"></td>
+                <td style="text-align: center;"><i class="fas fa-trash" style="color: var(--admin-danger); cursor: pointer;" onclick="this.closest('tr').remove()"></i></td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        document.getElementById('productForm').onsubmit = async (e) => {
+            // Pricing validation
+            const regPrice = parseFloat(document.getElementById('regularPrice').value);
+            const salePrice = parseFloat(document.getElementById('salePrice').value);
+            const priceError = document.getElementById('priceError');
+
+            if (salePrice > regPrice) {
+                e.preventDefault();
+                priceError.style.display = 'block';
+                return;
+            } else {
+                priceError.style.display = 'none';
+            }
+
+            if (selectedImages.length === 0) {
+                e.preventDefault();
+                document.getElementById('imageError').style.display = 'block';
+                return;
+            }
+        };
+    </script>
+</body>
+
+</html>

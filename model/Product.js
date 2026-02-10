@@ -10,6 +10,11 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    brand: {
+        type: String,
+        required: true,
+        trim: true
+    },
     category: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Category", // Links to the Category model
@@ -31,6 +36,12 @@ const productSchema = new mongoose.Schema({
         type: [String], // Array to store multiple image paths
         required: true
     },
+    variants: [{
+        size: { type: String, required: true },
+        color: { type: String, required: true },
+        quantity: { type: Number, required: true, default: 0 },
+        status: { type: String, enum: ["Available", "Out of Stock"], default: "Available" }
+    }],
     isBlocked: {
         type: Boolean,
         default: false

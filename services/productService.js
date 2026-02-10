@@ -17,10 +17,19 @@ class ProductService {
         const { category, sort, page = 1, search, maxPrice } = query;
         const skip = (page - 1) * limit;
 
-        // 1. Build Filter Object
-        let filter = { isDeleted: false, isActive: true, isBlocked: false };
+        // 1. Build Filter Object - Adjusted to match your actual Model
+        // Removed 'isActive' and 'isDeleted' as they don't exist in your schema
+        let filter = { 
+            isBlocked: false, 
+            status: "Available" 
+        };
+        
         if (category) filter.category = category;
         if (search) filter.productName = { $regex: search, $options: 'i' };
+        
+        if (maxPrice) {
+            filter.salePrice = { $lte: parseInt(maxPrice) };
+        }
 
         // 2. Build Sort Object
         let sortOrder = {};
@@ -30,15 +39,21 @@ class ProductService {
 
         // 3. Execute Queries
         const products = await Product.find(filter)
-            .populate('category')
+            .populate({
+                path: 'category',
+                match: { isListed: true } // Ensuring we only show products from listed categories
+            })
             .sort(sortOrder)
             .skip(skip)
             .limit(limit);
 
+        // Filter out products where the category is unlisted (populate returns null)
+        const finalProducts = products.filter(p => p.category !== null);
+
         const totalProducts = await Product.countDocuments(filter);
 
         return {
-            products,
+            products: finalProducts,
             totalCount: totalProducts,
             totalPages: Math.ceil(totalProducts / limit),
             currentPage: parseInt(page)

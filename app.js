@@ -27,7 +27,6 @@ app.use(express.json());
 
 // ================== STATIC FILES ==================
 app.use(express.static(path.join(__dirname, "public")));
-
 // ================== SESSION CONFIG ==================
 app.use(
   session({
