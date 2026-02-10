@@ -39,7 +39,8 @@
         }
 
         .page-link.active {
-            background-color: #000; /* Matches your sidebar/logo dark theme */
+            background-color: #000;
+            /* Matches your sidebar/logo dark theme */
             color: #fff;
             border-color: #000;
         }
@@ -122,8 +123,7 @@
             <div class="search-bar">
                 <i class="fas fa-search"></i>
                 <input type="text" placeholder="Search categories and press Enter..." id="categorySearch"
-                    value="<%= typeof search !== 'undefined' ? search : '' %>"
-                    onkeypress="handleSearch(event)" />
+                    value="<%= typeof search !== 'undefined' ? search : '' %>" onkeypress="handleSearch(event)" />
             </div>
 
             <div class="table-container">
@@ -182,68 +182,57 @@
                 </table>
             </div>
 
-            <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-            <div class="pagination-container">
-                <% if (currentPage > 1) { %>
-                    <a href="?page=<%= currentPage - 1 %>&search=<%= typeof search !== 'undefined' ? search : '' %>" class="page-link">Prev</a>
+            <% if (typeof totalPages !=='undefined' && totalPages> 1) { %>
+                <div class="pagination-container">
+                    <% if (currentPage> 1) { %>
+                        <a href="?page=<%= currentPage - 1 %>&search=<%= typeof search !== 'undefined' ? search : '' %>"
+                            class="page-link">Prev</a>
+                        <% } %>
+
+                            <% for(let i=1; i <=totalPages; i++) { %>
+                                <a href="?page=<%= i %>&search=<%= typeof search !== 'undefined' ? search : '' %>"
+                                    class="page-link <%= currentPage === i ? 'active' : '' %>">
+                                    <%= i %>
+                                </a>
+                                <% } %>
+
+                                    <% if (currentPage < totalPages) { %>
+                                        <a href="?page=<%= currentPage + 1 %>&search=<%= typeof search !== 'undefined' ? search : '' %>"
+                                            class="page-link">Next</a>
+                                        <% } %>
+                </div>
                 <% } %>
 
-                <% for(let i = 1; i <= totalPages; i++) { %>
-                    <a href="?page=<%= i %>&search=<%= typeof search !== 'undefined' ? search : '' %>" 
-                       class="page-link <%= currentPage === i ? 'active' : '' %>">
-                        <%= i %>
-                    </a>
-                <% } %>
-
-                <% if (currentPage < totalPages) { %>
-                    <a href="?page=<%= currentPage + 1 %>&search=<%= typeof search !== 'undefined' ? search : '' %>" class="page-link">Next</a>
-                <% } %>
-            </div>
-            <% } %>
 
 
 
-            <div class="pagination-container" style="display: flex; justify-content: center; padding: 20px; gap: 10px;">
-    <% if (currentPage > 1) { %>
-        <a href="?page=<%= currentPage - 1 %>&search=<%= search %>" class="btn-page">Previous</a>
-    <% } %>
 
-    <% for(let i = 1; i <= totalPages; i++) { %>
-        <a href="?page=<%= i %>&search=<%= search %>" 
-           class="btn-page <%= currentPage === i ? 'active' : '' %>">
-           <%= i %>
-        </a>
-    <% } %>
+                    <style>
+                        .btn-page {
+                            padding: 8px 16px;
+                            border: 1px solid #ddd;
+                            border-radius: 4px;
+                            color: #000000;
+                            text-decoration: none;
+                            transition: 0.3s;
+                        }
 
-    <% if (currentPage < totalPages) { %>
-        <a href="?page=<%= currentPage + 1 %>&search=<%= search %>" class="btn-page">Next</a>
-    <% } %>
-</div>
+                        .btn-page.active {
+                            background-color: #930606;
+                            color: #fff;
+                            border-color: #820000;
+                        }
 
-<style>
-    .btn-page {
-        padding: 8px 16px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        color: #000000;
-        text-decoration: none;
-        transition: 0.3s;
-    }
-    .btn-page.active {
-        background-color: #930606;
-        color: #fff;
-        border-color: #820000;
-    }
-    .btn-page:hover:not(.active) {
-        background-color: #f4f4f4;
-    }
-</style>
+                        .btn-page:hover:not(.active) {
+                            background-color: #f4f4f4;
+                        }
+                    </style>
         </div>
 
-        
+
     </main>
 
-    
+
 
     <div id="categoryModal" class="modal">
         <div class="modal-content">
@@ -271,7 +260,7 @@
         </div>
     </div>
 
-    
+
     <script>
         const modal = document.getElementById('categoryModal');
         const form = document.getElementById('categoryForm');

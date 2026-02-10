@@ -1063,6 +1063,19 @@ img {
   background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
 }
 
+.add-to-cart-btn.btn-icon-circle {
+  padding: 0;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  justify-content: center;
+  gap: 0;
+}
+
+.add-to-cart-btn.btn-icon-circle i {
+  font-size: 1.1rem;
+}
+
 /* List View */
 .products-grid.list-view .product-card {
   display: grid;

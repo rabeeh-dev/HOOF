@@ -124,8 +124,8 @@
                         <% } %>
                           ₹<%= product.salePrice %>
                     </p>
-                    <button class="add-to-cart-btn" onclick="addToCart('<%= product._id %>')">
-                      <i class="fas fa-shopping-bag"></i> Add
+                    <button class="add-to-cart-btn btn-icon-circle" onclick="addToCart('<%= product._id %>')">
+                      <i class="fas fa-shopping-bag"></i>
                     </button>
                   </div>
                 </div>
@@ -139,7 +139,7 @@
                   <% } %>
         </div>
 
-        <% if (Number(totalPages)> 1) { %>
+        <% if (Number(totalPages)>= 1) { %>
           <div class="pagination-wrapper">
             <div class="pagination">
               <% if (Number(currentPage)> 1) { %>
