@@ -106,3 +106,38 @@ exports.toggleProductStatus = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
+
+// controller/adminProductController.js
+exports.loadEditProduct = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const product = await adminProductService.getProductById(id);
+        const categories = await Category.find({}); // Get all categories for the dropdown
+
+        res.render("Admin/edit-product", {
+            product,
+            categories,
+            title: "Edit Product | HOOF Admin",
+            layout: false
+        });
+    } catch (error) {
+        console.error("Load Edit Product Error:", error);
+        res.redirect("/admin/products");
+    }
+};
+
+exports.updateProduct = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await adminProductService.updateProduct(id, req.body, req.files);
+        
+        if (result) {
+            res.json({ success: true, message: "Product updated successfully" });
+        } else {
+            res.status(404).json({ success: false, message: "Product not found" });
+        }
+    } catch (error) {
+        console.error("Update Product Error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

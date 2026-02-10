@@ -127,6 +127,12 @@ router.post('/products/add', adminAuth.isLogin, upload.array('productImages', 4)
 router.patch('/products/toggle-status/:id', adminAuth.isLogin, adminProductController.toggleProductStatus);
 
 
+// GET the edit page
+router.get('/products/edit/:id', adminAuth.isLogin, adminProductController.loadEditProduct);
+
+// POST/PATCH the updates (don't forget the upload middleware for images)
+router.post('/products/edit/:id', adminAuth.isLogin, upload.array('productImages', 4), adminProductController.updateProduct);
+
 /* =============================================================================
    LOGOUT
    Access: Private (isLogin)
