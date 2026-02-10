@@ -4,27 +4,36 @@ const fs = require('fs');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const dir = 'public/uploads/profile';
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
+        // Dynamically choose folder based on the route
+        let folder = 'public/uploads/profile';
+        
+        if (req.originalUrl.includes('products')) {
+            folder = 'public/uploads/products';
         }
-        cb(null, dir);
+
+        if (!fs.existsSync(folder)) {
+            fs.mkdirSync(folder, { recursive: true });
+        }
+        cb(null, folder);
     },
     filename: (req, file, cb) => {
-        // CHANGE THIS LINE:
-        // From: req.session.user._id
-        // To: req.session.userId
-        const userId = req.session.userId || 'guest'; 
-        cb(null, `user-${userId}-${Date.now()}${path.extname(file.originalname)}`);
+        // Use a random suffix to prevent filename collisions for multiple uploads
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `img-${uniqueSuffix}${path.extname(file.originalname)}`);
     }
 });
 
 const fileFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    // Allow standard images and HEIC
+    if (file.mimetype.startsWith('image/') || file.originalname.toLowerCase().endsWith('.heic')) {
         cb(null, true);
     } else {
-        cb(new Error('Not an image! Please upload an image.'), false);
+        cb(new Error('Only images are allowed!'), false);
     }
 };
 
-module.exports = multer({ storage, fileFilter });
+module.exports = multer({ 
+    storage, 
+    fileFilter,
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});

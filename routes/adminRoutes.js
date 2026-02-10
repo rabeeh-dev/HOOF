@@ -110,7 +110,7 @@ router.get('/products', adminAuth.isLogin, adminProductController.listProductsAd
  * @desc    Render the add product form
  * @access  Private (Admin Only)
  */
-router.get('/products/add', adminAuth.isLogin, adminProductController.loadAddProduct);
+router.get('/products/add', adminAuth.isLogin, adminProductController.listProductsAdmin);
 
 /**
  * @route   POST /admin/products/add

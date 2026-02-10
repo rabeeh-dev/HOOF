@@ -3,6 +3,7 @@ const User = require("../model/User");
 const Category = require("../model/Category");
 const bcrypt = require("bcrypt");
 const PDFDocument = require("pdfkit-table");
+const adminProductService = require("../services/adminProductService");
 
 /* =============================================================================
    ADMIN AUTHENTICATION SECTION
@@ -228,17 +229,30 @@ exports.exportUsersPDF = async (req, res) => {
  * @desc    Fetch and display all categories
  * @access  Private (Admin Only)
  */
+// controller/adminController.js
+
 exports.loadCategories = async (req, res) => {
     try {
-        const categories = await Category.find({}).sort({ createdAt: -1 });
-        res.render('Admin/category-management', {
+        const page = parseInt(req.query.page) || 1;
+        const search = req.query.search || '';
+        
+        const { categories, totalPages, currentPage } = 
+            await adminProductService.getAllCategoriesAdmin(page, 5, search);
+
+        // CHANGE THIS LINE
+        // From: res.render("Admin/categories", { ...
+        // To: 
+        res.render("Admin/category-management", { 
             categories,
+            totalPages,
+            currentPage,
+            search,
             title: "Category Management | HOOF Admin",
             layout: false
         });
     } catch (error) {
-        console.error("Load Categories Error:", error.message);
-        res.status(500).send("Error loading categories");
+        console.error("Load Categories Error:", error);
+        res.redirect("/admin/dashboard");
     }
 };
 

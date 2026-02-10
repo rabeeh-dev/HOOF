@@ -31,17 +31,28 @@ exports.listProductsAdmin = async (req, res) => {
  * @desc    Render the add product form
  * @access  Private (Admin)
  */
-exports.loadAddProduct = async (req, res) => {
+exports.loadCategories = async (req, res) => {
     try {
-        const categories = await Category.find({ isListed: true });
-        res.render("Admin/add-product", {
+        const page = parseInt(req.query.page) || 1;
+        const search = req.query.search || '';
+        
+        const { categories, totalPages, currentPage } = 
+            await adminProductService.getAllCategoriesAdmin(page, 5, search);
+
+        // CHANGE THIS LINE:
+        // From: res.render("Admin/categories", ...
+        // To:   res.render("Admin/category-management", ...
+        res.render("Admin/category-management", {
             categories,
-            title: "Add Product | HOOF Admin",
+            totalPages,
+            currentPage,
+            search,
+            title: "Category Management | HOOF Admin",
             layout: false
         });
     } catch (error) {
-        console.error("Load Add Product Error:", error);
-        res.redirect("/admin/products");
+        console.error("Load Categories Error:", error);
+        res.redirect("/admin/dashboard");
     }
 };
 
@@ -53,41 +64,23 @@ exports.loadAddProduct = async (req, res) => {
 exports.addProduct = async (req, res) => {
     try {
         const productData = req.body;
-        const files = req.files;
+        const files = req.files; // Multer array of files
 
-        // Process images
-        const imagePaths = files.map(file => `/uploads/products/${file.filename}`);
-        productData.productImage = imagePaths;
-
-        // Process variants if any
-        if (productData.variantSize) {
-            const variants = [];
-            if (Array.isArray(productData.variantSize)) {
-                for (let i = 0; i < productData.variantSize.length; i++) {
-                    variants.push({
-                        size: productData.variantSize[i],
-                        color: productData.variantColor[i],
-                        quantity: productData.variantStock[i],
-                        status: parseInt(productData.variantStock[i]) > 0 ? "Available" : "Out of Stock"
-                    });
-                }
-            } else {
-                variants.push({
-                    size: productData.variantSize,
-                    color: productData.variantColor,
-                    quantity: productData.variantStock,
-                    status: parseInt(productData.variantStock) > 0 ? "Available" : "Out of Stock"
-                });
-            }
-            productData.variants = variants;
+        if (!files || files.length === 0) {
+            return res.status(400).json({ success: false, message: "Please upload at least one image." });
         }
 
-        await adminProductService.addProduct(productData);
+        // Pass BOTH arguments to the service
+        // Argument 1: Text data (req.body)
+        // Argument 2: File data (req.files)
+        await adminProductService.addProduct(productData, files);
 
-        res.redirect("/admin/products?success=true");
+        // Since your EJS uses Fetch/AJAX, we should return JSON, not a redirect
+        res.json({ success: true, message: "Product added successfully!" });
+        
     } catch (error) {
         console.error("Add Product Error:", error);
-        res.redirect("/admin/products/add?error=true");
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 

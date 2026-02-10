@@ -12,10 +12,46 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* Pagination Styling to match your theme */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-top: 20px;
+            padding-bottom: 10px;
+        }
+
+        .page-link {
+            padding: 8px 14px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            color: #333;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .page-link:hover {
+            background-color: #f4f4f4;
+        }
+
+        .page-link.active {
+            background-color: #000; /* Matches your sidebar/logo dark theme */
+            color: #fff;
+            border-color: #000;
+        }
+
+        .page-link.disabled {
+            color: #ccc;
+            pointer-events: none;
+        }
+    </style>
 </head>
 
 <body>
-    <!-- SIDEBAR -->
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="logo">HOOF</div>
@@ -69,7 +105,6 @@
         </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
     <main class="main-content">
         <header class="page-header">
             <div>
@@ -84,11 +119,11 @@
         </header>
 
         <div class="categories-card">
-            <!-- SEARCH BAR -->
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search categories..." id="categorySearch"
-                    onkeyup="searchCategories()" />
+                <input type="text" placeholder="Search categories and press Enter..." id="categorySearch"
+                    value="<%= typeof search !== 'undefined' ? search : '' %>"
+                    onkeypress="handleSearch(event)" />
             </div>
 
             <div class="table-container">
@@ -146,10 +181,70 @@
                     </tbody>
                 </table>
             </div>
+
+            <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+            <div class="pagination-container">
+                <% if (currentPage > 1) { %>
+                    <a href="?page=<%= currentPage - 1 %>&search=<%= typeof search !== 'undefined' ? search : '' %>" class="page-link">Prev</a>
+                <% } %>
+
+                <% for(let i = 1; i <= totalPages; i++) { %>
+                    <a href="?page=<%= i %>&search=<%= typeof search !== 'undefined' ? search : '' %>" 
+                       class="page-link <%= currentPage === i ? 'active' : '' %>">
+                        <%= i %>
+                    </a>
+                <% } %>
+
+                <% if (currentPage < totalPages) { %>
+                    <a href="?page=<%= currentPage + 1 %>&search=<%= typeof search !== 'undefined' ? search : '' %>" class="page-link">Next</a>
+                <% } %>
+            </div>
+            <% } %>
+
+
+
+            <div class="pagination-container" style="display: flex; justify-content: center; padding: 20px; gap: 10px;">
+    <% if (currentPage > 1) { %>
+        <a href="?page=<%= currentPage - 1 %>&search=<%= search %>" class="btn-page">Previous</a>
+    <% } %>
+
+    <% for(let i = 1; i <= totalPages; i++) { %>
+        <a href="?page=<%= i %>&search=<%= search %>" 
+           class="btn-page <%= currentPage === i ? 'active' : '' %>">
+           <%= i %>
+        </a>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+        <a href="?page=<%= currentPage + 1 %>&search=<%= search %>" class="btn-page">Next</a>
+    <% } %>
+</div>
+
+<style>
+    .btn-page {
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        color: #000000;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+    .btn-page.active {
+        background-color: #930606;
+        color: #fff;
+        border-color: #820000;
+    }
+    .btn-page:hover:not(.active) {
+        background-color: #f4f4f4;
+    }
+</style>
         </div>
+
+        
     </main>
 
-    <!-- ADD/EDIT MODAL -->
+    
+
     <div id="categoryModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -176,6 +271,7 @@
         </div>
     </div>
 
+    
     <script>
         const modal = document.getElementById('categoryModal');
         const form = document.getElementById('categoryForm');
@@ -183,6 +279,14 @@
         const categoryIdInput = document.getElementById('categoryId');
         const nameInput = document.getElementById('categoryName');
         const descInput = document.getElementById('categoryDescription');
+
+        // Server-side search handler
+        function handleSearch(event) {
+            if (event.key === "Enter") {
+                const searchValue = document.getElementById('categorySearch').value;
+                window.location.href = `/admin/categories?page=1&search=${searchValue}`;
+            }
+        }
 
         function openAddModal() {
             modalTitle.innerText = "Add New Category";
@@ -265,6 +369,7 @@
             }
         }
 
+        // Lightweight instant UI filter for current page
         function searchCategories() {
             const input = document.getElementById('categorySearch');
             const filter = input.value.toLowerCase();

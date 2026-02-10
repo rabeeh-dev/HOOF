@@ -14,6 +14,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
     <style>
         .error-msg {
             color: var(--admin-danger);
@@ -209,92 +212,111 @@
         </form>
     </main>
 
-    <script>
-        let selectedImages = [];
+<div id="cropperModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background: white; padding: 20px; border-radius: 10px; max-width: 90%; max-height: 90%; overflow: auto;">
+        <div style="width: 500px; height: 500px; background: #eee;">
+            <img id="imageToCrop" style="max-width: 100%;">
+        </div>
+        <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+            <button type="button" onclick="closeCropper()" class="btn-cancel" style="max-width: 100px;">Cancel</button>
+            <button type="button" id="cropButton" class="btn-save" style="max-width: 100px;">Crop & Save</button>
+        </div>
+    </div>
+</div>
 
-        function previewImages(event) {
-            const preview = document.getElementById('imagePreview');
-            const files = event.target.files;
+<script>
+    let cropper;
+    let currentFiles = []; // Stores the final cropped blobs
+    const imagePreview = document.getElementById('imagePreview');
+    const cropperModal = document.getElementById('cropperModal');
+    const imageToCrop = document.getElementById('imageToCrop');
 
-            if (selectedImages.length + files.length > 4) {
-                Swal.fire('Limit exceeded', 'You can only upload up to 4 images', 'warning');
-                return;
-            }
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                selectedImages.push(file);
-
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const div = document.createElement('div');
-                    div.className = 'preview-item';
-                    div.innerHTML = `
-                        <img src="${e.target.result}" alt="Preview">
-                        <span class="remove-img" onclick="removeImage(${selectedImages.length - 1})">&times;</span>
-                    `;
-                    preview.appendChild(div);
-                }
-                reader.readAsDataURL(file);
-            }
+    function previewImages(event) {
+        const files = Array.from(event.target.files);
+        if (currentFiles.length + files.length > 4) {
+            Swal.fire('Limit exceeded', 'Maximum 4 images allowed', 'warning');
+            return;
         }
 
-        function removeImage(index) {
-            selectedImages.splice(index, 1);
-            updatePreview();
-        }
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imageToCrop.src = e.target.result;
+                cropperModal.style.display = 'flex';
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(imageToCrop, {
+                    aspectRatio: 1, // Perfect square for sneakers
+                    viewMode: 1
+                });
 
-        function updatePreview() {
-            const preview = document.getElementById('imagePreview');
-            preview.innerHTML = '';
-            selectedImages.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const div = document.createElement('div');
-                    div.className = 'preview-item';
-                    div.innerHTML = `
-                        <img src="${e.target.result}" alt="Preview">
-                        <span class="remove-img" onclick="removeImage(${index})">&times;</span>
-                    `;
-                    preview.appendChild(div);
-                }
-                reader.readAsDataURL(file);
-            });
-        }
+                document.getElementById('cropButton').onclick = () => {
+                    const canvas = cropper.getCroppedCanvas({ width: 800, height: 800 });
+                    canvas.toBlob((blob) => {
+                        const croppedFile = new File([blob], file.name, { type: 'image/jpeg' });
+                        currentFiles.push(croppedFile);
+                        displayPreview(croppedFile);
+                        closeCropper();
+                    }, 'image/jpeg');
+                };
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 
-        function addVariantRow() {
-            const tbody = document.getElementById('variantBody');
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><input type="text" name="variantSize[]" placeholder="e.g. 8" required style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--admin-border);"></td>
-                <td><input type="text" name="variantColor[]" placeholder="Red" required style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--admin-border);"></td>
-                <td><input type="number" name="variantStock[]" value="0" min="0" required style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--admin-border);"></td>
-                <td style="text-align: center;"><i class="fas fa-trash" style="color: var(--admin-danger); cursor: pointer;" onclick="this.closest('tr').remove()"></i></td>
+    function displayPreview(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const div = document.createElement('div');
+            div.className = 'preview-item';
+            div.innerHTML = `
+                <img src="${e.target.result}">
+                <span class="remove-img" onclick="removeImage(${currentFiles.length - 1})">&times;</span>
             `;
-            tbody.appendChild(row);
-        }
-
-        document.getElementById('productForm').onsubmit = async (e) => {
-            // Pricing validation
-            const regPrice = parseFloat(document.getElementById('regularPrice').value);
-            const salePrice = parseFloat(document.getElementById('salePrice').value);
-            const priceError = document.getElementById('priceError');
-
-            if (salePrice > regPrice) {
-                e.preventDefault();
-                priceError.style.display = 'block';
-                return;
-            } else {
-                priceError.style.display = 'none';
-            }
-
-            if (selectedImages.length === 0) {
-                e.preventDefault();
-                document.getElementById('imageError').style.display = 'block';
-                return;
-            }
+            imagePreview.appendChild(div);
         };
-    </script>
+        reader.readAsDataURL(file);
+    }
+
+    function closeCropper() {
+        cropperModal.style.display = 'none';
+        if (cropper) cropper.destroy();
+    }
+
+    function removeImage(index) {
+        currentFiles.splice(index, 1);
+        imagePreview.innerHTML = '';
+        currentFiles.forEach(file => displayPreview(file));
+    }
+
+    // FORM SUBMISSION (Using AJAX to send Blobs)
+    document.getElementById('productForm').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        // Remove the original file input data and append cropped files
+        formData.delete('productImages');
+        currentFiles.forEach(file => {
+            formData.append('productImages', file);
+        });
+
+        try {
+            const response = await fetch('/admin/products/add', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (result.success) {
+                Swal.fire('Success', 'Product published!', 'success').then(() => {
+                    window.location.href = '/admin/products';
+                });
+            } else {
+                Swal.fire('Error', result.message, 'error');
+            }
+        } catch (err) {
+            Swal.fire('Error', 'Server communication failed', 'error');
+        }
+    };
+</script>
 </body>
 
 </html>
