@@ -8,6 +8,7 @@
         </title>
 
         <link rel="stylesheet" href="/user/css/layout.css">
+        <link rel="stylesheet" href="/user/css/breadcrumb.css">
         <%- style %>
             <%- meta %>
 </head>
@@ -15,14 +16,36 @@
 <body>
     <%- include('../partials/user/header') %>
 
-        <main>
-            <%- body %>
-        </main>
+        <% if (locals.breadcrumbs && locals.breadcrumbs.length> 0) { %>
+            <div class="breadcrumb-container">
+                <div class="container">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <% breadcrumbs.forEach((crumb, index)=> { %>
+                                <% if (index===breadcrumbs.length - 1) { %>
+                                    <li class="breadcrumb-item active" aria-current="page">
+                                        <%= crumb.name %>
+                                    </li>
+                                    <% } else { %>
+                                        <li class="breadcrumb-item"><a href="<%= crumb.url %>">
+                                                <%= crumb.name %>
+                                            </a></li>
+                                        <% } %>
+                                            <% }); %>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            <% } %>
 
-        <%- include('../partials/user/footer') %>
+                <main>
+                    <%- body %>
+                </main>
 
-            <script src="/user/js/layout.js" defer></script>
-            <%- script %>
+                <%- include('../partials/user/footer') %>
+
+                    <script src="/user/js/layout.js" defer></script>
+                    <%- script %>
 </body>
 
 </html>

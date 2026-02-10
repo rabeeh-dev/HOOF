@@ -91,10 +91,13 @@
             </div>
             <div class="sort-dropdown">
               <select id="sortSelect" class="sort-select" onchange="applyFilters()">
-                <option value="newest" <%=selectedSort==='newest' ? 'selected' : '' %>>Newest First</option>
-                <option value="price-low" <%=selectedSort==='price-low' ? 'selected' : '' %>>Price: Low to High</option>
-                <option value="price-high" <%=selectedSort==='price-high' ? 'selected' : '' %>>Price: High to Low
+                <option value="newest" <%=selectedSort==='newest' ? 'selected' : '' %>>Sort: Newest First</option>
+                <option value="price-low" <%=selectedSort==='price-low' ? 'selected' : '' %>>Sort: Price Low to High
                 </option>
+                <option value="price-high" <%=selectedSort==='price-high' ? 'selected' : '' %>>Sort: Price High to Low
+                </option>
+                <option value="a-z" <%=selectedSort==='a-z' ? 'selected' : '' %>>Sort: A - Z</option>
+                <option value="z-a" <%=selectedSort==='z-a' ? 'selected' : '' %>>Sort: Z - A</option>
               </select>
             </div>
           </div>

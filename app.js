@@ -67,6 +67,10 @@ app.use((req, res, next) => {
   } : null;
   next();
 });
+
+const breadcrumbMiddleware = require("./middleware/breadcrumb");
+app.use(breadcrumbMiddleware);
+
 // ================== ROUTES ==================
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");

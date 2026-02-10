@@ -58,7 +58,10 @@ class ProductService {
         let sortOrder = {};
         if (sort === 'price-low') sortOrder.salePrice = 1;
         else if (sort === 'price-high') sortOrder.salePrice = -1;
+        else if (sort === 'a-z') sortOrder.productName = 1;
+        else if (sort === 'z-a') sortOrder.productName = -1;
         else if (sort === 'newest') sortOrder.createdAt = -1;
+
 
         // 4. Execute Queries
         const [products, totalCount] = await Promise.all([
