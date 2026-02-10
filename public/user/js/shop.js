@@ -116,3 +116,17 @@ function showToast(message, type = "info") {
 
     setTimeout(() => toast.remove(), 3000);
 }
+
+// Add this to your main script/navbar script
+function performSearch() {
+    const searchInput = document.getElementById('navSearchInput');
+    const query = searchInput.value.trim();
+    if (query) {
+        window.location.href = `/search?q=${encodeURIComponent(query)}`;
+    }
+}
+
+// Event listener for Enter key
+document.getElementById('navSearchInput')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') performSearch();
+});

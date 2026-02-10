@@ -544,3 +544,26 @@ exports.changePasswordRequest = async (req, res) => {
     res.redirect('/user/profile');
   }
 };
+
+// controller/userController.js
+exports.getSearchPage = async (req, res) => {
+    try {
+        const query = req.query.q || "";
+        const page = parseInt(req.query.page) || 1;
+
+        const { products, totalPages, currentPage, totalResults } = 
+            await userService.searchProducts(query, page);
+
+        res.render("User/search-results", {
+            products,
+            totalPages,
+            currentPage,
+            query,
+            totalResults,
+            title: `Search results for "${query}" | HOOF`
+        });
+    } catch (error) {
+        console.error("Search Error:", error);
+        res.redirect("/");
+    }
+};

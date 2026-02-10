@@ -83,6 +83,34 @@ class UserService {
 
         return true;
     }
+
+    async searchProducts(searchQuery, page = 1, limit = 12) {
+    const skip = (page - 1) * limit;
+    
+    // Create a Case-Insensitive regex search
+    const filter = {
+        isBlocked: false, // Only show active products
+        $or: [
+            { productName: { $regex: searchQuery, $options: 'i' } },
+            { brand: { $regex: searchQuery, $options: 'i' } }
+        ]
+    };
+
+    const products = await Product.find(filter)
+        .populate('category')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+    const totalProducts = await Product.countDocuments(filter);
+
+    return {
+        products,
+        totalPages: Math.ceil(totalProducts / limit),
+        currentPage: page,
+        totalResults: totalProducts
+    };
+}
 }
 
 module.exports = new UserService();
