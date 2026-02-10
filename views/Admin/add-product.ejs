@@ -182,7 +182,7 @@
 
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
-                            <h4 style="font-size: 0.9rem; font-weight: 600;">Manage Variants (Optional)</h4>
+                            <h4 style="font-size: 0.9rem; font-weight: 600;">Manage Variants (Required)</h4>
                             <button type="button" class="btn-add-variant" onclick="addVariantRow()">+ Add
                                 Variant</button>
                         </div>
@@ -191,15 +191,24 @@
                             <thead>
                                 <tr>
                                     <th>Size</th>
-                                    <th>Color</th>
                                     <th>Stock</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody id="variantBody">
-                                <!-- Dynamic Rows -->
+                                <!-- Initial required row -->
+                                <tr>
+                                    <td><input type="text" name="variantSize" placeholder="e.g. 9" required
+                                            class="variant-input"></td>
+                                    <td><input type="number" name="variantStock" placeholder="0" min="0" required
+                                            class="variant-input"></td>
+                                    <td></td>
+                                </tr>
                             </tbody>
                         </table>
+                        <small class="error-msg" id="variantError"
+                            style="display:block; margin-top:0.5rem; color: #666;">At least one size variant is
+                            required.</small>
                     </div>
                 </div>
             </div>
@@ -212,111 +221,133 @@
         </form>
     </main>
 
-<div id="cropperModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background: white; padding: 20px; border-radius: 10px; max-width: 90%; max-height: 90%; overflow: auto;">
-        <div style="width: 500px; height: 500px; background: #eee;">
-            <img id="imageToCrop" style="max-width: 100%;">
-        </div>
-        <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
-            <button type="button" onclick="closeCropper()" class="btn-cancel" style="max-width: 100px;">Cancel</button>
-            <button type="button" id="cropButton" class="btn-save" style="max-width: 100px;">Crop & Save</button>
+    <div id="cropperModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center;">
+        <div
+            style="background: white; padding: 20px; border-radius: 10px; max-width: 90%; max-height: 90%; overflow: auto;">
+            <div style="width: 500px; height: 500px; background: #eee;">
+                <img id="imageToCrop" style="max-width: 100%;">
+            </div>
+            <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" onclick="closeCropper()" class="btn-cancel"
+                    style="max-width: 100px;">Cancel</button>
+                <button type="button" id="cropButton" class="btn-save" style="max-width: 100px;">Crop & Save</button>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    let cropper;
-    let currentFiles = []; // Stores the final cropped blobs
-    const imagePreview = document.getElementById('imagePreview');
-    const cropperModal = document.getElementById('cropperModal');
-    const imageToCrop = document.getElementById('imageToCrop');
+    <script>
+        let cropper;
+        let currentFiles = []; // Stores the final cropped blobs
+        const imagePreview = document.getElementById('imagePreview');
+        const cropperModal = document.getElementById('cropperModal');
+        const imageToCrop = document.getElementById('imageToCrop');
 
-    function previewImages(event) {
-        const files = Array.from(event.target.files);
-        if (currentFiles.length + files.length > 4) {
-            Swal.fire('Limit exceeded', 'Maximum 4 images allowed', 'warning');
-            return;
+        function previewImages(event) {
+            const files = Array.from(event.target.files);
+            if (currentFiles.length + files.length > 4) {
+                Swal.fire('Limit exceeded', 'Maximum 4 images allowed', 'warning');
+                return;
+            }
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imageToCrop.src = e.target.result;
+                    cropperModal.style.display = 'flex';
+                    if (cropper) cropper.destroy();
+                    cropper = new Cropper(imageToCrop, {
+                        aspectRatio: 1, // Perfect square for sneakers
+                        viewMode: 1
+                    });
+
+                    document.getElementById('cropButton').onclick = () => {
+                        const canvas = cropper.getCroppedCanvas({ width: 800, height: 800 });
+                        canvas.toBlob((blob) => {
+                            const croppedFile = new File([blob], file.name, { type: 'image/jpeg' });
+                            currentFiles.push(croppedFile);
+                            displayPreview(croppedFile);
+                            closeCropper();
+                        }, 'image/jpeg');
+                    };
+                };
+                reader.readAsDataURL(file);
+            });
         }
 
-        files.forEach(file => {
+        function displayPreview(file) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                imageToCrop.src = e.target.result;
-                cropperModal.style.display = 'flex';
-                if (cropper) cropper.destroy();
-                cropper = new Cropper(imageToCrop, {
-                    aspectRatio: 1, // Perfect square for sneakers
-                    viewMode: 1
-                });
-
-                document.getElementById('cropButton').onclick = () => {
-                    const canvas = cropper.getCroppedCanvas({ width: 800, height: 800 });
-                    canvas.toBlob((blob) => {
-                        const croppedFile = new File([blob], file.name, { type: 'image/jpeg' });
-                        currentFiles.push(croppedFile);
-                        displayPreview(croppedFile);
-                        closeCropper();
-                    }, 'image/jpeg');
-                };
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    function displayPreview(file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const div = document.createElement('div');
-            div.className = 'preview-item';
-            div.innerHTML = `
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.innerHTML = `
                 <img src="${e.target.result}">
                 <span class="remove-img" onclick="removeImage(${currentFiles.length - 1})">&times;</span>
             `;
-            imagePreview.appendChild(div);
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function closeCropper() {
-        cropperModal.style.display = 'none';
-        if (cropper) cropper.destroy();
-    }
-
-    function removeImage(index) {
-        currentFiles.splice(index, 1);
-        imagePreview.innerHTML = '';
-        currentFiles.forEach(file => displayPreview(file));
-    }
-
-    // FORM SUBMISSION (Using AJAX to send Blobs)
-    document.getElementById('productForm').onsubmit = async (e) => {
-        e.preventDefault();
-        
-        const formData = new FormData(e.target);
-        // Remove the original file input data and append cropped files
-        formData.delete('productImages');
-        currentFiles.forEach(file => {
-            formData.append('productImages', file);
-        });
-
-        try {
-            const response = await fetch('/admin/products/add', {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
-            if (result.success) {
-                Swal.fire('Success', 'Product published!', 'success').then(() => {
-                    window.location.href = '/admin/products';
-                });
-            } else {
-                Swal.fire('Error', result.message, 'error');
-            }
-        } catch (err) {
-            Swal.fire('Error', 'Server communication failed', 'error');
+                imagePreview.appendChild(div);
+            };
+            reader.readAsDataURL(file);
         }
-    };
-</script>
+
+        function closeCropper() {
+            cropperModal.style.display = 'none';
+            if (cropper) cropper.destroy();
+        }
+
+        function removeImage(index) {
+            currentFiles.splice(index, 1);
+            imagePreview.innerHTML = '';
+            currentFiles.forEach(file => displayPreview(file));
+        }
+
+        function addVariantRow() {
+            const tbody = document.getElementById('variantBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+            <td><input type="text" name="variantSize" placeholder="e.g. 10" required class="variant-input"></td>
+            <td><input type="number" name="variantStock" placeholder="0" min="0" required class="variant-input"></td>
+            <td><i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="this.closest('tr').remove()"></i></td>
+        `;
+            tbody.appendChild(row);
+        }
+
+        // FORM SUBMISSION (Using AJAX to send Blobs)
+        document.getElementById('productForm').onsubmit = async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+
+            // Validation for variants
+            const sizes = formData.getAll('variantSize');
+            if (sizes.length === 0 || sizes.every(s => !s.trim())) {
+                Swal.fire('Error', 'At least one variant (Size & Stock) is required.', 'error');
+                return;
+            }
+
+            // Remove the original file input data and append cropped files
+            formData.delete('productImages');
+            currentFiles.forEach(file => {
+                formData.append('productImages', file);
+            });
+
+            try {
+                const response = await fetch('/admin/products/add', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    Swal.fire('Success', 'Product published!', 'success').then(() => {
+                        window.location.href = '/admin/products';
+                    });
+                } else {
+                    Swal.fire('Error', result.message, 'error');
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Server communication failed', 'error');
+            }
+        };
+    </script>
 </body>
 
 </html>

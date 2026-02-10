@@ -1,6 +1,5 @@
 <link rel="stylesheet" href="/user/css/shop.css" />
 
-<!-- PAGE HEADER -->
 <section class="page-header">
   <div class="container">
     <h1 class="page-title">EXPLORE COLLECTION</h1>
@@ -8,22 +7,18 @@
   </div>
 </section>
 
-<!-- MAIN PRODUCTS SECTION -->
 <section class="products-main-section">
   <div class="container">
     <div class="products-layout">
 
-      <!-- SIDEBAR - CATEGORIES & FILTERS -->
       <aside class="products-sidebar">
         <div class="sidebar-sticky">
-
           <button class="filter-toggle" id="filterToggle">
             <i class="fas fa-filter"></i>
             <span>Filters</span>
           </button>
 
           <div class="sidebar-content" id="sidebarContent">
-            <!-- Categories -->
             <div class="filter-section">
               <h3 class="filter-title"><i class="fas fa-th-large"></i> Categories</h3>
               <ul class="category-list">
@@ -32,8 +27,8 @@
                   <span class="category-name">All Products</span>
                 </li>
                 <% categories.forEach(cat=> { %>
-                  <li class="category-item <%= selectedCategory == cat._id ? 'active' : '' %>"
-                    onclick="window.location.href='/user/shop?category=<%= cat._id %>&sort=<%= selectedSort %>'">
+                  <li class="category-item <%= String(selectedCategory) === String(cat._id) ? 'active' : '' %>"
+                    onclick="window.location.href='/user/shop?category=<%= cat._id %>&sort=<%= selectedSort %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&size=<%= selectedSize %>'">
                     <span class="category-name">
                       <%= cat.name %>
                     </span>
@@ -42,22 +37,38 @@
               </ul>
             </div>
 
-            <!-- Price Range -->
             <div class="filter-section">
               <h3 class="filter-title"><i class="fas fa-rupee-sign"></i> Price Range</h3>
               <div class="price-inputs">
-                <div class="price-input-group">
-                  <label>Max</label>
-                  <input type="number" id="maxPriceDisplay" value="<%= maxPrice || 20000 %>" readonly>
+                <div class="price-range-display">
+                  ₹<span id="minPriceDisplay">
+                    <%= minPrice %>
+                  </span> - ₹<span id="maxPriceDisplay">
+                    <%= maxPrice %>
+                  </span>
                 </div>
               </div>
-              <div class="price-slider">
-                <input type="range" id="priceRange" min="0" max="20000" step="500" value="<%= maxPrice || 20000 %>"
-                  onchange="applyFilters()">
+              <div class="dual-range-slider">
+                <div class="slider-track"></div>
+                <input type="range" id="minPriceRange" min="0" max="20000" step="100" value="<%= minPrice %>"
+                  oninput="updatePriceLabels()">
+                <input type="range" id="maxPriceRange" min="0" max="20000" step="100" value="<%= maxPrice %>"
+                  oninput="updatePriceLabels()">
               </div>
             </div>
 
-            <!-- Clear Filters -->
+            <div class="filter-section">
+              <h3 class="filter-title"><i class="fas fa-ruler-combined"></i> Sizes</h3>
+              <div class="size-grid">
+                <% availableSizes.forEach(size=> { %>
+                  <button class="size-btn <%= selectedSize === size ? 'active' : '' %>"
+                    onclick="toggleSize('<%= size %>')">
+                    <%= size %>
+                  </button>
+                  <% }) %>
+              </div>
+            </div>
+
             <button class="btn outline clear-filters" onclick="window.location.href='/user/shop'">
               <i class="fas fa-redo"></i> Clear All Filters
             </button>
@@ -65,7 +76,6 @@
         </div>
       </aside>
 
-      <!-- PRODUCTS CONTENT -->
       <main class="products-content">
         <div class="products-toolbar">
           <div class="toolbar-left">
@@ -75,15 +85,14 @@
           </div>
           <div class="toolbar-right">
             <div class="product-search">
-              <input type="text" id="searchInput" placeholder="Search products..."
-                value="<%= typeof search !== 'undefined' ? search : '' %>">
+              <input type="text" id="searchInput" placeholder="Search sneakers..."
+                value="<%= typeof search !== 'undefined' ? search : '' %>" oninput="handleLiveSearch(event)">
               <button onclick="applyFilters()"><i class="fas fa-search"></i></button>
             </div>
             <div class="sort-dropdown">
               <select id="sortSelect" class="sort-select" onchange="applyFilters()">
                 <option value="newest" <%=selectedSort==='newest' ? 'selected' : '' %>>Newest First</option>
-                <option value="price-low" <%=selectedSort==='price-low' ? 'selected' : '' %>>Price: Low to High
-                </option>
+                <option value="price-low" <%=selectedSort==='price-low' ? 'selected' : '' %>>Price: Low to High</option>
                 <option value="price-high" <%=selectedSort==='price-high' ? 'selected' : '' %>>Price: High to Low
                 </option>
               </select>
@@ -92,19 +101,21 @@
         </div>
 
         <div class="products-grid" id="productsGrid">
-          <% if (products.length> 0) { %>
+          <% if (products && products.length> 0) { %>
             <% products.forEach(product=> { %>
               <div class="product-card">
                 <div class="product-image">
-                  <img src="<%= product.productImage[0] %>" alt="<%= product.productName %>" />
+                  <img src="<%= product.productImage[0] %>" alt="<%= product.productName %>"
+                    onclick="window.location.href='/user/product-details/<%= product._id %>'" style="cursor:pointer;" />
                   <button class="wishlist-btn"><i class="far fa-heart"></i></button>
                 </div>
                 <div class="product-info">
-                  <h3 class="product-name">
+                  <h3 class="product-name" onclick="window.location.href='/user/product-details/<%= product._id %>'"
+                    style="cursor:pointer;">
                     <%= product.productName %>
                   </h3>
                   <p class="product-category">
-                    <%= product.category.name %>
+                    <%= product.category ? product.category.name : 'Uncategorized' %>
                   </p>
                   <div class="product-footer">
                     <p class="product-price">
@@ -121,30 +132,153 @@
               </div>
               <% }) %>
                 <% } else { %>
-                  <div class="empty-state">
-                    <p>No products found matching your filters.</p>
+                  <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+                    <i class="fas fa-search" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+                    <p>No sneakers found matching your criteria.</p>
                   </div>
                   <% } %>
         </div>
 
-        <% if (totalPages> 1) { %>
-          <div class="pagination">
-            <% for(let i=1; i <=totalPages; i++) { %>
-              <button class="page-btn <%= currentPage == i ? 'active' : '' %>"
-                onclick="window.location.href='/user/shop?page=<%= i %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>'">
-                <%= i %>
-              </button>
-              <% } %>
+        <% if (Number(totalPages)> 1) { %>
+          <div class="pagination-wrapper">
+            <div class="pagination">
+              <% if (Number(currentPage)> 1) { %>
+                <button class="page-btn" onclick="navigateToPage('<%= Number(currentPage) - 1 %>')">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <% } %>
+
+                  <% let startPage=Math.max(1, Number(currentPage) - 2); let endPage=Math.min(Number(totalPages),
+                    startPage + 4); if (endPage - startPage < 4) { startPage=Math.max(1, endPage - 4); } %>
+
+                    <% if (startPage> 1) { %>
+                      <button class="page-btn" onclick="navigateToPage('1')">1</button>
+                      <% if (startPage> 2) { %><span class="page-dots">...</span>
+                        <% } %>
+                          <% } %>
+
+                            <% for(let i=startPage; i <=endPage; i++) { %>
+                              <button class="page-btn <%= Number(currentPage) === i ? 'active' : '' %>"
+                                onclick="navigateToPage('<%= i %>')">
+                                <%= i %>
+                              </button>
+                              <% } %>
+
+                                <% if (endPage < Number(totalPages)) { %>
+                                  <% if (endPage < Number(totalPages) - 1) { %><span class="page-dots">...</span>
+                                    <% } %>
+                                      <button class="page-btn" onclick="navigateToPage('<%= Number(totalPages) %>')">
+                                        <%= totalPages %>
+                                      </button>
+                                      <% } %>
+
+                                        <% if (Number(currentPage) < Number(totalPages)) { %>
+                                          <button class="page-btn"
+                                            onclick="navigateToPage('<%= Number(currentPage) + 1 %>')">
+                                            <i class="fas fa-chevron-right"></i>
+                                          </button>
+                                          <% } %>
+            </div>
+            <div class="pagination-info">
+              Showing page <span>
+                <%= currentPage %>
+              </span> of <span>
+                <%= totalPages %>
+              </span>
+            </div>
           </div>
           <% } %>
       </main>
-
     </div>
   </div>
 </section>
 
-<script src="/user/js/shop.js" defer></script>
 <script>
+  let debounceTimer;
+
+  // Dual Range Slider Logic
+  const minSlider = document.getElementById('minPriceRange');
+  const maxSlider = document.getElementById('maxPriceRange');
+  const minDisplay = document.getElementById('minPriceDisplay');
+  const maxDisplay = document.getElementById('maxPriceDisplay');
+  const track = document.querySelector('.slider-track');
+
+  function updatePriceLabels() {
+    let minVal = parseInt(minSlider.value);
+    let maxVal = parseInt(maxSlider.value);
+
+    if (maxVal - minVal < 1000) {
+      if (event && event.target === minSlider) {
+        minSlider.value = maxVal - 1000;
+        minVal = maxVal - 1000;
+      } else {
+        maxSlider.value = minVal + 1000;
+        maxVal = minVal + 1000;
+      }
+    }
+
+    minDisplay.innerText = minVal;
+    maxDisplay.innerText = maxVal;
+    fillTrack();
+  }
+
+  function fillTrack() {
+    const minPercent = (minSlider.value / minSlider.max) * 100;
+    const maxPercent = (maxSlider.value / maxSlider.max) * 100;
+    track.style.background = `linear-gradient(to right, #ddd ${minPercent}%, var(--accent) ${minPercent}%, var(--accent) ${maxPercent}%, #ddd ${maxPercent}%)`;
+  }
+
+  function toggleSize(size) {
+    const currentSize = '<%= selectedSize %>';
+    const newSize = (currentSize === size) ? '' : size;
+
+    // Call navigate to page 1 with new size
+    const search = document.getElementById('searchInput').value;
+    const sort = document.getElementById('sortSelect').value;
+    const minPrice = document.getElementById('minPriceRange').value;
+    const maxPrice = document.getElementById('maxPriceRange').value;
+    const category = '<%= selectedCategory %>';
+
+    let url = `/user/shop?page=1&sort=${sort}&minPrice=${minPrice}&maxPrice=${maxPrice}`;
+    if (newSize) url += `&size=${newSize}`;
+    if (category && category !== 'undefined' && category !== 'null') url += `&category=${category}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+
+    window.location.href = url;
+  }
+
+  // Optimized Navigation Function
+  function navigateToPage(pageNumber) {
+    const search = document.getElementById('searchInput').value;
+    const sort = document.getElementById('sortSelect').value;
+    const minPrice = document.getElementById('minPriceRange').value;
+    const maxPrice = document.getElementById('maxPriceRange').value;
+    const size = '<%= selectedSize %>';
+    const category = '<%= selectedCategory %>';
+
+    let url = `/user/shop?page=${pageNumber}&sort=${sort}&minPrice=${minPrice}&maxPrice=${maxPrice}`;
+    if (size && size !== 'undefined' && size !== 'null') url += `&size=${size}`;
+    if (category && category !== 'undefined' && category !== 'null') url += `&category=${category}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+
+    window.location.href = url;
+  }
+
+  minSlider.onchange = () => applyFilters();
+  maxSlider.onchange = () => applyFilters();
+  fillTrack();
+
+  function applyFilters() {
+    navigateToPage(1); // Always reset to page 1 when filtering
+  }
+
+  function handleLiveSearch(event) {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      applyFilters();
+    }, 600);
+  }
+
   window.addEventListener("pageshow", function (event) {
     if (event.persisted || (typeof window.performance != "undefined" && window.performance.navigation.type === 2)) {
       window.location.reload();

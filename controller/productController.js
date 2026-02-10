@@ -14,7 +14,10 @@ exports.listProducts = async (req, res) => {
         // 2. Get Categories for the Sidebar filter
         const categories = await Category.find({ isListed: true });
 
-        // 3. Render Page
+        // 3. Define available sizes (you can also query these from variants in DB)
+        const availableSizes = ["6", "7", "8", "9", "10", "11", "12"];
+
+        // 4. Render Page
         res.render('User/shop', {
             products,
             categories,
@@ -22,7 +25,10 @@ exports.listProducts = async (req, res) => {
             currentPage,
             selectedCategory: req.query.category || null,
             selectedSort: req.query.sort || 'newest',
+            minPrice: req.query.minPrice || 0,
             maxPrice: req.query.maxPrice || 20000,
+            selectedSize: req.query.size || null,
+            availableSizes,
             search: req.query.search || '',
             title: "Shop | HOOF"
         });

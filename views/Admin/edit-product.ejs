@@ -4,10 +4,13 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= title %></title>
+    <title>
+        <%= title %>
+    </title>
     <link rel="stylesheet" href="/admin/css/product-management.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -15,10 +18,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <style>
-        .error-msg { color: var(--admin-danger); font-size: 0.8rem; display: none; margin-top: 0.2rem; }
-        .is-invalid { border-color: var(--admin-danger) !important; }
-        .existing-img-container { position: relative; display: inline-block; margin-right: 10px; }
-        .remove-existing { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; }
+        .error-msg {
+            color: var(--admin-danger);
+            font-size: 0.8rem;
+            display: none;
+            margin-top: 0.2rem;
+        }
+
+        .is-invalid {
+            border-color: var(--admin-danger) !important;
+        }
+
+        .existing-img-container {
+            position: relative;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .remove-existing {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+        }
     </style>
 </head>
 
@@ -40,7 +71,8 @@
     <main class="main-content">
         <header class="page-header">
             <div>
-                <a href="/admin/products" style="text-decoration: none; color: var(--admin-text-light); font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">
+                <a href="/admin/products"
+                    style="text-decoration: none; color: var(--admin-text-light); font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">
                     <i class="fas fa-arrow-left"></i> Back to Products
                 </a>
                 <h1>Edit Product</h1>
@@ -54,7 +86,8 @@
                         <div class="form-section-title">General Information</div>
                         <div class="form-group">
                             <label for="productName">Product Name</label>
-                            <input type="text" id="productName" name="productName" value="<%= product.productName %>" required>
+                            <input type="text" id="productName" name="productName" value="<%= product.productName %>"
+                                required>
                         </div>
                         <div class="form-group">
                             <label for="description">Description</label>
@@ -63,12 +96,14 @@
                         <div class="form-grid" style="gap: 1rem;">
                             <div class="form-group">
                                 <label for="category">Category</label>
-                                <select id="category" name="category" required style="width: 100%; padding: 0.8rem; border-radius: 10px; border: 1px solid var(--admin-border);">
-                                    <% categories.forEach(cat => { %>
-                                        <option value="<%= cat._id %>" <%= String(cat._id) === String(product.category._id || product.category) ? 'selected' : '' %>>
+                                <select id="category" name="category" required
+                                    style="width: 100%; padding: 0.8rem; border-radius: 10px; border: 1px solid var(--admin-border);">
+                                    <% categories.forEach(cat=> { %>
+                                        <option value="<%= cat._id %>" <%=String(cat._id)===String(product.category._id
+                                            || product.category) ? 'selected' : '' %>>
                                             <%= cat.name %>
                                         </option>
-                                    <% }) %>
+                                        <% }) %>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -83,12 +118,15 @@
                         <div class="form-grid" style="gap: 1rem;">
                             <div class="form-group">
                                 <label for="regularPrice">Regular Price (₹)</label>
-                                <input type="number" id="regularPrice" name="regularPrice" value="<%= product.regularPrice %>" min="0" required>
+                                <input type="number" id="regularPrice" name="regularPrice"
+                                    value="<%= product.regularPrice %>" min="0" required>
                             </div>
                             <div class="form-group">
                                 <label for="salePrice">Sale Price (₹)</label>
-                                <input type="number" id="salePrice" name="salePrice" value="<%= product.salePrice %>" min="0" required>
-                                <small class="error-msg" id="priceError">Sale price cannot be higher than regular price</small>
+                                <input type="number" id="salePrice" name="salePrice" value="<%= product.salePrice %>"
+                                    min="0" required>
+                                <small class="error-msg" id="priceError">Sale price cannot be higher than regular
+                                    price</small>
                             </div>
                         </div>
                     </div>
@@ -98,18 +136,20 @@
                     <div class="form-container">
                         <div class="form-section-title">Product Images</div>
                         <div class="image-upload-area" onclick="document.getElementById('imageFiles').click()">
-                            <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--admin-primary); margin-bottom: 0.5rem;"></i>
+                            <i class="fas fa-cloud-upload-alt"
+                                style="font-size: 2rem; color: var(--admin-primary); margin-bottom: 0.5rem;"></i>
                             <p>Click to replace/add images</p>
-                            <input type="file" id="imageFiles" name="productImages" multiple accept="image/*" style="display: none;" onchange="previewImages(event)">
+                            <input type="file" id="imageFiles" name="productImages" multiple accept="image/*"
+                                style="display: none;" onchange="previewImages(event)">
                         </div>
-                        
+
                         <div class="preview-container" id="imagePreview">
-                            <% product.productImage.forEach((img, index) => { %>
+                            <% product.productImage.forEach((img, index)=> { %>
                                 <div class="preview-item existing-img" data-url="<%= img %>">
                                     <img src="<%= img %>">
                                     <span class="remove-img" onclick="this.parentElement.remove()">&times;</span>
                                 </div>
-                            <% }) %>
+                                <% }) %>
                         </div>
                     </div>
 
@@ -117,29 +157,39 @@
                         <div class="form-section-title">Stocks & Variants</div>
                         <div class="form-group">
                             <label for="totalStock">Total Base Stock</label>
-                            <input type="number" id="totalStock" name="quantity" value="<%= product.quantity %>" min="0">
+                            <input type="number" id="totalStock" name="quantity" value="<%= product.quantity %>"
+                                min="0">
                         </div>
 
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
                             <h4 style="font-size: 0.9rem; font-weight: 600;">Manage Variants</h4>
-                            <button type="button" class="btn-add-variant" onclick="addVariantRow()">+ Add Variant</button>
+                            <button type="button" class="btn-add-variant" onclick="addVariantRow()">+ Add
+                                Variant</button>
                         </div>
 
                         <table class="variants-table">
                             <thead>
-                                <tr><th>Size</th><th>Color</th><th>Stock</th><th></th></tr>
+                                <tr>
+                                    <th>Size</th>
+                                    <th>Stock</th>
+                                    <th></th>
+                                </tr>
                             </thead>
                             <tbody id="variantBody">
-                                <% if (product.variants && product.variants.length > 0) { %>
-                                    <% product.variants.forEach((variant, index) => { %>
+                                <% if (product.variants && product.variants.length> 0) { %>
+                                    <% product.variants.forEach((variant, index)=> { %>
                                         <tr>
-                                            <td><input type="text" name="variantSize[]" value="<%= variant.size %>" required class="variant-input"></td>
-                                            <td><input type="text" name="variantColor[]" value="<%= variant.color %>" required class="variant-input"></td>
-                                            <td><input type="number" name="variantStock[]" value="<%= variant.quantity %>" min="0" required class="variant-input"></td>
-                                            <td><i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="this.closest('tr').remove()"></i></td>
+                                            <td><input type="text" name="variantSize[]" value="<%= variant.size %>"
+                                                    required class="variant-input"></td>
+                                            <td><input type="number" name="variantStock[]"
+                                                    value="<%= variant.quantity %>" min="0" required
+                                                    class="variant-input"></td>
+                                            <td><i class="fas fa-trash" style="color:red; cursor:pointer;"
+                                                    onclick="this.closest('tr').remove()"></i></td>
                                         </tr>
-                                    <% }) %>
-                                <% } %>
+                                        <% }) %>
+                                            <% } %>
                             </tbody>
                         </table>
                     </div>
@@ -147,13 +197,15 @@
             </div>
 
             <div class="form-actions" style="justify-content: flex-end; margin-top: 2rem;">
-                <button type="button" class="btn-cancel" onclick="window.location.href='/admin/products'">Cancel</button>
+                <button type="button" class="btn-cancel"
+                    onclick="window.location.href='/admin/products'">Cancel</button>
                 <button type="submit" class="btn-save">Update Product</button>
             </div>
         </form>
     </main>
 
-    <div id="cropperModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center;">
+    <div id="cropperModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center;">
         <div style="background: white; padding: 20px; border-radius: 10px; width: 500px;">
             <div style="height: 400px; background: #eee;"><img id="imageToCrop" style="max-width: 100%;"></div>
             <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
@@ -163,101 +215,108 @@
         </div>
     </div>
 
-<script>
-    let cropper;
-    let currentFiles = []; // For NEW cropped images
-    const imagePreview = document.getElementById('imagePreview');
-    const cropperModal = document.getElementById('cropperModal');
-    const imageToCrop = document.getElementById('imageToCrop');
+    <script>
+        let cropper;
+        let currentFiles = []; // For NEW cropped images
+        const imagePreview = document.getElementById('imagePreview');
+        const cropperModal = document.getElementById('cropperModal');
+        const imageToCrop = document.getElementById('imageToCrop');
 
-    function previewImages(event) {
-        const files = Array.from(event.target.files);
-        files.forEach(file => {
+        function previewImages(event) {
+            const files = Array.from(event.target.files);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imageToCrop.src = e.target.result;
+                    cropperModal.style.display = 'flex';
+                    if (cropper) cropper.destroy();
+                    cropper = new Cropper(imageToCrop, { aspectRatio: 1, viewMode: 1 });
+
+                    document.getElementById('cropButton').onclick = () => {
+                        const canvas = cropper.getCroppedCanvas({ width: 800, height: 800 });
+                        canvas.toBlob((blob) => {
+                            const croppedFile = new File([blob], file.name, { type: 'image/jpeg' });
+                            currentFiles.push(croppedFile);
+                            displayPreview(croppedFile);
+                            closeCropper();
+                        }, 'image/jpeg');
+                    };
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function displayPreview(file) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                imageToCrop.src = e.target.result;
-                cropperModal.style.display = 'flex';
-                if (cropper) cropper.destroy();
-                cropper = new Cropper(imageToCrop, { aspectRatio: 1, viewMode: 1 });
-
-                document.getElementById('cropButton').onclick = () => {
-                    const canvas = cropper.getCroppedCanvas({ width: 800, height: 800 });
-                    canvas.toBlob((blob) => {
-                        const croppedFile = new File([blob], file.name, { type: 'image/jpeg' });
-                        currentFiles.push(croppedFile);
-                        displayPreview(croppedFile);
-                        closeCropper();
-                    }, 'image/jpeg');
-                };
+                const div = document.createElement('div');
+                div.className = 'preview-item new-img';
+                div.innerHTML = `<img src="${e.target.result}"><span class="remove-img" onclick="removeNewImage(this)">&times;</span>`;
+                imagePreview.appendChild(div);
             };
             reader.readAsDataURL(file);
-        });
-    }
+        }
 
-    function displayPreview(file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const div = document.createElement('div');
-            div.className = 'preview-item new-img';
-            div.innerHTML = `<img src="${e.target.result}"><span class="remove-img" onclick="removeNewImage(this)">&times;</span>`;
-            imagePreview.appendChild(div);
-        };
-        reader.readAsDataURL(file);
-    }
+        function removeNewImage(span) {
+            const div = span.parentElement;
+            const index = Array.from(document.querySelectorAll('.new-img')).indexOf(div);
+            currentFiles.splice(index, 1);
+            div.remove();
+        }
 
-    function removeNewImage(span) {
-        const div = span.parentElement;
-        const index = Array.from(document.querySelectorAll('.new-img')).indexOf(div);
-        currentFiles.splice(index, 1);
-        div.remove();
-    }
+        function closeCropper() { cropperModal.style.display = 'none'; if (cropper) cropper.destroy(); }
 
-    function closeCropper() { cropperModal.style.display = 'none'; if (cropper) cropper.destroy(); }
-
-    function addVariantRow() {
-        const tbody = document.getElementById('variantBody');
-        const row = document.createElement('tr');
-        row.innerHTML = `
+        function addVariantRow() {
+            const tbody = document.getElementById('variantBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
             <td><input type="text" name="variantSize[]" required class="variant-input"></td>
-            <td><input type="text" name="variantColor[]" required class="variant-input"></td>
             <td><input type="number" name="variantStock[]" value="0" min="0" required class="variant-input"></td>
             <td><i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="this.closest('tr').remove()"></i></td>`;
-        tbody.appendChild(row);
-    }
-
-    document.getElementById('productForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const id = e.target.getAttribute('data-id');
-        const formData = new FormData(e.target);
-        
-        // Remove file input and add cropped blobs
-        formData.delete('productImages');
-        currentFiles.forEach(file => formData.append('productImages', file));
-
-        // Get existing images that WEREN'T deleted
-        const remainingExisting = [];
-        document.querySelectorAll('.existing-img img').forEach(img => {
-            remainingExisting.push(img.getAttribute('src'));
-        });
-        formData.append('existingImages', JSON.stringify(remainingExisting));
-
-        try {
-            const response = await fetch(`/admin/products/edit/${id}`, {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
-            if (result.success) {
-                Swal.fire('Updated!', 'Product details saved.', 'success').then(() => {
-                    window.location.href = '/admin/products';
-                });
-            } else {
-                Swal.fire('Error', result.message, 'error');
-            }
-        } catch (err) {
-            Swal.fire('Error', 'Update failed', 'error');
+            tbody.appendChild(row);
         }
-    };
-</script>
+
+        document.getElementById('productForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = e.target.getAttribute('data-id');
+            const formData = new FormData(e.target);
+
+            // Validation for variants
+            const sizes = formData.getAll('variantSize[]');
+            if (sizes.length === 0 || sizes.every(s => !s.trim())) {
+                Swal.fire('Error', 'At least one variant (Size & Stock) is required.', 'error');
+                return;
+            }
+
+            // Remove file input and add cropped blobs
+            formData.delete('productImages');
+            currentFiles.forEach(file => formData.append('productImages', file));
+
+            // Get existing images that WEREN'T deleted
+            const remainingExisting = [];
+            document.querySelectorAll('.existing-img img').forEach(img => {
+                remainingExisting.push(img.getAttribute('src'));
+            });
+            formData.append('existingImages', JSON.stringify(remainingExisting));
+
+            try {
+                const response = await fetch(`/admin/products/edit/${id}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    Swal.fire('Updated!', 'Product details saved.', 'success').then(() => {
+                        window.location.href = '/admin/products';
+                    });
+                } else {
+                    Swal.fire('Error', result.message, 'error');
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Update failed', 'error');
+            }
+        };
+    </script>
 </body>
+
 </html>

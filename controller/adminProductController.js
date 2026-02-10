@@ -27,16 +27,16 @@ exports.listProductsAdmin = async (req, res) => {
 };
 
 /**
- * @route   GET /admin/products/add
- * @desc    Render the add product form
+ * @route   GET /admin/categories
+ * @desc    Load category management list
  * @access  Private (Admin)
  */
 exports.loadCategories = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const search = req.query.search || '';
-        
-        const { categories, totalPages, currentPage } = 
+
+        const { categories, totalPages, currentPage } =
             await adminProductService.getAllCategoriesAdmin(page, 5, search);
 
         // CHANGE THIS LINE:
@@ -77,7 +77,7 @@ exports.addProduct = async (req, res) => {
 
         // Since your EJS uses Fetch/AJAX, we should return JSON, not a redirect
         res.json({ success: true, message: "Product added successfully!" });
-        
+
     } catch (error) {
         console.error("Add Product Error:", error);
         res.status(500).json({ success: false, message: error.message });
@@ -130,7 +130,7 @@ exports.updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
         const result = await adminProductService.updateProduct(id, req.body, req.files);
-        
+
         if (result) {
             res.json({ success: true, message: "Product updated successfully" });
         } else {
@@ -139,5 +139,24 @@ exports.updateProduct = async (req, res) => {
     } catch (error) {
         console.error("Update Product Error:", error);
         res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * @route   GET /admin/products/add
+ * @desc    Render the add product form
+ * @access  Private (Admin)
+ */
+exports.loadAddProduct = async (req, res) => {
+    try {
+        const categories = await Category.find({ isListed: true });
+        res.render("Admin/add-product", {
+            categories,
+            title: "Add Product | HOOF Admin",
+            layout: false
+        });
+    } catch (error) {
+        console.error("Load Add Product Error:", error);
+        res.redirect("/admin/products");
     }
 };

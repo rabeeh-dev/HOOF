@@ -567,3 +567,38 @@ exports.getSearchPage = async (req, res) => {
         res.redirect("/");
     }
 };
+// controller/userController.js
+exports.loadShop = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const category = req.query.category || null;
+        const search = req.query.search || '';
+        const sort = req.query.sort || 'newest';
+        const maxPrice = req.query.maxPrice || 20000;
+
+        // Make sure you get these 3 variables from the service
+        const { products, totalPages, currentPage } = await userService.getShopProducts({
+            page,
+            limit: 9, 
+            category,
+            search,
+            sort,
+            maxPrice
+        });
+
+        res.render("User/shop", {
+            products,
+            totalPages, // <--- MUST BE PASSED
+            currentPage, // <--- MUST BE PASSED
+            selectedCategory: category,
+            selectedSort: sort,
+            maxPrice: maxPrice,
+            search: search,
+            title: "Shop Sneakers | HOOF",
+            layout: "layout" // or false depending on your setup
+        });
+    } catch (error) {
+        console.error("Shop Load Error:", error);
+        res.redirect("/");
+    }
+};

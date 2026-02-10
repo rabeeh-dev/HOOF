@@ -47,27 +47,32 @@ async function addProduct(productData, files) {
             filename = `conv-${Date.now()}-${Math.round(Math.random() * 1E9)}.jpg`;
             const newPath = path.resolve('public/uploads/products', filename);
             fs.writeFileSync(newPath, outputBuffer);
-            fs.unlinkSync(filePath); 
+            fs.unlinkSync(filePath);
         }
-        
+
         imagePaths.push(`/uploads/products/${filename}`);
     }
 
     // 2. Process Variants
     const variants = [];
-    if (productData.variantSize) {
-        const sizes = Array.isArray(productData.variantSize) ? productData.variantSize : [productData.variantSize];
-        const colors = Array.isArray(productData.variantColor) ? productData.variantColor : [productData.variantColor];
-        const stocks = Array.isArray(productData.variantStock) ? productData.variantStock : [productData.variantStock];
+    if (!productData.variantSize || (Array.isArray(productData.variantSize) && productData.variantSize.length === 0)) {
+        throw new Error("At least one variant (Size & Stock) is required.");
+    }
 
-        sizes.forEach((size, i) => {
-            variants.push({
-                size: size,
-                color: colors[i],
-                quantity: parseInt(stocks[i]) || 0,
-                status: parseInt(stocks[i]) > 0 ? "Available" : "Out of Stock"
-            });
+    const sizes = Array.isArray(productData.variantSize) ? productData.variantSize : [productData.variantSize];
+    const stocks = Array.isArray(productData.variantStock) ? productData.variantStock : [productData.variantStock];
+
+    sizes.forEach((size, i) => {
+        if (!size || !stocks[i]) return; // Basic skip for empty rows if any
+        variants.push({
+            size: size,
+            quantity: parseInt(stocks[i]) || 0,
+            status: parseInt(stocks[i]) > 0 ? "Available" : "Out of Stock"
         });
+    });
+
+    if (variants.length === 0) {
+        throw new Error("At least one valid variant is required.");
     }
 
     const newProduct = new Product({
@@ -90,7 +95,7 @@ async function addProduct(productData, files) {
  */
 async function getAllCategoriesAdmin(page = 1, limit = 5, search = '') {
     const skip = (page - 1) * limit;
-    
+
     let query = {};
     if (search) {
         query.name = { $regex: search, $options: 'i' };
@@ -148,19 +153,24 @@ async function updateProduct(id, productData, files) {
 
     // 3. Process Variants
     const variants = [];
-    if (productData.variantSize) {
-        const sizes = Array.isArray(productData.variantSize) ? productData.variantSize : [productData.variantSize];
-        const colors = Array.isArray(productData.variantColor) ? productData.variantColor : [productData.variantColor];
-        const stocks = Array.isArray(productData.variantStock) ? productData.variantStock : [productData.variantStock];
+    if (!productData.variantSize || (Array.isArray(productData.variantSize) && productData.variantSize.length === 0)) {
+        throw new Error("At least one variant (Size & Stock) is required.");
+    }
 
-        sizes.forEach((size, i) => {
-            variants.push({
-                size: size,
-                color: colors[i],
-                quantity: parseInt(stocks[i]) || 0,
-                status: parseInt(stocks[i]) > 0 ? "Available" : "Out of Stock"
-            });
+    const sizes = Array.isArray(productData.variantSize) ? productData.variantSize : [productData.variantSize];
+    const stocks = Array.isArray(productData.variantStock) ? productData.variantStock : [productData.variantStock];
+
+    sizes.forEach((size, i) => {
+        if (!size || !stocks[i]) return;
+        variants.push({
+            size: size,
+            quantity: parseInt(stocks[i]) || 0,
+            status: parseInt(stocks[i]) > 0 ? "Available" : "Out of Stock"
         });
+    });
+
+    if (variants.length === 0) {
+        throw new Error("At least one valid variant is required.");
     }
 
     // 4. Update Database
