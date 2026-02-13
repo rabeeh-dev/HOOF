@@ -1,3 +1,15 @@
+/**
+ * @file middleware/breadcrumb.js
+ * @description Middleware for generating dynamic breadcrumbs for user navigation.
+ */
+
+/**
+ * Middleware to generate breadcrumbs based on the request path.
+ * Skips specific routes like admin, assets, and home page.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
 const breadcrumbMiddleware = (req, res, next) => {
     // Skip for admin routes, assets, landing page, and home page
     if (req.path.startsWith('/admin') ||
@@ -13,30 +25,20 @@ const breadcrumbMiddleware = (req, res, next) => {
 
     let currentUrl = '';
 
-    pathParts.forEach((part, index) => {
-        // Skip 'user' prefix in URL if it exists, or handle it
-        // The routes are mounted at /user, but the actual URL in browser is /user/shop
-        // So we want to keep /user in the URL but maybe skip showing it as a breadcrumb name?
-        // Actually, 'Home' is /user/home usually. Let's check routes.
-        // / -> /user/home (landing page)
-
+    pathParts.forEach((part) => {
         currentUrl += `/${part}`;
 
         // Map path parts to readable names
         let name = part.charAt(0).toUpperCase() + part.slice(1);
 
-        // Custom mappings
-        if (part === 'user') return; // Skip 'user' in breadcrumb list if you want Home > Shop instead of Home > User > Shop
+        // Custom mappings for specific route segments
+        if (part === 'user') return; // Skip 'user' prefix in visual breadcrumbs
         if (part === 'product-details') name = 'Product Details';
         if (part === 'cart') name = 'Shopping Cart';
         if (part === 'checkout') name = 'Checkout';
 
-        // If it's an ID (long string/number), try to make it generic or skip
-        // Simple check for MongoID-like strings (24 hex chars)
+        // Skip MongoID-like strings (24 hex characters) for cleaner breadcrumbs
         if (/^[0-9a-fA-F]{24}$/.test(part)) {
-            // If previous part was product-details, maybe don't show ID?
-            // Or we rely on the specific route handler to override this with the actual product name?
-            // For now, let's just ignore IDs in the visual breadcrumb to keep it clean
             return;
         }
 

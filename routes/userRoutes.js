@@ -1,30 +1,37 @@
+/**
+ * @file routes/userRoutes.js
+ * @description Route definitions for user-related features, including authentication, profile settings, and shop browsing.
+ */
+
 const express = require("express");
 const router = express.Router();
 const userController = require("../controller/userController");
-const { isUser, isLoggedOut, isLogin } = require("../middleware/auth");
+const { isUser, isLoggedOut } = require("../middleware/auth");
 const upload = require('../middleware/multer');
 const passport = require("../config/passport");
 
-/* =============================================================================
-   AUTHENTICATION ROUTES (Signup, Login, OTP)
-   Access: Public / Guest (isLoggedOut)
-============================================================================= */
+// ==========================================
+// AUTHENTICATION ROUTES (Signup, Login, OTP)
+// ==========================================
 
 /**
+ * @desc    Render signup page for new users.
  * @route   GET /user/signup
- * @desc    Render signup page for new users
+ * @access  Public (Guest Only)
  */
 router.get("/signup", isLoggedOut, userController.signupPage);
 
 /**
+ * @desc    Handle user registration submitted via form.
  * @route   POST /user/signup
- * @desc    Handle user registration data
+ * @access  Public
  */
 router.post("/signup", isLoggedOut, userController.signup);
 
 /**
+ * @desc    Render OTP verification page.
  * @route   GET /user/verify-otp
- * @desc    Render OTP verification page
+ * @access  Public (Session-based)
  */
 router.get("/verify-otp", (req, res) => {
   res.render("User/auth/verify-otp", {
@@ -34,49 +41,55 @@ router.get("/verify-otp", (req, res) => {
 });
 
 /**
+ * @desc    Verify the submitted OTP code.
  * @route   POST /user/verify-otp
- * @desc    Verify the submitted OTP code
+ * @access  Public
  */
 router.post("/verify-otp", userController.verifyOtp);
 
 /**
+ * @desc    Trigger a new OTP email (resend).
  * @route   POST /user/resend-otp
- * @desc    Trigger a new OTP email
+ * @access  Public
  */
 router.post("/resend-otp", userController.resendOtp);
 
 /**
+ * @desc    Render login page.
  * @route   GET /user/login
- * @desc    Render login page
+ * @access  Public (Guest Only)
  */
 router.get("/login", isLoggedOut, userController.loginPage);
 
 /**
+ * @desc    Authenticate user credentials and create session.
  * @route   POST /user/login
- * @desc    Authenticate user and create session
+ * @access  Public
  */
 router.post("/login", isLoggedOut, userController.login);
 
-/* =============================================================================
-   GOOGLE OAUTH ROUTES
-   Access: Public / Social Auth
-============================================================================= */
+// ==========================================
+// GOOGLE OAUTH ROUTES
+// ==========================================
 
 /**
+ * @desc    Redirect to Google OAuth consent screen.
  * @route   GET /user/auth/google
- * @desc    Redirect to Google OAuth consent screen
+ * @access  Public / Social Auth
  */
 router.get("/auth/google", isLoggedOut,
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
 /**
+ * @desc    Handle Google authentication callback and session creation.
  * @route   GET /user/auth/google/callback
- * @desc    Handle Google authentication callback and session creation
+ * @access  Public
  */
 router.get("/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/user/login" }),
   (req, res) => {
+    // Populate session with authenticated user data
     req.session.userId = req.user._id;
     req.session.userName = req.user.fullName;
     req.session.userEmail = req.user.email;
@@ -91,43 +104,46 @@ router.get("/auth/google/callback",
   }
 );
 
-/* =============================================================================
-   PASSWORD RECOVERY ROUTES
-   Access: Public
-============================================================================= */
+// ==========================================
+// PASSWORD RECOVERY ROUTES
+// ==========================================
 
 /**
+ * @desc    Render forgot password request page.
  * @route   GET /user/forgot-password
- * @desc    Render forgot password request page
+ * @access  Public
  */
 router.get("/forgot-password", isLoggedOut, userController.forgotPasswordPage);
 
 /**
+ * @desc    Handle forgot password email submission.
  * @route   POST /user/forgot-password
- * @desc    Handle forgot password email submission
+ * @access  Public
  */
 router.post("/forgot-password", isLoggedOut, userController.forgotPassword);
 
 /**
+ * @desc    Render reset password form via token link from email.
  * @route   GET /user/reset-password/:token
- * @desc    Render reset password form via token link
+ * @access  Public (Token-based)
  */
 router.get("/reset-password/:token", userController.resetPasswordPage);
 
 /**
+ * @desc    Process the password update after successful reset.
  * @route   POST /user/reset-password/:token
- * @desc    Process the password update
+ * @access  Public
  */
 router.post("/reset-password/:token", userController.resetPassword);
 
-/* =============================================================================
-   USER PROFILE & ACCOUNT MANAGEMENT
-   Access: Private (isUser)
-============================================================================= */
+// ==========================================
+// USER PROFILE & ACCOUNT MANAGEMENT
+// ==========================================
 
 /**
+ * @desc    User homepage (Landing after login).
  * @route   GET /user/home
- * @desc    User homepage
+ * @access  Private (isUser)
  */
 router.get('/home', isUser, (req, res) => {
   res.render('User/home', {
@@ -137,43 +153,48 @@ router.get('/home', isUser, (req, res) => {
 });
 
 /**
+ * @desc    Render user profile dashboard with addresses and details.
  * @route   GET /user/profile
- * @desc    Render user profile dashboard
+ * @access  Private (isUser)
  */
 router.get('/profile', isUser, userController.getProfile);
 
 /**
+ * @desc    Update text-based profile details (Full Name, Phone, etc.) via AJAX.
  * @route   POST /user/profile/update
- * @desc    Update user profile details (AJAX)
+ * @access  Private (isUser)
  */
 router.post('/profile/update', isUser, userController.updateProfile);
 
 /**
+ * @desc    Upload, crop, and set a new profile image.
  * @route   POST /user/profile/update-image
- * @desc    Upload and crop new profile image
+ * @access  Private (isUser)
  */
 router.post('/profile/update-image', isUser, upload.single('profileImage'), userController.updateProfileImage);
 
 /**
+ * @desc    Remove current profile image and revert to default.
  * @route   DELETE /user/profile/delete-image
- * @desc    Remove profile image
+ * @access  Private (isUser)
  */
 router.delete('/profile/delete-image', isUser, userController.deleteProfileImage);
 
-/* =============================================================================
-   EMAIL & PASSWORD CHANGE FLOW
-   Access: Private (isUser)
-============================================================================= */
+// ==========================================
+// EMAIL & PASSWORD CHANGE FLOW (Inside Profile)
+// ==========================================
 
 /**
+ * @desc    Initiate email change (sends OTP to old email).
  * @route   GET /user/profile/change-email-start
- * @desc    Initiate email change (send OTP to old email)
+ * @access  Private (isUser)
  */
 router.get('/profile/change-email-start', isUser, userController.getChangeEmailOtp);
 
 /**
+ * @desc    Render form to enter new email address (requires OTP verification).
  * @route   GET /user/profile/change-email-form
- * @desc    Render form to enter new email (session protected)
+ * @access  Private (isUser, Session-protected)
  */
 router.get('/profile/change-email-form', isUser, (req, res) => {
   if (!req.session.emailVerifiedForChange) return res.redirect('/user/profile');
@@ -181,63 +202,66 @@ router.get('/profile/change-email-form', isUser, (req, res) => {
 });
 
 /**
+ * @desc    Send OTP to the new email address for confirmation.
  * @route   POST /user/profile/change-email-new-otp
- * @desc    Send OTP to the new email address
+ * @access  Private (isUser)
  */
 router.post('/profile/change-email-new-otp', isUser, userController.sendNewEmailOtp);
 
 /**
+ * @desc    Initiate password change flow via reset link from profile settings.
  * @route   GET /user/profile/change-password-request
- * @desc    Initiate password change from inside profile
+ * @access  Private (isUser)
  */
 router.get('/profile/change-password-request', isUser, userController.changePasswordRequest);
 
-/* =============================================================================
-   ADDRESS MANAGEMENT
-   Access: Private (isUser)
-============================================================================= */
+// ==========================================
+// ADDRESS MANAGEMENT
+// ==========================================
 const addressController = require("../controller/addressController");
 
 /**
+ * @desc    Create and save a new delivery address.
  * @route   POST /user/address/add
- * @desc    Create new delivery address
+ * @access  Private (isUser)
  */
 router.post('/address/add', isUser, addressController.addAddress);
 
 /**
+ * @desc    Remove a specific delivery address by ID.
  * @route   DELETE /user/address/delete/:id
- * @desc    Remove a specific delivery address
+ * @access  Private (isUser)
  */
 router.delete('/address/delete/:id', isUser, addressController.deleteAddress);
 
-/* =============================================================================
-   LOGOUT
-============================================================================= */
+// ==========================================
+// LOGOUT
+// ==========================================
 
 /**
+ * @desc    End user session and clear authentication flags.
  * @route   POST /user/logout
- * @desc    End user session
+ * @access  Private (isUser)
  */
 router.post("/logout", userController.logout);
 
-
-/* =============================================================================
-   SHOP / PRODUCT LISTING
-============================================================================= */
+// ==========================================
+// SHOP / PRODUCT LISTING
+// ==========================================
 const productController = require("../controller/productController");
 
 /**
- * @route   GET /shop
- * @desc    Display the product listing page
+ * @desc    Display the main shop page with filtering, sorting, and pagination.
+ * @route   GET /user/shop
+ * @access  Public / Private
  */
 router.get('/shop', productController.listProducts);
 
 /**
- * @route   GET /product-details/:id
- * @desc    View single product
+ * @desc    View details of a specific product and related items.
+ * @route   GET /user/product-details/:id
+ * @access  Public / Private
  */
 router.get('/product-details/:id', productController.loadProductDetails);
-
-
 
 module.exports = router;

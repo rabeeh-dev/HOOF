@@ -1,3 +1,8 @@
+/**
+ * @file services/authService.js
+ * @description Service layer for user authentication, OTP management, and registration logic.
+ */
+
 const User = require("../model/User");
 const Otp = require("../model/Otp");
 const bcrypt = require("bcrypt");
@@ -5,49 +10,62 @@ const { generateOtp } = require("../utils/generateOtp");
 const { sendOtpEmail } = require("../utils/sendEmail");
 
 class AuthService {
+    /**
+     * Initiates the signup process by validating the user, hashing the password, and sending an OTP.
+     * @param {string} fullName - User's full name.
+     * @param {string} email - User's email address.
+     * @param {string} password - User's plain-text password.
+     * @returns {Promise<Object>} Object containing pending user data and the raw OTP.
+     * @throws {Error} If the user already exists.
+     */
+    async initiateSignup(fullName, email, password) {
+        // 1. Business Logic: Check if user exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            throw new Error("User already exists");
+        }
 
-    //Signup Function
+        // 2. Security: Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
+        // 3. OTP Logic: Generate and Hash
+        const otp = generateOtp();
+        const hashedOtp = await bcrypt.hash(otp, 10);
 
-  async initiateSignup(fullName, email, password) {
-    // 1. Business Logic: Check if user exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      throw new Error("User already exists");
+        // 4. Persistence: Clean old OTPs and create new one
+        await Otp.deleteMany({ email });
+        await Otp.create({
+            email,
+            otp: hashedOtp,
+            expiresAt: Date.now() + 5 * 60 * 1000,
+            lastSentAt: new Date(),
+        });
+
+        // 5. Communication: Send Email
+        await sendOtpEmail(email, otp);
+
+        // Return the processed data back to the controller
+        return {
+            pendingUser: {
+                fullName,
+                email,
+                password: hashedPassword,
+            },
+            otp // Raw OTP for dev console
+        };
     }
 
-    // 2. Security: Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // 3. OTP Logic: Generate and Hash
-    const otp = generateOtp();
-    const hashedOtp = await bcrypt.hash(otp, 10);
-
-    // 4. Persistence: Clean old OTPs and create new one
-    await Otp.deleteMany({ email });
-    await Otp.create({
-      email,
-      otp: hashedOtp,
-      expiresAt: Date.now() + 5 * 60 * 1000,
-      lastSentAt: new Date(),
-    });
-
-    // 5. Communication: Send Email
-    await sendOtpEmail(email, otp);
-
-    // Return the processed data back to the controller
-    return {
-      pendingUser: {
-        fullName,
-        email,
-        password: hashedPassword,
-      },
-      otp // Raw OTP for dev console
-    };
-  }
-
-  //Verify Otp Fucntion
-
+    /**
+     * Verifies the provided OTP code and performs actions based on the verification mode.
+     * @param {Object} params - Parameters for verification.
+     * @param {string} params.otp - The OTP code to verify.
+     * @param {string} params.email - User's email.
+     * @param {string} params.mode - The verification flow (e.g., NEW_SIGNUP, NEW_EMAIL_UPDATE).
+     * @param {string} [params.userId] - User ID (required for email update).
+     * @param {Object} [params.pendingUserData] - Data for creating a new user (for signup).
+     * @returns {Promise<Object>} Object containing success status and redirect URL.
+     * @throws {Error} If OTP record is missing, expired, or invalid.
+     */
     async verifyOtpCode({ otp, email, mode, userId, pendingUserData }) {
         // 1. Fetch latest OTP
         const otpRecord = await Otp.findOne({ email }).sort({ createdAt: -1 });
@@ -55,7 +73,7 @@ class AuthService {
         // 2. Validation
         if (!otpRecord) throw new Error("No OTP record found");
         if (otpRecord.expiresAt < Date.now()) throw new Error("OTP has expired");
-        
+
         const isMatch = await bcrypt.compare(otp, otpRecord.otp);
         if (!isMatch) throw new Error("Invalid OTP code");
 
@@ -68,15 +86,15 @@ class AuthService {
         if (mode === 'NEW_EMAIL_UPDATE') {
             await User.findByIdAndUpdate(userId, { email });
             redirectUrl = "/user/profile?emailChanged=true";
-        } 
+        }
         else if (mode === 'VERIFY_OLD_EMAIL') {
             redirectUrl = "/user/profile/change-email-form";
-        } 
+        }
         else { // Default: NEW_SIGNUP
-            await User.create({ 
-                ...pendingUserData, 
-                authProvider: "local", 
-                isEmailVerified: true 
+            await User.create({
+                ...pendingUserData,
+                authProvider: "local",
+                isEmailVerified: true
             });
             redirectUrl = "/user/login?signupSuccess=true";
         }
@@ -84,8 +102,12 @@ class AuthService {
         return { success: true, redirectUrl };
     }
 
-    // Resend Otp Function
-
+    /**
+     * Processes a request to resend an OTP, enforcing a 1-minute rate limit.
+     * @param {string} email - User's email address.
+     * @returns {Promise<string>} The raw OTP code.
+     * @throws {Error} If the rate limit is exceeded.
+     */
     async processResendOtp(email) {
         // 1. Business Rule: Check for 1-minute cooldown
         const existingOtp = await Otp.findOne({ email });
@@ -95,7 +117,7 @@ class AuthService {
             if (diff < 60 * 1000) {
                 // We throw a custom error to differentiate rate limiting from other errors
                 const error = new Error("Please wait 1 minute before requesting another OTP");
-                error.status = 429; 
+                error.status = 429;
                 throw error;
             }
         }
@@ -121,8 +143,13 @@ class AuthService {
         return otp; // Return raw OTP for dev logging
     }
 
-    //Login Function
-    
+    /**
+     * Authenticates a user by email and password, ensuring account is not blocked.
+     * @param {string} email - User's email.
+     * @param {string} password - Plain-text password.
+     * @returns {Promise<Object>} Sanitized user document data.
+     * @throws {Error} If authentication fails or account is suspended.
+     */
     async authenticateUser(email, password) {
         // 1. Fetch user with password
         const user = await User.findOne({ email }).select("+password");

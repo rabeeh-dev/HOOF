@@ -1,6 +1,13 @@
-document.addEventListener("DOMContentLoaded", () => {
+/**
+ * @file public/user/js/register.js
+ * @description Logic for the user registration page, including form validation, password strength meter, and UI interactions.
+ */
 
-  // Mobile nav toggle
+document.addEventListener("DOMContentLoaded", () => {
+  // ==========================================
+  // NAVIGATION & UI EFFECTS
+  // ==========================================
+
   const toggle = document.getElementById("nav-toggle");
   const navLinks = document.querySelector(".nav-links");
 
@@ -10,7 +17,37 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- EYE TOGGLE FEATURE ---
+  // Close mobile menu on link click
+  document.querySelectorAll(".nav-links a").forEach(link => {
+    link.addEventListener("click", () => {
+      if (navLinks) {
+        navLinks.classList.remove("open");
+      }
+    });
+  });
+
+  // Scroll reveal observer
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("visible");
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll(".reveal").forEach(section => {
+    observer.observe(section);
+  });
+
+  // ==========================================
+  // PASSWORD VISIBILITY TOGGLE
+  // ==========================================
+
+  /**
+   * Handles the visibility toggle for password fields.
+   * @param {string} iconId - ID of the icon element.
+   * @param {string} inputId - ID of the input element.
+   */
   const handleToggle = (iconId, inputId) => {
     const icon = document.getElementById(iconId);
     const input = document.getElementById(inputId);
@@ -27,27 +64,10 @@ document.addEventListener("DOMContentLoaded", () => {
   handleToggle("togglePassword", "password");
   handleToggle("toggleConfirmPassword", "confirmPassword");
 
-  // Close mobile menu on link click
-  document.querySelectorAll(".nav-links a").forEach(link => {
-    link.addEventListener("click", () => {
-      navLinks?.classList.remove("open");
-    });
-  });
+  // ==========================================
+  // PASSWORD STRENGTH METER
+  // ==========================================
 
-  // Scroll reveal
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("visible");
-      }
-    });
-  }, { threshold: 0.15 });
-
-  document.querySelectorAll(".reveal").forEach(section => {
-    observer.observe(section);
-  });
-
-  // ===== PASSWORD STRENGTH =====
   const newPassword = document.getElementById("password");
   const strengthBar = document.getElementById("strengthBar");
 
@@ -56,6 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const password = newPassword.value;
       let strength = 0;
 
+      // Basic password strength criteria
       if (password.length >= 8) strength++;
       if (/[a-z]/.test(password)) strength++;
       if (/[A-Z]/.test(password)) strength++;
@@ -66,18 +87,26 @@ document.addEventListener("DOMContentLoaded", () => {
       strengthBar.style.width = percent + "%";
 
       const colors = [
-        "#dc3545", // weak
-        "#ffc107",
-        "#ff914d",
-        "#28a745",
-        "#198754"  // strong
+        "#dc3545", // Weak
+        "#ffc107", // Fair
+        "#ff914d", // Good
+        "#28a745", // Strong
+        "#198754"  // Very Strong
       ];
 
       strengthBar.style.background = colors[strength - 1] || "#ddd";
     });
   }
 
-  // ===== INLINE VALIDATION =====
+  // ==========================================
+  // INLINE FORM VALIDATION
+  // ==========================================
+
+  /**
+   * Validates a form field and display appropriate feedback.
+   * @param {HTMLInputElement} input - The input element to validate.
+   * @returns {boolean} - Returns true if valid, false otherwise.
+   */
   function validateField(input) {
     const formGroup = input.closest(".form-group");
     const errorMsg = formGroup?.querySelector(".error-message");
@@ -86,16 +115,16 @@ document.addEventListener("DOMContentLoaded", () => {
     let isValid = true;
     let message = "";
 
-    // Reset
+    // Reset states
     formGroup.classList.remove("error", "success");
     errorMsg.textContent = "";
 
-    // 1. Required Check
+    // Required Field Check
     if (input.hasAttribute("required") && !input.value.trim()) {
       isValid = false;
       message = `${input.previousElementSibling.innerText || "This field"} is required`;
     }
-    // 2. Email Check
+    // Email Format Check
     else if (input.type === "email" && input.value.trim()) {
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailPattern.test(input.value.trim())) {
@@ -103,10 +132,10 @@ document.addEventListener("DOMContentLoaded", () => {
         message = "Please enter a valid email address";
       }
     }
-    // 3. Password Match Check
+    // Password Match Check
     else if (input.id === "confirmPassword") {
-      const password = document.getElementById("password")?.value;
-      if (password && input.value !== password) {
+      const passwordVal = document.getElementById("password")?.value;
+      if (passwordVal && input.value !== passwordVal) {
         isValid = false;
         message = "Passwords do not match";
       }
@@ -122,16 +151,17 @@ document.addEventListener("DOMContentLoaded", () => {
     return isValid;
   }
 
+  // Setup input event listeners
   const inputs = document.querySelectorAll(".signup-form input:not([type='checkbox'])");
 
   inputs.forEach(input => {
-    // Validate on blur (when user leaves field)
+    // Validate on blur
     input.addEventListener("blur", () => {
       validateField(input);
       input.closest(".form-group")?.classList.remove("focused");
     });
 
-    // Clear error on input (as user types)
+    // Clear error on input
     input.addEventListener("input", () => {
       const formGroup = input.closest(".form-group");
       if (formGroup?.classList.contains("error")) {
@@ -145,17 +175,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ===== FORM SUBMISSION =====
+  // ==========================================
+  // FORM SUBMISSION HANDLING
+  // ==========================================
+
   const signupForm = document.getElementById('signupForm');
   if (signupForm) {
     signupForm.addEventListener('submit', function (e) {
       let isFormValid = true;
 
-      // Validate all fields
+      // Validate all fields before submission
       inputs.forEach(input => {
-        if (!validateField(input)) isFormValid = false;
+        if (!validateField(input)) {
+          isFormValid = false;
+        }
       });
 
+      // Check terms and conditions
       const terms = document.getElementById('terms');
       if (!terms?.checked) {
         e.preventDefault();
@@ -165,10 +201,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!isFormValid) {
         e.preventDefault();
-        // Check for specific password mismatch to show toast as well (optional, but requested in original behavior)
-        const password = document.getElementById("password")?.value;
-        const confirm = document.getElementById("confirmPassword")?.value;
-        if (password !== confirm) {
+        const psw = document.getElementById("password")?.value;
+        const confirmPsw = document.getElementById("confirmPassword")?.value;
+        if (psw !== confirmPsw) {
           showMessage('Passwords do not match', 'error');
         } else {
           showMessage('Please fix the errors above', 'error');

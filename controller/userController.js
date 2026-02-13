@@ -1,3 +1,8 @@
+/**
+ * @file controller/userController.js
+ * @description Controller for handled user-related operations, including authentication, profile management, password recovery, and shop interactions.
+ */
+
 const User = require("../model/User");
 const bcrypt = require("bcrypt");
 const Otp = require("../model/Otp");
@@ -10,14 +15,17 @@ const authService = require("../services/authService");
 const passwordService = require("../services/passwordService");
 const userService = require("../services/userService");
 
-/* =============================================================================
-   AUTHENTICATION SECTION (Signup, Login, OTP)
-============================================================================= */
+// ==========================================
+// AUTHENTICATION SECTION (Signup, Login, OTP)
+// ==========================================
 
 /**
+ * @desc    Renders the registration page.
  * @route   GET /user/signup
- * @desc    Renders the registration page
  * @access  Public
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.signupPage = (req, res) => {
   res.render("User/auth/register", {
@@ -28,14 +36,18 @@ exports.signupPage = (req, res) => {
 };
 
 /**
+ * @desc    Handles user registration and initiates OTP verification.
  * @route   POST /user/signup
- * @desc    Handles user registration and initiates OTP verification
  * @access  Public
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.signup = async (req, res) => {
   const { fullName, email, password, confirmPassword } = req.body;
 
   try {
+    // Basic validation
     if (!fullName || !email || !password || !confirmPassword) {
       return res.render("User/auth/register", {
         layout: "layouts/user",
@@ -60,6 +72,7 @@ exports.signup = async (req, res) => {
       });
     }
 
+    // Initiate signup process via service
     const result = await authService.initiateSignup(fullName, email, password);
 
     req.session.pendingUser = result.pendingUser;
@@ -79,99 +92,110 @@ exports.signup = async (req, res) => {
 };
 
 /**
+ * @desc    Verifies the OTP code for signup or email changes.
  * @route   POST /user/verify-otp
- * @desc    Verifies the OTP code for signup or email changes
  * @access  Public / Session-based
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.verifyOtp = async (req, res) => {
-    try {
-        const { otp } = req.body;
-        const isOld = !!req.session.changeEmailFlow;
-        const isNew = !!req.session.newEmailOtpSent;
+  try {
+    const { otp } = req.body;
+    const isOld = !!req.session.changeEmailFlow;
+    const isNew = !!req.session.newEmailOtpSent;
 
-        let mode = 'NEW_SIGNUP';
-        let email = req.session.pendingUser?.email;
+    let mode = 'NEW_SIGNUP';
+    let email = req.session.pendingUser?.email;
 
-        if (isNew) {
-            mode = 'NEW_EMAIL_UPDATE';
-            email = req.session.tempNewEmail;
-        } else if (isOld) {
-            mode = 'VERIFY_OLD_EMAIL';
-            email = req.session.currentEmailToVerify;
-        }
-
-        if (!email) {
-            return res.status(400).json({ success: false, message: "Session expired" });
-        }
-
-        const result = await authService.verifyOtpCode({
-            otp,
-            email,
-            mode,
-            userId: req.session.userId,
-            pendingUserData: req.session.pendingUser
-        });
-
-        if (mode === 'NEW_EMAIL_UPDATE') {
-            req.session.emailVerifiedForChange = req.session.newEmailOtpSent = req.session.tempNewEmail = null;
-        } else if (mode === 'VERIFY_OLD_EMAIL') {
-            req.session.emailVerifiedForChange = true;
-            req.session.changeEmailFlow = null;
-        } else {
-            req.session.pendingUser = null;
-        }
-
-        return res.json({ success: true, redirectUrl: result.redirectUrl });
-
-    } catch (err) {
-        console.error("Verification Error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Error during verification." });
+    // Determine verification context
+    if (isNew) {
+      mode = 'NEW_EMAIL_UPDATE';
+      email = req.session.tempNewEmail;
+    } else if (isOld) {
+      mode = 'VERIFY_OLD_EMAIL';
+      email = req.session.currentEmailToVerify;
     }
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Session expired" });
+    }
+
+    const result = await authService.verifyOtpCode({
+      otp,
+      email,
+      mode,
+      userId: req.session.userId,
+      pendingUserData: req.session.pendingUser
+    });
+
+    // Cleanup session after successful verification
+    if (mode === 'NEW_EMAIL_UPDATE') {
+      req.session.emailVerifiedForChange = req.session.newEmailOtpSent = req.session.tempNewEmail = null;
+    } else if (mode === 'VERIFY_OLD_EMAIL') {
+      req.session.emailVerifiedForChange = true;
+      req.session.changeEmailFlow = null;
+    } else {
+      req.session.pendingUser = null;
+    }
+
+    return res.json({ success: true, redirectUrl: result.redirectUrl });
+
+  } catch (err) {
+    console.error("Verification Error:", err);
+    return res.status(400).json({ success: false, message: err.message || "Error during verification." });
+  }
 };
 
 /**
+ * @desc    Resends the OTP code with a cooldown enforcement.
  * @route   POST /user/resend-otp
- * @desc    Resends the OTP code with a 1-minute cooldown enforcement
  * @access  Public / Session-based
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.resendOtp = async (req, res) => {
-    try {
-        const email = req.session.otpEmail;
+  try {
+    const email = req.session.otpEmail;
 
-        if (!email) {
-            return res.status(400).json({ 
-                message: "Session expired. Please signup again." 
-            });
-        }
-
-        const otp = await authService.processResendOtp(email);
-        console.log("RESEND OTP (DEV):", otp);
-
-        return res.json({ message: "OTP resent successfully" });
-
-    } catch (err) {
-        console.error("Resend OTP error:", err);
-        const status = err.status || 500;
-        const message = err.message || "Failed to resend OTP";
-        return res.status(status).json({ message });
+    if (!email) {
+      return res.status(400).json({
+        message: "Session expired. Please signup again."
+      });
     }
+
+    const otp = await authService.processResendOtp(email);
+    console.log("RESEND OTP (DEV):", otp);
+
+    return res.json({ message: "OTP resent successfully" });
+
+  } catch (err) {
+    console.error("Resend OTP error:", err);
+    const status = err.status || 500;
+    const message = err.message || "Failed to resend OTP";
+    return res.status(status).json({ message });
+  }
 };
 
 /**
+ * @desc    Renders the login page with optional success/reset messages.
  * @route   GET /user/login
- * @desc    Renders the login page with optional success messages
  * @access  Public
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.loginPage = (req, res) => {
   const signupSuccess = req.query.signupSuccess === 'true';
   const resetSuccess = req.query.resetSuccess === 'true';
 
-    let successMessage = null;
-    if (signupSuccess) {
-        successMessage = "Account created successfully! Please log in.";
-    } else if (resetSuccess) {
-        successMessage = "Password reset successful!, Log in Now";
-    }
+  let successMessage = null;
+  if (signupSuccess) {
+    successMessage = "Account created successfully! Please log in.";
+  } else if (resetSuccess) {
+    successMessage = "Password reset successful! Log in now.";
+  }
 
   res.render("User/auth/login", {
     layout: "layouts/user",
@@ -181,40 +205,47 @@ exports.loginPage = (req, res) => {
 };
 
 /**
+ * @desc    Authenticates user and starts a session.
  * @route   POST /user/login
- * @desc    Authenticates user and starts a session
  * @access  Public
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        const user = await authService.authenticateUser(email, password);
+  try {
+    const { email, password } = req.body;
+    const user = await authService.authenticateUser(email, password);
 
-        req.session.userId = user._id;
-        req.session.userName = user.fullName;
-        req.session.userEmail = user.email;
+    // Establish user session
+    req.session.userId = user._id;
+    req.session.userName = user.fullName;
+    req.session.userEmail = user.email;
 
-        req.session.save((err) => {
-            if (err) {
-                console.error("Session Save Error:", err);
-                return res.redirect("/user/login");
-            }
-            res.redirect("/user/home");
-        });
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session Save Error:", err);
+        return res.redirect("/user/login");
+      }
+      res.redirect("/user/home");
+    });
 
-    } catch (err) {
-        console.error("Login Error:", err);
-        res.render("User/auth/login", {
-            layout: "layouts/user",
-            error: err.message || "Something went wrong. Try again.",
-        });
-    }
+  } catch (err) {
+    console.error("Login Error:", err);
+    res.render("User/auth/login", {
+      layout: "layouts/user",
+      error: err.message || "Something went wrong. Try again.",
+    });
+  }
 };
 
 /**
+ * @desc    Destroys user session and clears authentication cookies.
  * @route   POST /user/logout
- * @desc    Destroys user session and clears cookies
  * @access  Private
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.logout = (req, res) => {
   req.session.userId = null;
@@ -230,14 +261,17 @@ exports.logout = (req, res) => {
   });
 };
 
-/* =============================================================================
-   PASSWORD RECOVERY SECTION
-============================================================================= */
+// ==========================================
+// PASSWORD RECOVERY SECTION
+// ==========================================
 
 /**
+ * @desc    Renders the forgot password email request page.
  * @route   GET /user/forgot-password
- * @desc    Renders the forgot password email request page
  * @access  Public
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.forgotPasswordPage = (req, res) => {
   res.render("User/auth/forgot-password", {
@@ -247,33 +281,39 @@ exports.forgotPasswordPage = (req, res) => {
 };
 
 /**
+ * @desc    Generates reset token and sends a reset email.
  * @route   POST /user/forgot-password
- * @desc    Generates reset token and sends email
  * @access  Public
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.forgotPassword = async (req, res) => {
-    try {
-        const { email } = req.body;
-        await passwordService.initiatePasswordReset(email);
+  try {
+    const { email } = req.body;
+    await passwordService.initiatePasswordReset(email);
 
-        res.render("User/auth/forgot-password", {
-            layout: "layouts/user",
-            message: "If an account exists, a reset link has been sent.",
-        });
+    res.render("User/auth/forgot-password", {
+      layout: "layouts/user",
+      message: "If an account exists, a reset link has been sent.",
+    });
 
-    } catch (err) {
-        console.error("Forgot password error:", err);
-        res.render("User/auth/forgot-password", {
-            layout: "layouts/user",
-            message: "Something went wrong. Please try again.",
-        });
-    }
+  } catch (err) {
+    console.error("Forgot password error:", err);
+    res.render("User/auth/forgot-password", {
+      layout: "layouts/user",
+      message: "Something went wrong. Please try again.",
+    });
+  }
 };
 
 /**
+ * @desc    Renders password reset form if the provided token is valid.
  * @route   GET /user/reset-password/:token
- * @desc    Renders password reset form if token is valid
  * @access  Public
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.resetPasswordPage = async (req, res) => {
   const hashedToken = crypto
@@ -297,39 +337,45 @@ exports.resetPasswordPage = async (req, res) => {
 };
 
 /**
+ * @desc    Updates the password in the database after successful reset.
  * @route   POST /user/reset-password/:token
- * @desc    Updates the password in the database
  * @access  Public
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.resetPassword = async (req, res) => {
-    try {
-        const { password, confirmPassword } = req.body;
-        const { token } = req.params;
+  try {
+    const { password, confirmPassword } = req.body;
+    const { token } = req.params;
 
-        if (password !== confirmPassword) {
-            return res.render("User/auth/reset-password", {
-                token,
-                error: "Passwords do not match"
-            });
-        }
-
-        await passwordService.resetPassword(token, password);
-        res.redirect("/user/login?resetSuccess=true");
-
-    } catch (err) {
-        console.error("Reset Password Error:", err);
-        res.status(400).send(err.message || "Internal Server Error");
+    if (password !== confirmPassword) {
+      return res.render("User/auth/reset-password", {
+        token,
+        error: "Passwords do not match"
+      });
     }
+
+    await passwordService.resetPassword(token, password);
+    res.redirect("/user/login?resetSuccess=true");
+
+  } catch (err) {
+    console.error("Reset Password Error:", err);
+    res.status(400).send(err.message || "Internal Server Error");
+  }
 };
 
-/* =============================================================================
-   USER PROFILE SECTION (Details & Settings)
-============================================================================= */
+// ==========================================
+// USER PROFILE SECTION (Details & Settings)
+// ==========================================
 
 /**
+ * @desc    Fetch and display user profile, addresses, and status flags.
  * @route   GET /user/profile
- * @desc    Fetch and display user profile, addresses, and success flags
  * @access  Private
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.getProfile = async (req, res) => {
   try {
@@ -354,7 +400,7 @@ exports.getProfile = async (req, res) => {
       addresses,
       title: 'My Profile | HOOF',
       layout: 'layouts/user',
-      successMessage: successMessage 
+      successMessage: successMessage
     });
   } catch (err) {
     console.error("Profile Error:", err);
@@ -363,18 +409,21 @@ exports.getProfile = async (req, res) => {
 };
 
 /**
+ * @desc    Update text-based profile details via AJAX.
  * @route   POST /user/profile/update
- * @desc    Update text-based profile details (AJAX)
  * @access  Private
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.updateProfile = async (req, res) => {
   try {
     const { fullName, phoneNumber, dateOfBirth } = req.body;
 
     const updatedUser = await userService.updateProfileData(req.session.userId, {
-        fullName,
-        phoneNumber,
-        dateOfBirth
+      fullName,
+      phoneNumber,
+      dateOfBirth
     });
 
     req.session.userName = updatedUser.fullName;
@@ -386,83 +435,92 @@ exports.updateProfile = async (req, res) => {
 };
 
 /**
+ * @desc    Upload, crop, and save a new profile image.
  * @route   POST /user/profile/update-image
- * @desc    Upload, crop, and save a new profile image
  * @access  Private
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.updateProfileImage = async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: "No file uploaded" });
-        }
-
-        const userId = req.session.userId;
-        const publicRoot = path.join(__dirname, '../public');
-
-        const newImagePath = await userService.updateUserProfileImage(
-            userId, 
-            req.file.filename, 
-            publicRoot
-        );
-
-        if (req.session.user) {
-            req.session.user.profileImage = newImagePath;
-        }
-
-        req.session.save((err) => {
-            if (err) throw err;
-            res.json({ 
-                success: true, 
-                message: "Profile picture updated!", 
-                imagePath: newImagePath 
-            });
-        });
-
-    } catch (error) {
-        console.error("Profile Image Upload Error:", error);
-        res.status(500).json({ 
-            success: false, 
-            message: error.message || "Server error during upload" 
-        });
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
     }
+
+    const userId = req.session.userId;
+    const publicRoot = path.join(__dirname, '../public');
+
+    const newImagePath = await userService.updateUserProfileImage(
+      userId,
+      req.file.filename,
+      publicRoot
+    );
+
+    if (req.session.user) {
+      req.session.user.profileImage = newImagePath;
+    }
+
+    req.session.save((err) => {
+      if (err) throw err;
+      res.json({
+        success: true,
+        message: "Profile picture updated!",
+        imagePath: newImagePath
+      });
+    });
+
+  } catch (error) {
+    console.error("Profile Image Upload Error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Server error during upload"
+    });
+  }
 };
 
 /**
+ * @desc    Removes profile picture from server and database.
  * @route   DELETE /user/profile/delete-image
- * @desc    Removes profile picture from server and database
  * @access  Private
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.deleteProfileImage = async (req, res) => {
-    try {
-        const userId = req.session.userId;
-        const publicRoot = path.join(__dirname, '../public');
+  try {
+    const userId = req.session.userId;
+    const publicRoot = path.join(__dirname, '../public');
 
-        await userService.removeUserProfileImage(userId, publicRoot);
+    await userService.removeUserProfileImage(userId, publicRoot);
 
-        if (req.session.user) {
-            req.session.user.profileImage = "";
-        }
-
-        return res.json({ success: true, message: "Profile image deleted" });
-
-    } catch (error) {
-        console.error("Delete Image Error:", error);
-        const statusCode = error.message === "No image found to delete" ? 400 : 500;
-        return res.status(statusCode).json({ 
-            success: false, 
-            message: error.message || "Server error" 
-        });
+    if (req.session.user) {
+      req.session.user.profileImage = "";
     }
+
+    return res.json({ success: true, message: "Profile image deleted" });
+
+  } catch (error) {
+    console.error("Delete Image Error:", error);
+    const statusCode = error.message === "No image found to delete" ? 400 : 500;
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message || "Server error"
+    });
+  }
 };
 
-/* =============================================================================
-   EMAIL & PASSWORD CHANGE FLOW
-============================================================================= */
+// ==========================================
+// EMAIL & PASSWORD CHANGE FLOW
+// ==========================================
 
 /**
+ * @desc    Sends verification OTP to current email to authorize change.
  * @route   GET /user/profile/change-email-start
- * @desc    Sends verification OTP to current email to authorize change
  * @access  Private
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.getChangeEmailOtp = async (req, res) => {
   try {
@@ -470,6 +528,7 @@ exports.getChangeEmailOtp = async (req, res) => {
     const otp = generateOtp();
     const hashedOtp = await bcrypt.hash(otp, 10);
 
+    // Refresh OTP record for current email
     await Otp.deleteMany({ email: user.email });
     await Otp.create({ email: user.email, otp: hashedOtp, expiresAt: Date.now() + 300000 });
     await sendOtpEmail(user.email, otp);
@@ -480,13 +539,18 @@ exports.getChangeEmailOtp = async (req, res) => {
     req.session.currentEmailToVerify = user.email;
 
     res.render("User/auth/verify-otp", { layout: "layouts/user", email: user.email, message: null });
-  } catch (err) { res.redirect('/user/profile'); }
+  } catch (err) {
+    res.redirect('/user/profile');
+  }
 };
 
 /**
+ * @desc    Sends verification OTP to the NEW email address.
  * @route   POST /user/profile/change-email-new-otp
- * @desc    Sends verification OTP to the NEW email address
  * @access  Private
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.sendNewEmailOtp = async (req, res) => {
   try {
@@ -494,11 +558,17 @@ exports.sendNewEmailOtp = async (req, res) => {
     const { newEmail } = req.body;
 
     const exists = await User.findOne({ email: newEmail });
-    if (exists) return res.render('User/change-email', { layout: 'layouts/user', message: { type: 'error', text: 'Email already registered.' } });
+    if (exists) {
+      return res.render('User/change-email', {
+        layout: 'layouts/user',
+        message: { type: 'error', text: 'Email already registered.' }
+      });
+    }
 
     const otp = generateOtp();
     const hashedOtp = await bcrypt.hash(otp, 10);
 
+    // Save OTP for new email verification
     await Otp.deleteMany({ email: newEmail });
     await Otp.create({ email: newEmail, otp: hashedOtp, expiresAt: Date.now() + 300000 });
     await sendOtpEmail(newEmail, otp);
@@ -509,13 +579,18 @@ exports.sendNewEmailOtp = async (req, res) => {
     req.session.newEmailOtpSent = true;
 
     res.render("User/auth/verify-otp", { layout: "layouts/user", email: newEmail, message: null });
-  } catch (err) { res.redirect('/user/profile'); }
+  } catch (err) {
+    res.redirect('/user/profile');
+  }
 };
 
 /**
+ * @desc    Initiates password change via reset link sent to registered email.
  * @route   GET /user/profile/change-password-request
- * @desc    Initiates password change via reset link sent to email
  * @access  Private
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.changePasswordRequest = async (req, res) => {
   try {
@@ -532,7 +607,7 @@ exports.changePasswordRequest = async (req, res) => {
       .digest("hex");
 
     user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; 
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
     await user.save();
 
     await sendResetPasswordEmail(user.email, resetToken);
@@ -545,60 +620,74 @@ exports.changePasswordRequest = async (req, res) => {
   }
 };
 
-// controller/userController.js
+/**
+ * @desc    Renders global search results page.
+ * @route   GET /user/search
+ * @access  Public
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
+ */
 exports.getSearchPage = async (req, res) => {
-    try {
-        const query = req.query.q || "";
-        const page = parseInt(req.query.page) || 1;
+  try {
+    const query = req.query.q || "";
+    const page = parseInt(req.query.page) || 1;
 
-        const { products, totalPages, currentPage, totalResults } = 
-            await userService.searchProducts(query, page);
+    const { products, totalPages, currentPage, totalResults } =
+      await userService.searchProducts(query, page);
 
-        res.render("User/search-results", {
-            products,
-            totalPages,
-            currentPage,
-            query,
-            totalResults,
-            title: `Search results for "${query}" | HOOF`
-        });
-    } catch (error) {
-        console.error("Search Error:", error);
-        res.redirect("/");
-    }
+    res.render("User/search-results", {
+      products,
+      totalPages,
+      currentPage,
+      query,
+      totalResults,
+      title: `Search results for "${query}" | HOOF`
+    });
+  } catch (error) {
+    console.error("Search Error:", error);
+    res.redirect("/");
+  }
 };
-// controller/userController.js
+
+/**
+ * @desc    Renders the shop page with advanced filtering and search.
+ * @route   GET /user/shop
+ * @access  Public
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
+ */
 exports.loadShop = async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const category = req.query.category || null;
-        const search = req.query.search || '';
-        const sort = req.query.sort || 'newest';
-        const maxPrice = req.query.maxPrice || 20000;
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const category = req.query.category || null;
+    const search = req.query.search || '';
+    const sort = req.query.sort || 'newest';
+    const maxPrice = req.query.maxPrice || 20000;
 
-        // Make sure you get these 3 variables from the service
-        const { products, totalPages, currentPage } = await userService.getShopProducts({
-            page,
-            limit: 9, 
-            category,
-            search,
-            sort,
-            maxPrice
-        });
+    const { products, totalPages, currentPage } = await userService.getShopProducts({
+      page,
+      limit: 9,
+      category,
+      search,
+      sort,
+      maxPrice
+    });
 
-        res.render("User/shop", {
-            products,
-            totalPages, // <--- MUST BE PASSED
-            currentPage, // <--- MUST BE PASSED
-            selectedCategory: category,
-            selectedSort: sort,
-            maxPrice: maxPrice,
-            search: search,
-            title: "Shop Sneakers | HOOF",
-            layout: "layout" // or false depending on your setup
-        });
-    } catch (error) {
-        console.error("Shop Load Error:", error);
-        res.redirect("/");
-    }
+    res.render("User/shop", {
+      products,
+      totalPages,
+      currentPage,
+      selectedCategory: category,
+      selectedSort: sort,
+      maxPrice: maxPrice,
+      search: search,
+      title: "Shop Sneakers | HOOF",
+      layout: "layout"
+    });
+  } catch (error) {
+    console.error("Shop Load Error:", error);
+    res.redirect("/");
+  }
 };

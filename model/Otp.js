@@ -1,13 +1,30 @@
+/**
+ * @file model/Otp.js
+ * @description Mongoose schema for One-Time Passwords used in authentication flows.
+ */
+
 const mongoose = require("mongoose");
 
-const otpSchema = new mongoose.Schema(
-  {
-    email: { type: String, required: true, index: true },
-    otp: { type: String, required: true },
-    expiresAt: { type: Date, required: true, index: { expires: 0 } },
-    lastSentAt: { type: Date, required: true, default: Date.now },
+const otpSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+    index: true
   },
-  { timestamps: true },
-); // Required for the .sort() to work
+  otp: {
+    type: String,
+    required: true
+  },
+  expiresAt: {
+    type: Date,
+    required: true,
+    index: { expires: 0 } // TTL index for automatic deletion
+  },
+  lastSentAt: {
+    type: Date,
+    required: true,
+    default: Date.now
+  }
+}, { timestamps: true });
 
 module.exports = mongoose.model("Otp", otpSchema);

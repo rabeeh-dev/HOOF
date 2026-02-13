@@ -1,4 +1,12 @@
-// Mobile nav toggle
+/**
+ * @file public/user/js/reset-password.js
+ * @description Logic for the password reset page, including form validation, strength meter, and password visibility toggles.
+ */
+
+// ==========================================
+// NAVIGATION & UI EFFECTS
+// ==========================================
+
 const toggle = document.getElementById("nav-toggle");
 const navLinks = document.querySelector(".nav-links");
 
@@ -11,11 +19,13 @@ if (toggle && navLinks) {
 // Close mobile menu on link click
 document.querySelectorAll(".nav-links a").forEach(link => {
   link.addEventListener("click", () => {
-    navLinks.classList.remove("open");
+    if (navLinks) {
+      navLinks.classList.remove("open");
+    }
   });
 });
 
-// Scroll reveal
+// Scroll reveal observer
 const observer = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     if (entry.isIntersecting) {
@@ -28,7 +38,10 @@ document.querySelectorAll(".reveal").forEach(section => {
   observer.observe(section);
 });
 
-// ===== PASSWORD STRENGTH =====
+// ==========================================
+// PASSWORD STRENGTH METER
+// ==========================================
+
 const newPassword = document.getElementById("newPassword");
 const strengthBar = document.getElementById("strengthBar");
 
@@ -37,6 +50,7 @@ if (newPassword && strengthBar) {
     const password = newPassword.value;
     let strength = 0;
 
+    // Strength criteria
     if (password.length >= 8) strength++;
     if (/[a-z]/.test(password)) strength++;
     if (/[A-Z]/.test(password)) strength++;
@@ -47,26 +61,28 @@ if (newPassword && strengthBar) {
     strengthBar.style.width = percent + "%";
 
     const colors = [
-      "#dc3545", // weak
-      "#ffc107",
-      "#ff914d",
-      "#28a745",
-      "#198754"  // strong
+      "#dc3545", // Weak
+      "#ffc107", // Fair
+      "#ff914d", // Good
+      "#28a745", // Strong
+      "#198754"  // Very Strong
     ];
 
     strengthBar.style.background = colors[strength - 1] || "#ddd";
   });
 }
 
-// ===== SHOW / HIDE PASSWORD =====
+// ==========================================
+// VISIBILITY TOGGLE HANDLING
+// ==========================================
+
 const confirmPassword = document.getElementById("confirmPassword");
 const toggleNewPassword = document.getElementById("toggleNewPassword");
 const toggleConfirmPassword = document.getElementById("toggleConfirmPassword");
 
 if (toggleNewPassword && newPassword) {
   toggleNewPassword.addEventListener("click", () => {
-    const type =
-      newPassword.type === "password" ? "text" : "password";
+    const type = newPassword.type === "password" ? "text" : "password";
     newPassword.type = type;
     toggleNewPassword.classList.toggle("fa-eye");
     toggleNewPassword.classList.toggle("fa-eye-slash");
@@ -75,15 +91,22 @@ if (toggleNewPassword && newPassword) {
 
 if (toggleConfirmPassword && confirmPassword) {
   toggleConfirmPassword.addEventListener("click", () => {
-    const type =
-      confirmPassword.type === "password" ? "text" : "password";
+    const type = confirmPassword.type === "password" ? "text" : "password";
     confirmPassword.type = type;
     toggleConfirmPassword.classList.toggle("fa-eye");
     toggleConfirmPassword.classList.toggle("fa-eye-slash");
   });
 }
 
-// ===== INLINE VALIDATION =====
+// ==========================================
+// INLINE FORM VALIDATION
+// ==========================================
+
+/**
+ * Validates a single input field.
+ * @param {HTMLInputElement} input - The input element to validate.
+ * @returns {boolean} - Returns true if valid, false otherwise.
+ */
 function validateField(input) {
   const formGroup = input.closest(".form-group");
   const errorMsg = formGroup?.querySelector(".error-message");
@@ -92,24 +115,24 @@ function validateField(input) {
   let isValid = true;
   let message = "";
 
-  // Reset
+  // Reset states
   formGroup.classList.remove("error", "success");
   errorMsg.textContent = "";
 
-  // 1. Required Check
+  // Required Field Check
   if (input.hasAttribute("required") && !input.value.trim()) {
     isValid = false;
     message = `${input.previousElementSibling.innerText || "This field"} is required`;
   }
-  // 2. Length Check (for password)
+  // Minimum Length Check
   else if (input.id === "newPassword" && input.value.length < 8) {
     isValid = false;
     message = "Password must be at least 8 characters";
   }
-  // 3. Match Check
+  // Password Match Check
   else if (input.id === "confirmPassword") {
-    const password = document.getElementById("newPassword")?.value;
-    if (password && input.value !== password) {
+    const passwordVal = document.getElementById("newPassword")?.value;
+    if (passwordVal && input.value !== passwordVal) {
       isValid = false;
       message = "Passwords do not match";
     }
@@ -125,6 +148,7 @@ function validateField(input) {
   return isValid;
 }
 
+// Setup event listeners for inputs
 const inputs = document.querySelectorAll(".signup-form input");
 
 inputs.forEach(input => {
@@ -148,13 +172,20 @@ inputs.forEach(input => {
   });
 });
 
-// ===== FORM SUBMISSION =====
+// ==========================================
+// FORM SUBMISSION HANDLING
+// ==========================================
+
 const resetForm = document.getElementById("resetForm");
 if (resetForm) {
   resetForm.addEventListener("submit", (e) => {
     let isFormValid = true;
+
+    // Validate all fields before submission
     inputs.forEach(input => {
-      if (!validateField(input)) isFormValid = false;
+      if (!validateField(input)) {
+        isFormValid = false;
+      }
     });
 
     if (!isFormValid) {
@@ -164,7 +195,15 @@ if (resetForm) {
   });
 }
 
-// ===== TOAST MESSAGE =====
+// ==========================================
+// TOAST NOTIFICATIONS
+// ==========================================
+
+/**
+ * Displays a toast message notification.
+ * @param {string} text - Message content.
+ * @param {string} type - Toast type: success, error, info.
+ */
 function showMessage(text, type) {
   const existing = document.querySelector(".message-toast");
   if (existing) existing.remove();
@@ -180,16 +219,28 @@ function showMessage(text, type) {
 
   setTimeout(() => {
     message.style.transform = "translateX(400px)";
-    setTimeout(() => message.remove(), 400);
+    setTimeout(() => {
+      if (message.parentNode) {
+        message.remove();
+      }
+    }, 400);
   }, 4000);
 }
 
+// Toast styling
 const toastStyle = document.createElement("style");
 toastStyle.textContent = `
   .message-toast {
-    position: fixed; top: 100px; right: 20px; padding: 1.2rem 1.8rem;
-    border-radius: 12px; color: white; font-weight: 500; z-index: 10000;
-    transform: translateX(400px); transition: all 0.4s ease;
+    position: fixed; 
+    top: 100px; 
+    right: 20px; 
+    padding: 1.2rem 1.8rem;
+    border-radius: 12px; 
+    color: white; 
+    font-weight: 500; 
+    z-index: 10000;
+    transform: translateX(400px); 
+    transition: all 0.4s ease;
     box-shadow: 0 20px 40px rgba(0,0,0,0.3); max-width: 350px;
     font-family: Poppins, sans-serif;
   }

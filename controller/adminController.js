@@ -1,3 +1,8 @@
+/**
+ * @file controller/adminController.js
+ * @description Controller for administrative operations, including authentication, dashboard metrics, customer management, and category management.
+ */
+
 const Admin = require("../model/Admin");
 const User = require("../model/User");
 const Category = require("../model/Category");
@@ -5,14 +10,17 @@ const bcrypt = require("bcrypt");
 const PDFDocument = require("pdfkit-table");
 const adminProductService = require("../services/adminProductService");
 
-/* =============================================================================
-   ADMIN AUTHENTICATION SECTION
-============================================================================= */
+// ==========================================
+// ADMIN AUTHENTICATION SECTION
+// ==========================================
 
 /**
+ * @desc    Renders the admin login page (Redirects if already logged in).
  * @route   GET /admin/login
- * @desc    Renders the admin login page (Redirects if already logged in)
  * @access  Public (Guest Only)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.loadLogin = async (req, res) => {
     try {
@@ -27,9 +35,12 @@ exports.loadLogin = async (req, res) => {
 };
 
 /**
+ * @desc    Verifies admin credentials and establishes an admin session.
  * @route   POST /admin/login
- * @desc    Verifies admin credentials and establishes an admin session
  * @access  Public
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.verifyAdmin = async (req, res) => {
     try {
@@ -40,22 +51,23 @@ exports.verifyAdmin = async (req, res) => {
             const passwordMatch = await bcrypt.compare(password, adminData.password);
             if (passwordMatch) {
                 req.session.adminId = adminData._id;
-
                 return res.status(200).json({ success: true });
             }
         }
 
         return res.status(401).json({ success: false, message: "Invalid email or password" });
-
     } catch (error) {
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
 
 /**
+ * @desc    Destroys the admin session and clears local cookies.
  * @route   GET /admin/logout
- * @desc    Destroys the admin session and clears local cookies
  * @access  Private (Admin Only)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.logout = (req, res) => {
     req.session.destroy((err) => {
@@ -68,14 +80,17 @@ exports.logout = (req, res) => {
     });
 };
 
-/* =============================================================================
-   ADMIN DASHBOARD & DASHBOARD METRICS
-============================================================================= */
+// ==========================================
+// ADMIN DASHBOARD & METRICS
+// ==========================================
 
 /**
+ * @desc    Renders the main admin analytics dashboard.
  * @route   GET /admin/dashboard
- * @desc    Renders the main admin analytics dashboard
  * @access  Private (Admin Only)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.loadDashboard = async (req, res) => {
     try {
@@ -89,14 +104,17 @@ exports.loadDashboard = async (req, res) => {
     }
 };
 
-/* =============================================================================
-   USER MANAGEMENT SECTION
-============================================================================= */
+// ==========================================
+// USER MANAGEMENT SECTION
+// ==========================================
 
 /**
+ * @desc    Fetch and display all users with pagination support.
  * @route   GET /admin/users
- * @desc    Fetch and display all users with pagination support
  * @access  Private (Admin Only)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.loadCustomers = async (req, res) => {
     try {
@@ -126,9 +144,12 @@ exports.loadCustomers = async (req, res) => {
 };
 
 /**
+ * @desc    Toggles the isBlocked status of a specific user.
  * @route   PATCH /admin/users/:id/:action
- * @desc    Toggles the isBlocked status of a specific user
  * @access  Private (Admin Only)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.toggleUserStatus = async (req, res) => {
     try {
@@ -153,15 +174,18 @@ exports.toggleUserStatus = async (req, res) => {
 };
 
 /**
+ * @desc    Generates and downloads a PDF report of all users.
  * @route   GET /admin/users/export-pdf
- * @desc    Generates and downloads a PDF report of all users
  * @access  Private (Admin Only)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.exportUsersPDF = async (req, res) => {
     try {
         const users = await User.find({}).sort({ createdAt: -1 });
 
-        // Create a new PDF document
+        // Create a new PDF document using pdfkit-table
         const doc = new PDFDocument({ margin: 30, size: 'A4' });
 
         // Set response headers
@@ -177,7 +201,7 @@ exports.exportUsersPDF = async (req, res) => {
         doc.fontSize(10).text(`Generated on: ${new Date().toLocaleString()}`, { align: "center" });
         doc.moveDown(2);
 
-        // --- TABLE ---
+        // --- TABLE DEFINITION ---
         const table = {
             title: "User List",
             headers: [
@@ -197,21 +221,18 @@ exports.exportUsersPDF = async (req, res) => {
         };
 
         // Draw the table
-        // pdfkit-table's table() method automatically handles new pages
         await doc.table(table, {
             prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10),
             prepareRow: (row, indexColumn, indexRow, rect, rowData) => {
                 doc.font("Helvetica").fontSize(10);
-                // Optional: Stripe rows
+                // Alternate background color for rows
                 if (indexRow % 2 === 0) {
-                    doc.addBackground(rect, '#f0f0f0', 0.15); // light gray
+                    doc.addBackground(rect, '#f0f0f0', 0.15);
                 }
-
-                // Color status text if needed (simulated by checking value in renderer - pdfkit-table is simpler)
             }
         });
 
-        // Finalize the PDF and end the stream
+        // Finalize the PDF
         doc.end();
 
     } catch (error) {
@@ -220,29 +241,27 @@ exports.exportUsersPDF = async (req, res) => {
     }
 };
 
-/* =============================================================================
-   CATEGORY MANAGEMENT SECTION
-============================================================================= */
+// ==========================================
+// CATEGORY MANAGEMENT SECTION
+// ==========================================
 
 /**
+ * @desc    Fetch and display all categories with pagination and search.
  * @route   GET /admin/categories
- * @desc    Fetch and display all categories
  * @access  Private (Admin Only)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
-// controller/adminController.js
-
 exports.loadCategories = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const search = req.query.search || '';
-        
-        const { categories, totalPages, currentPage } = 
+
+        const { categories, totalPages, currentPage } =
             await adminProductService.getAllCategoriesAdmin(page, 5, search);
 
-        // CHANGE THIS LINE
-        // From: res.render("Admin/categories", { ...
-        // To: 
-        res.render("Admin/category-management", { 
+        res.render("Admin/category-management", {
             categories,
             totalPages,
             currentPage,
@@ -257,15 +276,19 @@ exports.loadCategories = async (req, res) => {
 };
 
 /**
+ * @desc    Create a new category.
  * @route   POST /admin/categories/add
- * @desc    Create a new category
  * @access  Private (Admin Only)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.addCategory = async (req, res) => {
     try {
         const { name, description } = req.body;
         const normalizedName = name.trim();
 
+        // Case-insensitive check for existing category
         const existingCategory = await Category.findOne({
             name: { $regex: new RegExp(`^${normalizedName}$`, 'i') }
         });
@@ -289,9 +312,12 @@ exports.addCategory = async (req, res) => {
 };
 
 /**
+ * @desc    Update an existing category's details.
  * @route   PATCH /admin/categories/edit/:id
- * @desc    Update an existing category's details
  * @access  Private (Admin Only)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.updateCategory = async (req, res) => {
     try {
@@ -299,6 +325,7 @@ exports.updateCategory = async (req, res) => {
         const { name, description } = req.body;
         const normalizedName = name.trim();
 
+        // Check if new name exists in another category
         const existingCategory = await Category.findOne({
             name: { $regex: new RegExp(`^${normalizedName}$`, 'i') },
             _id: { $ne: id }
@@ -322,9 +349,12 @@ exports.updateCategory = async (req, res) => {
 };
 
 /**
+ * @desc    Toggle the isListed status of a category.
  * @route   PATCH /admin/categories/toggle-status/:id
- * @desc    Toggle the isListed status of a category
  * @access  Private (Admin Only)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.toggleCategoryStatus = async (req, res) => {
     try {

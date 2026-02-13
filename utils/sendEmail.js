@@ -1,22 +1,28 @@
+/**
+ * @file utils/sendEmail.js
+ * @description Utility module for sending emails using Nodemailer and Gmail SMTP.
+ */
+
 const nodemailer = require("nodemailer");
 
-/* ======================================================
-   CREATE TRANSPORTER (GMAIL SMTP)
-====================================================== */
+// ==========================================
+// CREATE TRANSPORTER (GMAIL SMTP)
+// ==========================================
+
 const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST,           
-  port: Number(process.env.MAIL_PORT),   
-  secure: false,                     
+  host: process.env.MAIL_HOST,
+  port: Number(process.env.MAIL_PORT),
+  secure: false,
   auth: {
-    user: process.env.MAIL_USER,         
-    pass: process.env.MAIL_PASS,       
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
   },
   tls: {
     rejectUnauthorized: false,
   },
 });
 
-// Verify transporter
+// Verify mail transporter connection on startup
 transporter.verify((error) => {
   if (error) {
     console.error("❌ Mail transporter error:", error);
@@ -25,9 +31,16 @@ transporter.verify((error) => {
   }
 });
 
-/* ======================================================
-   SEND OTP EMAIL
-====================================================== */
+// ==========================================
+// SEND OTP EMAIL
+// ==========================================
+
+/**
+ * Sends a verification OTP email to a user.
+ * @param {string} email - Destination email address.
+ * @param {string} otp - The 6-digit OTP code to include in the email.
+ * @returns {Promise<void>}
+ */
 const sendOtpEmail = async (email, otp) => {
   try {
     const html = `
@@ -104,9 +117,16 @@ const sendOtpEmail = async (email, otp) => {
   }
 };
 
-/* ======================================================
-   SEND RESET PASSWORD EMAIL
-====================================================== */
+// ==========================================
+// SEND RESET PASSWORD EMAIL
+// ==========================================
+
+/**
+ * Sends a password reset link to a user.
+ * @param {string} email - Destination email address.
+ * @param {string} resetToken - The unique password reset token.
+ * @returns {Promise<void>}
+ */
 const sendResetPasswordEmail = async (email, resetToken) => {
   try {
     const resetUrl = `${process.env.BASE_URL}/user/reset-password/${resetToken}`;
@@ -184,9 +204,10 @@ const sendResetPasswordEmail = async (email, resetToken) => {
   }
 };
 
-/* ======================================================
-   EXPORTS
-====================================================== */
+// ==========================================
+// EXPORTS
+// ==========================================
+
 module.exports = {
   sendOtpEmail,
   sendResetPasswordEmail,

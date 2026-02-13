@@ -1,4 +1,12 @@
-// ================= NAVBAR =================
+/**
+ * @file public/user/js/verify-otp.js
+ * @description Logic for the OTP verification page, including countdown timer, auto-focus inputs, and AJAX submission.
+ */
+
+// ==========================================
+// NAVIGATION
+// ==========================================
+
 const toggle = document.getElementById("nav-toggle");
 const navLinks = document.querySelector(".nav-links");
 
@@ -7,22 +15,35 @@ if (toggle && navLinks) {
 }
 
 document.querySelectorAll(".nav-links a").forEach(link => {
-  link.addEventListener("click", () => navLinks.classList.remove("open"));
+  link.addEventListener("click", () => {
+    if (navLinks) {
+      navLinks.classList.remove("open");
+    }
+  });
 });
 
-// ================= SCROLL REVEAL =================
+// ==========================================
+// UI EFFECTS (Scroll Reveal)
+// ==========================================
+
 const observer = new IntersectionObserver(entries => {
   entries.forEach(entry => {
-    if (entry.isIntersecting) entry.target.classList.add("visible");
+    if (entry.isIntersecting) {
+      entry.target.classList.add("visible");
+    }
   });
 }, { threshold: 0.15 });
 
 document.querySelectorAll(".reveal").forEach(section => observer.observe(section));
 
-// ================= OTP INPUT HANDLING =================
+// ==========================================
+// OTP INPUT HANDLING
+// ==========================================
+
 const otpInputs = document.querySelectorAll(".otp-input");
 
 otpInputs.forEach((input, index) => {
+  // Digit-only validation and auto-focus next
   input.addEventListener("input", e => {
     if (!/[0-9]/.test(e.target.value)) {
       e.target.value = "";
@@ -33,37 +54,49 @@ otpInputs.forEach((input, index) => {
     }
   });
 
+  // Backspace auto-focus previous
   input.addEventListener("keydown", e => {
     if (e.key === "Backspace" && !input.value && index > 0) {
       otpInputs[index - 1].focus();
     }
   });
 
+  // Handle clipboard paste
   input.addEventListener("paste", e => {
     e.preventDefault();
     const data = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     data.split("").forEach((digit, i) => {
-      if (otpInputs[i]) otpInputs[i].value = digit;
+      if (otpInputs[i]) {
+        otpInputs[i].value = digit;
+      }
     });
     otpInputs[Math.min(data.length, 5)].focus();
   });
 });
 
-// ================= TIMER =================
-let timeLeft = 120;
+// ==========================================
+// COUNTDOWN TIMER
+// ==========================================
+
+let timeLeft = 120; // 2 minutes
 const timerEl = document.getElementById("timer");
 const resendBtn = document.getElementById("resendOtp");
 
+/**
+ * Updates the visual timer every second.
+ */
 function updateTimer() {
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
-  timerEl.textContent = `${minutes.toString().padStart(2, "0")}:${seconds
-    .toString()
-    .padStart(2, "0")}`;
+  if (timerEl) {
+    timerEl.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  }
 
   if (timeLeft <= 0) {
-    resendBtn.style.display = "inline-block";
+    if (resendBtn) {
+      resendBtn.style.display = "inline-block";
+    }
     return;
   }
 
@@ -71,9 +104,13 @@ function updateTimer() {
   setTimeout(updateTimer, 1000);
 }
 
+// Start timer on load
 updateTimer();
 
-// ================= RESEND OTP (CONNECTED TO BACKEND) =================
+// ==========================================
+// RESEND OTP
+// ==========================================
+
 resendBtn?.addEventListener("click", async () => {
   try {
     const res = await fetch("/user/resend-otp", {
@@ -90,7 +127,7 @@ resendBtn?.addEventListener("click", async () => {
 
     showMessage("New OTP sent to your email!", "success");
 
-    // Restart cooldown
+    // Restart timer
     timeLeft = 120;
     resendBtn.style.display = "none";
     updateTimer();
@@ -100,19 +137,21 @@ resendBtn?.addEventListener("click", async () => {
   }
 });
 
-// ================= OTP FORM SUBMIT =================
+// ==========================================
+// FORM SUBMISSION (AJAX)
+// ==========================================
+
 const otpForm = document.getElementById("otpForm");
-const otpHidden = document.getElementById("otpHidden");
 
 if (otpForm) {
   otpForm.addEventListener("submit", async (e) => {
-    e.preventDefault(); // Prevent reload
+    e.preventDefault();
 
     let isValid = true;
     let otpCode = "";
 
     otpInputs.forEach(input => {
-      // Clear previous error
+      // Clear previous error state
       input.classList.remove("error");
 
       const val = input.value.trim();
@@ -128,7 +167,7 @@ if (otpForm) {
       return;
     }
 
-    // AJAX Submission
+    // Submit via AJAX
     const btn = otpForm.querySelector("button[type='submit']");
     const originalText = btn.innerHTML;
     btn.disabled = true;
@@ -149,12 +188,12 @@ if (otpForm) {
           window.location.href = data.redirectUrl;
         }, 1000);
       } else {
-        // Error handling
+        // Handle invalid OTP
         showMessage(data.message || "Invalid OTP", "error");
         btn.disabled = false;
         btn.innerHTML = originalText;
 
-        // Clear inputs and focus first
+        // Clear and highlight inputs
         otpInputs.forEach(input => {
           input.value = "";
           input.classList.add("error");
@@ -169,7 +208,7 @@ if (otpForm) {
     }
   });
 
-  // Clear error on input
+  // Remove error state on input
   otpInputs.forEach(input => {
     input.addEventListener("input", function () {
       this.classList.remove("error");
@@ -177,7 +216,15 @@ if (otpForm) {
   });
 }
 
-// ================= TOAST =================
+// ==========================================
+// TOAST NOTIFICATIONS
+// ==========================================
+
+/**
+ * Displays a toast notification message.
+ * @param {string} text - Message content.
+ * @param {string} type - Notification type: success, error, info.
+ */
 function showMessage(text, type) {
   document.querySelector(".message-toast")?.remove();
 
@@ -194,6 +241,7 @@ function showMessage(text, type) {
   }, 4000);
 }
 
+// Global toast styling
 const toastStyle = document.createElement("style");
 toastStyle.textContent = `
 .message-toast {
@@ -213,11 +261,14 @@ toastStyle.textContent = `
 }
 .message-toast.success { background:#28a745; }
 .message-toast.error { background:#dc3545; }
-.message-toast.info { background:var(--accent); }
+.message-toast.info { background:#333; }
 `;
 document.head.appendChild(toastStyle);
 
-// ================= EXTRA =================
+// ==========================================
+// ADDITIONAL INTERACTIONS
+// ==========================================
+
 document.getElementById("contactSupport")?.addEventListener("click", e => {
   e.preventDefault();
   showMessage("Contact support: support@hoofsnkrs.com", "info");

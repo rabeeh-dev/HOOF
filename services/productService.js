@@ -1,18 +1,25 @@
+/**
+ * @file services/productService.js
+ * @description Service layer for user-facing product operations, including listing, filtering, and sorting.
+ */
+
 const Product = require("../model/Product");
 const Category = require("../model/Category");
 
-/**
- * ProductService handles logic for fetching, filtering, and 
- * managing product data for the store.
- */
 class ProductService {
     /**
-     * Fetches products based on filters, sorting, and pagination.
-     * @param {Object} query - Object containing category, sort, and page.
-     * @param {number} limit - Number of products per page.
-     * @returns {Promise<Object>} Products, total count, and pagination info.
+     * Fetches products based on filters, sorting, and pagination for the shop listing.
+     * @param {Object} query - Query parameters from the request.
+     * @param {string} [query.category] - Category ID filter.
+     * @param {string} [query.sort] - Sorting criteria (e.g., price-low, newest).
+     * @param {number} [query.page=1] - Current page number.
+     * @param {string} [query.search] - Search term for product names.
+     * @param {string} [query.minPrice] - Minimum price filter.
+     * @param {string} [query.maxPrice] - Maximum price filter.
+     * @param {string} [query.size] - Product size filter.
+     * @param {number} [limit=12] - Number of products per page.
+     * @returns {Promise<Object>} Object containing products, totalCount, totalPages, and currentPage.
      */
-
     async getAllProducts(query, limit = 12) {
         const { category, sort, page = 1, search, minPrice, maxPrice, size } = query;
         const skip = (page - 1) * limit;

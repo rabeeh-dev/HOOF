@@ -1,3 +1,8 @@
+/**
+ * @file services/passwordService.js
+ * @description Service layer for password recovery and reset operations.
+ */
+
 const User = require("../model/User");
 const crypto = require("crypto");
 const { sendResetPasswordEmail } = require("../utils/sendEmail");
@@ -5,8 +10,9 @@ const bcrypt = require("bcrypt");
 
 class PasswordService {
     /**
-     * Handles the forgot password request logic
-     * @param {string} email 
+     * Initiates the password reset process by generating a token and sending a reset email.
+     * @param {string} email - User's email address.
+     * @returns {Promise<boolean>} True if the process completed (always true for security).
      */
     async initiatePasswordReset(email) {
         // 1. Fetch user
@@ -14,7 +20,7 @@ class PasswordService {
 
         // 2. Business Rule: Only process for local auth providers
         if (user && user.authProvider === "local") {
-            
+
             // 3. Security: Generate raw token for email and hashed version for DB
             const resetToken = crypto.randomBytes(32).toString("hex");
             const hashedToken = crypto
@@ -30,13 +36,18 @@ class PasswordService {
             // 5. Communication: Send the raw token in the email
             await sendResetPasswordEmail(email, resetToken);
         }
-        
+
         // Always return true to keep the response generic for security
         return true;
     }
 
-    //Reset Password Function
-
+    /**
+     * Resets the user's password using a valid reset token.
+     * @param {string} token - The raw reset token from the email.
+     * @param {string} password - The new plain-text password.
+     * @returns {Promise<boolean>} True if successful.
+     * @throws {Error} If the token is invalid or expired.
+     */
     async resetPassword(token, password) {
         // 1. Hash the incoming token to match DB storage
         const hashedToken = crypto

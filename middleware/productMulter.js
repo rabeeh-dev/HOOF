@@ -1,7 +1,15 @@
+/**
+ * @file middleware/productMulter.js
+ * @description Specialized Multer configuration for handling product image uploads.
+ */
+
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
+/**
+ * Storage configuration dedicated to product images.
+ */
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const dir = "public/uploads/products";
@@ -11,10 +19,14 @@ const storage = multer.diskStorage({
         cb(null, dir);
     },
     filename: (req, file, cb) => {
+        // Preserve original filename with a timestamp prefix
         cb(null, Date.now() + "-" + file.originalname);
     }
 });
 
+/**
+ * Multer instance for product uploads with specific image type validation.
+ */
 const upload = multer({
     storage: storage,
     fileFilter: (req, file, cb) => {

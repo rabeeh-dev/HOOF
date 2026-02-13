@@ -1,3 +1,12 @@
+/**
+ * @file public/user/js/change-email.js
+ * @description Logic for the user email update page, including nav toggles, profile dropdowns, and form validation.
+ */
+
+// ==========================================
+// NAVIGATION & UI
+// ==========================================
+
 // Mobile nav toggle
 const toggle = document.getElementById("nav-toggle");
 const navLinks = document.querySelector(".nav-links");
@@ -10,11 +19,16 @@ if (toggle && navLinks) {
 // Close mobile menu on link click
 document.querySelectorAll(".nav-links a").forEach(link => {
   link.addEventListener("click", () => {
-    navLinks.classList.remove("open");
+    if (navLinks) {
+      navLinks.classList.remove("open");
+    }
   });
 });
 
-// PROFILE DROPDOWN FUNCTIONALITY
+// ==========================================
+// PROFILE DROPDOWN
+// ==========================================
+
 const profileToggle = document.getElementById("profileToggle");
 const profileDropdown = document.getElementById("profileDropdown");
 
@@ -41,13 +55,12 @@ if (profileToggle && profileDropdown) {
   // Handle dropdown menu item clicks
   document.querySelectorAll(".dropdown-item").forEach(item => {
     item.addEventListener("click", (e) => {
-      // If it's the logout button, don't preventDefault!
+      // If it's the logout button, let the browser handle it
       if (item.classList.contains('logout')) {
         return;
       }
 
       e.preventDefault();
-      const text = item.querySelector("span").textContent;
       profileDropdown.classList.remove("active");
     });
   });
@@ -60,12 +73,15 @@ if (profileToggle && profileDropdown) {
   });
 }
 
-// CHANGE EMAIL FORM VALIDATION AND SUBMISSION
+// ==========================================
+// CHANGE EMAIL FORM
+// ==========================================
+
 const changeEmailForm = document.getElementById("changeEmailForm");
 if (changeEmailForm) {
   changeEmailForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    
+
     const newEmail = document.getElementById("newEmail").value.trim();
     const confirmEmail = document.getElementById("confirmEmail").value.trim();
     const submitBtn = changeEmailForm.querySelector(".change-email-btn");
@@ -101,7 +117,7 @@ if (changeEmailForm) {
     btnText.style.display = "none";
     btnLoader.style.display = "inline-flex";
 
-    // Simulate API call (replace with actual API call)
+    // Simulate API call
     setTimeout(() => {
       // Reset button state
       submitBtn.disabled = false;
@@ -110,27 +126,25 @@ if (changeEmailForm) {
 
       // Show success message
       showMessage("Email changed successfully! Please verify your new email. 📧", "success");
-      
+
       // Reset form
       changeEmailForm.reset();
-
-      // Optional: Redirect to profile page after 3 seconds
-      setTimeout(() => {
-        // window.location.href = "/user/profile";
-      }, 3000);
     }, 2000);
   });
 }
 
-// Email input validation on blur
+// ==========================================
+// INLINE VALIDATION
+// ==========================================
+
 const newEmailInput = document.getElementById("newEmail");
 const confirmEmailInput = document.getElementById("confirmEmail");
 
 if (newEmailInput) {
-  newEmailInput.addEventListener("blur", function() {
+  newEmailInput.addEventListener("blur", function () {
     this.value = this.value.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
+
     if (this.value && !emailRegex.test(this.value)) {
       highlightError("newEmail");
       showMessage("Please enter a valid email address", "error");
@@ -141,11 +155,11 @@ if (newEmailInput) {
 }
 
 if (confirmEmailInput) {
-  confirmEmailInput.addEventListener("blur", function() {
+  confirmEmailInput.addEventListener("blur", function () {
     this.value = this.value.trim();
-    const newEmail = document.getElementById("newEmail").value.trim();
-    
-    if (this.value && newEmail && this.value !== newEmail) {
+    const newEmailText = document.getElementById("newEmail").value.trim();
+
+    if (this.value && newEmailText && this.value !== newEmailText) {
       highlightError("confirmEmail");
       showMessage("Email addresses do not match", "error");
     } else {
@@ -154,7 +168,10 @@ if (confirmEmailInput) {
   });
 }
 
-// Helper functions for error handling
+/**
+ * Highlights a form field with an error state.
+ * @param {string} inputId - ID of the input element.
+ */
 function highlightError(inputId) {
   const input = document.getElementById(inputId);
   if (input) {
@@ -163,6 +180,10 @@ function highlightError(inputId) {
   }
 }
 
+/**
+ * Clears the error state from a form field.
+ * @param {string} inputId - ID of the input element.
+ */
 function clearError(inputId) {
   const input = document.getElementById(inputId);
   if (input) {
@@ -171,12 +192,23 @@ function clearError(inputId) {
   }
 }
 
+/**
+ * Clears error states from all form fields.
+ */
 function clearErrors() {
   clearError("newEmail");
   clearError("confirmEmail");
 }
 
-// Toast message
+// ==========================================
+// TOAST NOTIFICATIONS
+// ==========================================
+
+/**
+ * Displays a toast message notification.
+ * @param {string} text - Message content.
+ * @param {string} type - Toast type: success, error, info.
+ */
 function showMessage(text, type) {
   const existing = document.querySelector(".message-toast");
   if (existing) existing.remove();
@@ -185,7 +217,7 @@ function showMessage(text, type) {
   message.className = `message-toast ${type}`;
   message.textContent = text;
   document.body.appendChild(message);
-  
+
   requestAnimationFrame(() => {
     message.style.transform = "translateX(0)";
   });
@@ -198,7 +230,7 @@ function showMessage(text, type) {
   }, 4000);
 }
 
-// Toast CSS
+// Toast styling
 const toastStyle = document.createElement("style");
 toastStyle.textContent = `
   .message-toast {
@@ -218,7 +250,7 @@ toastStyle.textContent = `
   }
   .message-toast.success { background: #28a745; }
   .message-toast.error { background: #dc3545; }
-  .message-toast.info { background: ${getComputedStyle(document.documentElement).getPropertyValue('--accent')}; }
+  .message-toast.info { background: #333; }
   
   @media (max-width: 480px) {
     .message-toast {
@@ -230,12 +262,12 @@ toastStyle.textContent = `
 `;
 document.head.appendChild(toastStyle);
 
-// Input effects
+// Input interactions
 document.querySelectorAll(".change-email-form input").forEach(input => {
-  input.addEventListener("focus", function() {
+  input.addEventListener("focus", function () {
     this.parentElement.parentElement.classList.add("focused");
   });
-  input.addEventListener("blur", function() {
+  input.addEventListener("blur", function () {
     this.parentElement.parentElement.classList.remove("focused");
   });
 });

@@ -1,13 +1,20 @@
+/**
+ * @file controller/adminProductController.js
+ * @description Controller for administrative product and category management.
+ */
+
 const Product = require("../model/Product");
 const Category = require("../model/Category");
 const adminProductService = require("../services/adminProductService");
 
 /**
+ * @desc    Display product management table with pagination.
  * @route   GET /admin/products
- * @desc    Display product management table with pagination
  * @access  Private (Admin)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
-
 exports.listProductsAdmin = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -27,9 +34,12 @@ exports.listProductsAdmin = async (req, res) => {
 };
 
 /**
+ * @desc    Load category management list with pagination and search.
  * @route   GET /admin/categories
- * @desc    Load category management list
  * @access  Private (Admin)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.loadCategories = async (req, res) => {
     try {
@@ -39,9 +49,6 @@ exports.loadCategories = async (req, res) => {
         const { categories, totalPages, currentPage } =
             await adminProductService.getAllCategoriesAdmin(page, 5, search);
 
-        // CHANGE THIS LINE:
-        // From: res.render("Admin/categories", ...
-        // To:   res.render("Admin/category-management", ...
         res.render("Admin/category-management", {
             categories,
             totalPages,
@@ -57,9 +64,12 @@ exports.loadCategories = async (req, res) => {
 };
 
 /**
+ * @desc    Create a new product.
  * @route   POST /admin/products/add
- * @desc    Create a new product
  * @access  Private (Admin)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.addProduct = async (req, res) => {
     try {
@@ -70,12 +80,9 @@ exports.addProduct = async (req, res) => {
             return res.status(400).json({ success: false, message: "Please upload at least one image." });
         }
 
-        // Pass BOTH arguments to the service
-        // Argument 1: Text data (req.body)
-        // Argument 2: File data (req.files)
         await adminProductService.addProduct(productData, files);
 
-        // Since your EJS uses Fetch/AJAX, we should return JSON, not a redirect
+        // Return JSON response for AJAX requests
         res.json({ success: true, message: "Product added successfully!" });
 
     } catch (error) {
@@ -85,9 +92,12 @@ exports.addProduct = async (req, res) => {
 };
 
 /**
+ * @desc    Toggle product blocked status (Block/Unblock).
  * @route   PATCH /admin/products/toggle-status/:id
- * @desc    Toggle product blocked status
  * @access  Private (Admin)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.toggleProductStatus = async (req, res) => {
     try {
@@ -107,7 +117,14 @@ exports.toggleProductStatus = async (req, res) => {
     }
 };
 
-// controller/adminProductController.js
+/**
+ * @desc    Render the edit product form with existing product data.
+ * @route   GET /admin/products/edit/:id
+ * @access  Private (Admin)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
+ */
 exports.loadEditProduct = async (req, res) => {
     try {
         const { id } = req.params;
@@ -126,6 +143,14 @@ exports.loadEditProduct = async (req, res) => {
     }
 };
 
+/**
+ * @desc    Update product details.
+ * @route   PUT /admin/products/edit/:id
+ * @access  Private (Admin)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
+ */
 exports.updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
@@ -143,9 +168,12 @@ exports.updateProduct = async (req, res) => {
 };
 
 /**
+ * @desc    Render the add product form.
  * @route   GET /admin/products/add
- * @desc    Render the add product form
  * @access  Private (Admin)
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.loadAddProduct = async (req, res) => {
     try {

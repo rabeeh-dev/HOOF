@@ -1,24 +1,32 @@
+/**
+ * @file controller/productController.js
+ * @description Controller for handled product-related operations for the end-user (shop and product details).
+ */
+
 const productService = require("../services/productService");
 const Category = require("../model/Category");
 const Product = require("../model/Product");
 
 /**
- * @route   GET /products
- * @desc    Renders the shop/listing page with filters and sorting
+ * @desc    Renders the shop/listing page with filters, sorting, and pagination.
+ * @route   GET /user/shop
  * @access  Public
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.listProducts = async (req, res) => {
     try {
-        // 1. Get Data from Service
+        // 1. Get Data from Service (Filter, Sort, Paginate)
         const { products, totalPages, currentPage } = await productService.getAllProducts(req.query);
 
         // 2. Get Categories for the Sidebar filter
         const categories = await Category.find({ isListed: true });
 
-        // 3. Define available sizes (you can also query these from variants in DB)
+        // 3. Define available sizes (static for now)
         const availableSizes = ["6", "7", "8", "9", "10", "11", "12"];
 
-        // 4. Render Page
+        // 4. Render Page with all necessary parameters
         res.render('User/shop', {
             products,
             categories,
@@ -40,14 +48,18 @@ exports.listProducts = async (req, res) => {
 };
 
 /**
- * @route   GET /product-details/:id
- * @desc    Render single product details page
+ * @desc    Render single product details page.
+ * @route   GET /user/product-details/:id
  * @access  Public
+ * @param   {Object} req - Express request object.
+ * @param   {Object} res - Express response object.
+ * @returns {void}
  */
 exports.loadProductDetails = async (req, res) => {
     try {
         const productId = req.params.id;
-        // Validate ObjectId
+
+        // Validate if productId is a valid MongoDB ObjectId
         if (!productId.match(/^[0-9a-fA-F]{24}$/)) {
             return res.redirect('/user/shop');
         }
@@ -58,7 +70,7 @@ exports.loadProductDetails = async (req, res) => {
             return res.redirect('/user/shop');
         }
 
-        // Fetch related products (same category, exclude current)
+        // Fetch related products (same category, exclude current, only active products)
         const relatedProducts = await Product.find({
             category: product.category._id,
             _id: { $ne: productId },

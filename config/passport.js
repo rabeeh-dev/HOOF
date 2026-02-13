@@ -1,7 +1,16 @@
+/**
+ * @file config/passport.js
+ * @description Passport.js configuration for Google OAuth2 authentication.
+ */
+
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../model/User');
 
+/**
+ * Configure Passport to use Google Strategy.
+ * Handles user lookup and creation during Google OAuth flow.
+ */
 passport.use(
   new GoogleStrategy(
     {
@@ -11,18 +20,18 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // 1. Check if user already exists
+        // Check if user already exists by email
         let user = await User.findOne({ email: profile.emails[0].value });
 
         if (user) {
-          // 2. If user exists but is blocked, stop them!
+          // If user exists but is blocked, deny authentication
           if (user.isBlocked) {
             return done(null, false, { message: 'Account is suspended' });
           }
-          // 3. If user exists and is fine, log them in
+          // If user exists and is active, return user object
           return done(null, user);
         } else {
-          // 4. IF USER DOES NOT EXIST -> CREATE THEM (The "Signup" part)
+          // If user does not exist, create a new record (Auto-signup)
           const newUser = await User.create({
             fullName: profile.displayName,
             email: profile.emails[0].value,
@@ -39,15 +48,23 @@ passport.use(
   )
 );
 
-// Save user id in session
+/**
+ * Serializes the user ID into the session.
+ */
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-// Get user from session
+/**
+ * Deserializes the user from the session using the stored ID.
+ */
 passport.deserializeUser(async (id, done) => {
-  const user = await User.findById(id);
-  done(null, user);
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
 });
 
 module.exports = passport;

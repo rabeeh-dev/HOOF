@@ -1,3 +1,8 @@
+/**
+ * @file model/Category.js
+ * @description Mongoose schema for product categories.
+ */
+
 const mongoose = require("mongoose");
 
 const categorySchema = new mongoose.Schema({

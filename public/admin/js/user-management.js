@@ -1,8 +1,15 @@
-/* ==========================================
-   HOOF ADMIN: USER MANAGEMENT LOGIC
-   ========================================== */
+/**
+ * @file public/admin/js/user-management.js
+ * @description Administrative logic for user management, including searching, blocking/unblocking, and exporting.
+ */
 
-// 1. Sidebar Toggle Logic
+// ==========================================
+// SIDEBAR & NAVIGATION
+// ==========================================
+
+/**
+ * Creates and manages the mobile sidebar toggle button.
+ */
 const createMobileToggle = () => {
     const sidebar = document.querySelector('.sidebar');
     const mainContent = document.querySelector('.main-content');
@@ -20,10 +27,14 @@ const createMobileToggle = () => {
         });
     }
 };
+
 createMobileToggle();
 window.addEventListener('resize', createMobileToggle);
 
-// 2. Export Button Logic
+// ==========================================
+// EXPORTING DATA
+// ==========================================
+
 const exportBtn = document.querySelector('.btn-export');
 if (exportBtn) {
     exportBtn.addEventListener('click', (e) => {
@@ -32,7 +43,10 @@ if (exportBtn) {
     });
 }
 
-// 3. Search Logic (Filtered to current view)
+// ==========================================
+// SEARCH FUNCTIONALITY
+// ==========================================
+
 const searchInput = document.getElementById('searchInput');
 if (searchInput) {
     searchInput.addEventListener('input', (e) => {
@@ -51,7 +65,10 @@ if (searchInput) {
     });
 }
 
-// 3. Block/Unblock Logic (Production Ready)
+// ==========================================
+// USER BLOCK/UNBLOCK SYSTEM
+// ==========================================
+
 document.querySelectorAll('.action-btn.block').forEach(btn => {
     btn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -73,7 +90,7 @@ document.querySelectorAll('.action-btn.block').forEach(btn => {
                         statusBadge.className = isBlocked ? 'status-badge active' : 'status-badge blocked';
                         statusBadge.textContent = isBlocked ? 'Active' : 'Blocked';
                         btn.innerHTML = isBlocked ? '<i class="fas fa-ban"></i>' : '<i class="fas fa-unlock"></i>';
-                        // showToast(`${customerName} ${action}ed successfully`, 'success');
+                        showToast(`${customerName} ${action}ed successfully`, 'success');
                     }
                 } catch (err) {
                     showToast('Server connection failed', 'error');
@@ -83,7 +100,10 @@ document.querySelectorAll('.action-btn.block').forEach(btn => {
     });
 });
 
-// 4. Logout Logic
+// ==========================================
+// AUTHENTICATION INTERACTIONS
+// ==========================================
+
 const logoutBtn = document.querySelector('.logout-btn');
 if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
@@ -93,7 +113,15 @@ if (logoutBtn) {
     });
 }
 
-// 5. Toast Notification System
+// ==========================================
+// UI FEEDBACK SYSTEMS (Toast & Confirm)
+// ==========================================
+
+/**
+ * Displays a toast notification.
+ * @param {string} message - Message to display.
+ * @param {string} [type='info'] - Type: info, success, error.
+ */
 function showToast(message, type = 'info') {
     const existing = document.querySelector('.toast');
     if (existing) existing.remove();
@@ -111,15 +139,20 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// 6. Custom Confirm Modal
+/**
+ * Displays a custom confirmation modal.
+ * @param {string} title - Modal title.
+ * @param {string} message - Modal message (allows HTML).
+ * @param {Function} onConfirm - Callback function to execute on confirm.
+ */
 function showCustomConfirm(title, message, onConfirm) {
     let modalOverlay = document.querySelector('.custom-modal');
 
-    // Create logic
+    // Create modal structure if it doesn't exist
     if (!modalOverlay) {
         modalOverlay = document.createElement('div');
         modalOverlay.className = 'custom-modal';
-        modalOverlay.style.display = 'flex'; // Trigger flex layout from CSS
+        modalOverlay.style.display = 'flex';
         modalOverlay.innerHTML = `
             <div class="modal-overlay"></div>
             <div class="modal-container">
@@ -138,7 +171,7 @@ function showCustomConfirm(title, message, onConfirm) {
         `;
         document.body.appendChild(modalOverlay);
     } else {
-        // Reuse logic
+        // Update existing modal content
         modalOverlay.querySelector('h3').textContent = title;
         modalOverlay.querySelector('p').innerHTML = message;
     }
@@ -154,7 +187,7 @@ function showCustomConfirm(title, message, onConfirm) {
         icon.className = 'fas fa-unlock';
     }
 
-    // Reset Listeners
+    // Reset Listeners to prevent multiple triggers
     const newCancel = cancelBtn.cloneNode(true);
     const newConfirm = confirmBtn.cloneNode(true);
     cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
@@ -165,7 +198,6 @@ function showCustomConfirm(title, message, onConfirm) {
     };
 
     newCancel.addEventListener('click', closeModal);
-    // Be able to click overlay to close
     modalOverlay.querySelector('.modal-overlay').addEventListener('click', closeModal);
 
     newConfirm.addEventListener('click', () => {
@@ -174,9 +206,18 @@ function showCustomConfirm(title, message, onConfirm) {
     });
 }
 
-// 6. Keyboard Shortcuts
+// ==========================================
+// KEYBOARD SHORTCUTS
+// ==========================================
+
 document.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); searchInput.focus(); }
+    // Focus search with Ctrl/Cmd + K
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        if (searchInput) searchInput.focus();
+    }
+
+    // Clear and blur search with Escape
     if (e.key === 'Escape' && searchInput === document.activeElement) {
         searchInput.value = '';
         searchInput.dispatchEvent(new Event('input'));

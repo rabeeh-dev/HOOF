@@ -1,3 +1,8 @@
+/**
+ * @file services/adminProductService.js
+ * @description Service layer for administrative product and category operations.
+ */
+
 const Product = require("../model/Product");
 const Category = require("../model/Category");
 const convert = require('heic-convert');
@@ -5,7 +10,10 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * Fetches all products with pagination and category details.
+ * Fetches all products with pagination and category details for admin.
+ * @param {number} [page=1] - Current page number.
+ * @param {number} [limit=10] - Number of products per page.
+ * @returns {Promise<Object>} Object containing products, totalPages, and currentPage.
  */
 async function getAllProductsAdmin(page = 1, limit = 10) {
     const skip = (page - 1) * limit;
@@ -26,7 +34,11 @@ async function getAllProductsAdmin(page = 1, limit = 10) {
 }
 
 /**
- * Adds a new product to the database with HEIC conversion support.
+ * Adds a new product to the database with image processing and HEIC conversion.
+ * @param {Object} productData - Data for the new product.
+ * @param {Array<Object>} files - Array of uploaded image files.
+ * @returns {Promise<Object>} The saved product document.
+ * @throws {Error} If no valid variants are provided.
  */
 async function addProduct(productData, files) {
     const imagePaths = [];
@@ -91,7 +103,11 @@ async function addProduct(productData, files) {
 }
 
 /**
- * Fetches categories with pagination and search support
+ * Fetches categories with pagination and search support for admin.
+ * @param {number} [page=1] - Current page number.
+ * @param {number} [limit=5] - Number of categories per page.
+ * @param {string} [search=''] - Search term for category name.
+ * @returns {Promise<Object>} Object containing categories, totalPages, currentPage, and totalCategories.
  */
 async function getAllCategoriesAdmin(page = 1, limit = 5, search = '') {
     const skip = (page - 1) * limit;
@@ -114,12 +130,25 @@ async function getAllCategoriesAdmin(page = 1, limit = 5, search = '') {
         currentPage: page,
         totalCategories
     };
-} // <--- Fixed: Added missing closing brace here
+}
 
+/**
+ * Retrieves a single product by its ID with populated category.
+ * @param {string} id - Product ID.
+ * @returns {Promise<Object|null>} The product document or null.
+ */
 async function getProductById(id) {
     return await Product.findById(id).populate('category');
 }
 
+/**
+ * Updates an existing product with image handling and variant processing.
+ * @param {string} id - Product ID.
+ * @param {Object} productData - Updated product data.
+ * @param {Array<Object>} files - New uploaded image files.
+ * @returns {Promise<Object|null>} The updated product document.
+ * @throws {Error} If no valid variants are provided.
+ */
 async function updateProduct(id, productData, files) {
     // 1. Process New Images
     const newImagePaths = [];

@@ -1,3 +1,8 @@
+/**
+ * @file model/Product.js
+ * @description Mongoose schema for products and their variants.
+ */
+
 const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema({

@@ -1,5 +1,13 @@
+/**
+ * @file public/user/js/layout.js
+ * @description Global client-side logic for the user-facing site layout, including navigation and profile dropdowns.
+ */
+
 document.addEventListener("DOMContentLoaded", () => {
-    // Mobile nav toggle
+    // ==========================================
+    // MOBILE NAVIGATION TOGGLE
+    // ==========================================
+
     const toggle = document.getElementById("nav-toggle");
     const navLinks = document.querySelector(".nav-links");
 
@@ -12,7 +20,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // ==========================================
     // PROFILE DROPDOWN FUNCTIONALITY
+    // ==========================================
+
     const profileToggle = document.getElementById("profileToggle");
     const profileDropdown = document.getElementById("profileDropdown");
 
