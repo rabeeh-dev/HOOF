@@ -82,8 +82,23 @@
 
       <div class="profile-main">
         <% if (typeof successMessage !=='undefined' && successMessage) { %>
-          <div class="server-message success"><i class="fas fa-check-circle"></i>
-            <%= successMessage %>
+          <div id="successPopupModal" class="custom-modal" style="display: flex;">
+            <div class="modal-overlay"></div>
+            <div class="modal-container" style="max-width: 420px; text-align: center;">
+              <div class="modal-header" style="justify-content: center; border: none; padding-bottom: 0;">
+                <div
+                  style="background: rgba(40, 167, 69, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                  <i class="fas fa-check-circle" style="font-size: 2.5rem; color: #28a745;"></i>
+                </div>
+              </div>
+              <h3 style="font-size: 1.5rem; margin-bottom: 10px;">Success!</h3>
+              <p style="color: #666; margin-bottom: 25px; line-height: 1.6;">
+                <%= successMessage %>
+              </p>
+              <div class="modal-footer" style="display: flex; gap: 12px; border: none; padding: 0;">
+                <button type="button" id="closeSuccessPopup" class="btn primary" style="flex: 1;">OK</button>
+              </div>
+            </div>
           </div>
           <% } %>
 

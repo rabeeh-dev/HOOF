@@ -11,14 +11,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const navToggle = document.getElementById("nav-toggle");
     const navLinks = document.querySelector(".nav-links");
 
-    // Auto-dismiss server messages after 3 seconds
-    const serverMessage = document.querySelector('.server-message');
-    if (serverMessage) {
-        setTimeout(() => {
-            serverMessage.style.transition = 'opacity 0.5s ease';
-            serverMessage.style.opacity = '0';
-            setTimeout(() => serverMessage.remove(), 500);
-        }, 3000);
+    // Auto-dismiss success popup modal
+    const successPopup = document.getElementById('successPopupModal');
+    if (successPopup) {
+        const closePopup = () => successPopup.remove();
+        const okBtn = document.getElementById('closeSuccessPopup');
+        if (okBtn) okBtn.addEventListener('click', closePopup);
+        successPopup.querySelector('.modal-overlay')?.addEventListener('click', closePopup);
+        setTimeout(closePopup, 4000);
     }
 
     const profileToggle = document.getElementById("profileToggle");
@@ -364,13 +364,53 @@ function showToast(message, type = "info") {
 }
 
 /**
- * Handle navigation for change email/password actions.
+ * Handle navigation for change email/password actions with confirmation popup.
  * @param {string} type - Action type: 'email' or 'password'
  */
 function verifyAndChange(type) {
-    if (type === 'email') {
-        window.location.href = '/user/profile/change-email-start';
-    } else if (type === 'password') {
-        window.location.href = '/user/profile/change-password-request';
-    }
+    const isEmail = type === 'email';
+    const title = isEmail ? 'Change Email' : 'Update Password';
+    const message = isEmail
+        ? 'We will send a verification OTP to your current email to confirm your identity.'
+        : 'We will send a password reset link to your registered email address.';
+    const icon = isEmail ? 'fa-envelope' : 'fa-lock';
+    const redirectUrl = isEmail
+        ? '/user/profile/change-email-start'
+        : '/user/profile/change-password-request';
+
+    // Remove existing confirm modal if any
+    const existing = document.getElementById('verifyConfirmModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'verifyConfirmModal';
+    modal.className = 'custom-modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-overlay"></div>
+        <div class="modal-container" style="max-width: 420px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border: none; padding-bottom: 0;">
+                <div style="background: rgba(255, 145, 77, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                    <i class="fas ${icon}" style="font-size: 2.5rem; color: var(--accent, #ff914d);"></i>
+                </div>
+            </div>
+            <h3 style="font-size: 1.5rem; margin-bottom: 10px;">${title}</h3>
+            <p style="color: #666; margin-bottom: 25px; line-height: 1.6;">${message}</p>
+            <div class="modal-footer" style="display: flex; gap: 12px; border: none; padding: 0;">
+                <button type="button" class="btn primary" id="confirmVerifyBtn" style="flex: 1;">Yes, Proceed</button>
+                <button type="button" class="btn outline" id="cancelVerifyBtn" style="flex: 1;">Cancel</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.querySelector('#confirmVerifyBtn').addEventListener('click', () => {
+        window.location.href = redirectUrl;
+    });
+    modal.querySelector('#cancelVerifyBtn').addEventListener('click', () => {
+        modal.remove();
+    });
+    modal.querySelector('.modal-overlay').addEventListener('click', () => {
+        modal.remove();
+    });
 }
