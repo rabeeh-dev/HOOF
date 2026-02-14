@@ -99,11 +99,13 @@ app.use(breadcrumbMiddleware);
 // ==========================================
 // ROUTE DEFINITIONS
 // ==========================================
-const userRoutes = require("./routes/userRoutes");
-const authRoutes = require("./routes/authRoutes");
-const adminRoutes = require('./routes/adminRoutes');
+const userRoutes = require("./routes/User");
+const addressRoutes = require("./routes/Address");
+const authRoutes = require("./routes/Auth");
+const adminRoutes = require('./routes/Admin');
 
 app.use("/user", userRoutes);
+app.use("/user/address", addressRoutes);
 app.use("/auth", authRoutes);
 
 // Admin routes with layout override

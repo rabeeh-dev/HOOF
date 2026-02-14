@@ -218,35 +218,9 @@ router.get('/profile/change-password-request', isUser, userController.changePass
 // ==========================================
 // ADDRESS MANAGEMENT
 // ==========================================
-const addressController = require("../controller/Address");
 
-/**
- * @desc    Create and save a new delivery address.
- * @route   POST /user/address/add
- * @access  Private (isUser)
- */
-router.post('/address/add', isUser, addressController.addAddress);
 
-/**
- * @desc    Render the address management page.
- * @route   GET /user/address
- * @access  Private (isUser)
- */
-router.get('/address', isUser, addressController.getAddressPage);
 
-/**
- * @desc    Remove a specific delivery address by ID.
- * @route   DELETE /user/address/delete/:id
- * @access  Private (isUser)
- */
-router.delete('/address/delete/:id', isUser, addressController.deleteAddress);
-
-/**
- * @desc    Update an existing delivery address.
- * @route   PUT /user/address/edit/:id
- * @access  Private (isUser)
- */
-router.put('/address/edit/:id', isUser, addressController.editAddress);
 
 // ==========================================
 // LOGOUT
