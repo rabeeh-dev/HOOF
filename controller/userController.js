@@ -387,12 +387,15 @@ exports.getProfile = async (req, res) => {
 
     const emailChanged = req.query.emailChanged === 'true';
     const passwordChanged = req.query.passwordChanged === 'true';
+    const resetLinkSent = req.query.message === 'reset_link_sent';
 
     let successMessage = null;
     if (emailChanged) {
       successMessage = "Your email has been updated successfully!";
     } else if (passwordChanged) {
       successMessage = "Your password has been changed successfully!";
+    } else if (resetLinkSent) {
+      successMessage = "A password reset link has been sent to your email.";
     }
 
     res.render('User/user-profile', {

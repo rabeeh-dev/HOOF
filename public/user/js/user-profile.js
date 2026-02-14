@@ -10,6 +10,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const navToggle = document.getElementById("nav-toggle");
     const navLinks = document.querySelector(".nav-links");
+
+    // Auto-dismiss server messages after 3 seconds
+    const serverMessage = document.querySelector('.server-message');
+    if (serverMessage) {
+        setTimeout(() => {
+            serverMessage.style.transition = 'opacity 0.5s ease';
+            serverMessage.style.opacity = '0';
+            setTimeout(() => serverMessage.remove(), 500);
+        }, 3000);
+    }
+
     const profileToggle = document.getElementById("profileToggle");
     const profileDropdown = document.getElementById("profileDropdown");
     const tabButtons = document.querySelectorAll(".tab-btn");
@@ -43,19 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
         navToggle.addEventListener("click", () => navLinks.classList.toggle("open"));
     }
 
-    if (profileToggle && profileDropdown) {
-        profileToggle.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            profileDropdown.classList.toggle("active");
-        });
 
-        document.addEventListener("click", (e) => {
-            if (!profileToggle.contains(e.target) && !profileDropdown.contains(e.target)) {
-                profileDropdown.classList.remove("active");
-            }
-        });
-    }
 
     // ==========================================
     // TAB NAVIGATION
@@ -312,4 +311,16 @@ function showToast(message, type = "info") {
         toast.classList.remove("show");
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+}
+
+/**
+ * Handle navigation for change email/password actions.
+ * @param {string} type - Action type: 'email' or 'password'
+ */
+function verifyAndChange(type) {
+    if (type === 'email') {
+        window.location.href = '/user/profile/change-email-start';
+    } else if (type === 'password') {
+        window.location.href = '/user/profile/change-password-request';
+    }
 }
