@@ -106,8 +106,58 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Handle profile update submission
     if (profileForm) {
+        const phoneInput = document.getElementById("phoneNumber");
+        const dobInput = document.getElementById("dateOfBirth");
+        const phoneError = document.getElementById("phoneError");
+        const dobError = document.getElementById("dobError");
+
+        const validatePhone = () => {
+            const phone = phoneInput.value.trim();
+            if (!/^\d{10}$/.test(phone)) {
+                phoneError.textContent = "Phone number must be exactly 10 digits.";
+                phoneError.className = "validation-message error";
+                return false;
+            } else {
+                phoneError.textContent = "";
+                phoneError.className = "validation-message success";
+                return true;
+            }
+        };
+
+        const validateDob = () => {
+            if (!dobInput.value) return true; // Optional, or handle as required
+            const dob = new Date(dobInput.value);
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            if (age < 18) {
+                dobError.textContent = "You must be at least 18 years old.";
+                dobError.className = "validation-message error";
+                return false;
+            } else {
+                dobError.textContent = "";
+                dobError.className = "validation-message success";
+                return true;
+            }
+        };
+
+        if (phoneInput) phoneInput.addEventListener('input', validatePhone);
+        if (dobInput) dobInput.addEventListener('change', validateDob);
+
         profileForm.addEventListener("submit", async (e) => {
             e.preventDefault();
+
+            const isPhoneValid = validatePhone();
+            const isDobValid = validateDob();
+
+            if (!isPhoneValid || !isDobValid) {
+                showToast("Please fix the errors before saving.", "error");
+                return;
+            }
 
             const formData = {
                 fullName: document.getElementById("fullName").value,
