@@ -84,13 +84,13 @@ document.querySelectorAll('.action-btn.block').forEach(btn => {
             `Are you sure you want to <strong>${action}</strong> ${customerName}?`,
             async () => {
                 try {
-                    const response = await fetch(`/admin/users/${action}/${userId}`, { method: 'PATCH' });
+                    const response = await fetch(`/admin/users/${userId}/${action}`, { method: 'PATCH' });
                     const data = await response.json();
                     if (data.success) {
                         statusBadge.className = isBlocked ? 'status-badge active' : 'status-badge blocked';
                         statusBadge.textContent = isBlocked ? 'Active' : 'Blocked';
                         btn.innerHTML = isBlocked ? '<i class="fas fa-ban"></i>' : '<i class="fas fa-unlock"></i>';
-                        showToast(`${customerName} ${action}ed successfully`, 'success');
+                        showSuccessAlert('Success!', `${customerName} ${action}ed successfully`);
                     }
                 } catch (err) {
                     showToast('Server connection failed', 'error');
@@ -116,6 +116,44 @@ if (logoutBtn) {
 // ==========================================
 // UI FEEDBACK SYSTEMS (Toast & Confirm)
 // ==========================================
+
+/**
+ * Displays a success modal popup.
+ * @param {string} title - Modal title.
+ * @param {string} message - Message to display.
+ */
+function showSuccessAlert(title, message) {
+    const modalId = 'success-alert-modal';
+    let modal = document.getElementById(modalId);
+
+    if (modal) modal.remove();
+
+    modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'custom-modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-overlay"></div>
+        <div class="modal-container" style="max-width: 420px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border: none; padding-bottom: 0;">
+                <div style="background: rgba(40, 167, 69, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                    <i class="fas fa-check-circle" style="font-size: 2.5rem; color: #28a745;"></i>
+                </div>
+            </div>
+            <h3 style="font-size: 1.5rem; margin-bottom: 10px;">${title}</h3>
+            <p style="color: #666; margin-bottom: 25px; line-height: 1.6;">${message}</p>
+            <div class="modal-footer" style="display: flex; gap: 12px; border: none; padding: 0;">
+                <button type="button" class="btn primary close-modal" style="flex: 1; background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem;">OK</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeModal = () => modal.remove();
+    modal.querySelector('.close-modal').addEventListener('click', closeModal);
+    modal.querySelector('.modal-overlay').addEventListener('click', closeModal);
+}
 
 /**
  * Displays a toast notification.

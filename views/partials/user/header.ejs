@@ -12,7 +12,7 @@
                         <li><a href="/user/about">About</a></li>
                         <li><a href="/user/shop">Shop</a></li>
                         <li><a href="/user/contact">Contact</a></li>
-                        <% if (!user) { %>
+                        <% if (!locals.user) { %>
                             <li><a href="/user/login" style="color: #ff4d4d;">Log In</a></li>
                             <% } %>
                     </ul>
