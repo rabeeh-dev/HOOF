@@ -263,4 +263,31 @@
             timer: 3000
         });
     }
+
+    // Image Zoom Logic
+    const mainImageContainer = document.querySelector('.main-image');
+    const mainImg = document.getElementById('mainImage');
+
+    if (mainImageContainer && mainImg) {
+        mainImageContainer.addEventListener('mousemove', function (e) {
+            const { left, top, width, height } = mainImageContainer.getBoundingClientRect();
+            const x = e.clientX - left;
+            const y = e.clientY - top;
+
+            // Calculate percentage
+            const xPercent = (x / width) * 100;
+            const yPercent = (y / height) * 100;
+
+            // Set transform origin
+            mainImg.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+            mainImg.style.transform = "scale(2)"; // Zoom level
+            mainImg.classList.add('zooming');
+        });
+
+        mainImageContainer.addEventListener('mouseleave', function () {
+            mainImg.style.transformOrigin = "center center";
+            mainImg.style.transform = "scale(1)";
+            mainImg.classList.remove('zooming');
+        });
+    }
 </script>
