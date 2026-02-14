@@ -108,8 +108,8 @@
               <button class="tab-btn" data-tab="orders"><i class="fas fa-box"></i><span>Orders</span></button>
               <button class="tab-btn" data-tab="wallet"><i class="fas fa-wallet"></i><span>Wallet</span></button>
               <button class="tab-btn" data-tab="referral"><i class="fas fa-gift"></i><span>Referral</span></button>
-              <button class="tab-btn" data-tab="address"><i
-                  class="fa fa-location-arrow"></i><span>Address</span></button>
+              <a href="/user/address" class="tab-btn" style="text-decoration: none;"><i
+                  class="fa fa-location-arrow"></i><span>Address</span></a>
               <button class="tab-btn" data-tab="faq"><i class="fas fa-question-circle"></i><span>FAQ</span></button>
             </div>
 
@@ -164,39 +164,6 @@
                 </form>
               </div>
 
-              <div class="tab-content" id="address-tab">
-                <div class="content-header" style="display: flex; justify-content: space-between; align-items: center;">
-                  <h2>My Addresses</h2><button type="button" class="btn primary" id="openAddressModal">Add New
-                    Address</button>
-                </div>
-                <div class="address-grid" id="addressGrid">
-                  <% if (addresses && addresses.length> 0) { %>
-                    <% addresses.forEach(addr=> { %>
-                      <div class="address-card" id="address-<%= addr._id %>">
-                        <span class="address-type-badge">
-                          <%= addr.addressType %>
-                        </span>
-                        <h4>
-                          <%= addr.fullName %>
-                        </h4>
-                        <p class="address-details">
-                          <%= addr.houseName %><br>
-                            <%= addr.city %>, <%= addr.state %> - <strong>
-                                  <%= addr.pincode %>
-                                </strong><br>Phone: <%= addr.mobile %>
-                        </p>
-                        <div class="address-actions"><a href="javascript:void(0)"
-                            onclick="deleteAddress('<%= addr._id %>')" class="action-link delete"><i
-                              class="fas fa-trash"></i> Delete</a></div>
-                      </div>
-                      <% }) %>
-                        <% } else { %>
-                          <div class="empty-state">
-                            <p>No addresses saved yet.</p>
-                          </div>
-                          <% } %>
-                </div>
-              </div>
             </div>
       </div>
     </div>
@@ -219,6 +186,8 @@
         class="btn outline" style="flex: 1;">Cancel</button></div>
   </div>
 </div>
+
+
 
 <div id="imageDeleteModal" class="custom-modal" style="display:none;">
   <div class="modal-overlay"></div>

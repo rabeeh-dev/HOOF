@@ -1,0 +1,325 @@
+<link rel="stylesheet" href="/user/css/user-profile.css" />
+
+<style>
+    .validation-message {
+        font-size: 0.8rem;
+        height: 1.2em;
+        display: block;
+        margin-top: 4px;
+    }
+
+    .validation-message.error {
+        color: #dc3545;
+    }
+
+    .validation-message.success {
+        color: #28a745;
+    }
+</style>
+
+<section class="profile-section">
+    <div class="container">
+        <div class="profile-header-title">
+            <h1>My Addresses</h1>
+            <p>Manage your delivery addresses</p>
+        </div>
+
+        <div class="profile-layout">
+            <!-- Sidebar -->
+            <div class="profile-sidebar">
+                <div class="profile-card">
+                    <div class="profile-avatar-wrapper">
+                        <div class="profile-avatar">
+                            <% if (user.profileImage) { %>
+                                <img src="<%= user.profileImage %>" alt="Profile">
+                                <% } else { %>
+                                    <span>
+                                        <%= user.fullName.charAt(0) %>
+                                    </span>
+                                    <% } %>
+                        </div>
+                    </div>
+                    <h3 class="profile-name">
+                        <%= user.fullName %>
+                    </h3>
+                    <a href="/user/profile" class="btn-edit-profile"
+                        style="text-decoration: none; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                        <i class="fas fa-arrow-left"></i>Back to Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="profile-main">
+                <!-- Tab bar area matching profile page -->
+                <div class="profile-tabs">
+                    <a href="/user/address" class="tab-btn active" style="text-decoration: none;">
+                        <i class="fa fa-location-arrow"></i><span>Address</span>
+                    </a>
+                </div>
+
+                <!-- Content area with proper padding -->
+                <div class="tab-content-wrapper">
+                    <div class="content-header"
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h2 style="margin: 0;">Saved Addresses</h2>
+                        <button type="button" class="btn primary" id="openAddressModal"
+                            style="padding: 10px 20px; font-size: 0.9rem; border-radius: 12px; white-space: nowrap;">
+                            <i class="fas fa-plus" style="margin-right: 6px;"></i>Add New Address
+                        </button>
+                    </div>
+
+                    <div class="address-grid" id="addressGrid">
+                        <% if (addresses && addresses.length> 0) { %>
+                            <% addresses.forEach(addr=> { %>
+                                <div class="address-card" id="address-<%= addr._id %>" data-id="<%= addr._id %>"
+                                    data-fullname="<%= addr.fullName %>" data-mobile="<%= addr.mobile %>"
+                                    data-housename="<%= addr.houseName %>" data-city="<%= addr.city %>"
+                                    data-state="<%= addr.state %>" data-pincode="<%= addr.pincode %>"
+                                    data-type="<%= addr.addressType %>" data-default="<%= addr.isDefault %>">
+                                    <!-- Card Header -->
+                                    <div class="addr-card-header">
+                                        <div class="addr-type-icon">
+                                            <i
+                                                class="fas <%= addr.addressType === 'Home' ? 'fa-home' : addr.addressType === 'Work' ? 'fa-briefcase' : 'fa-map-pin' %>"></i>
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <h4 class="addr-card-name">
+                                                <%= addr.fullName %>
+                                            </h4>
+                                            <span class="addr-type-label">
+                                                <%= addr.addressType %>
+                                            </span>
+                                            <% if (addr.isDefault) { %>
+                                                <span class="addr-default-badge">✓ Default</span>
+                                                <% } %>
+                                        </div>
+                                    </div>
+                                    <!-- Card Body -->
+                                    <div class="addr-card-body">
+                                        <p><i class="fas fa-map-marker-alt"></i>
+                                            <%= addr.houseName %>
+                                        </p>
+                                        <p><i class="fas fa-city"></i>
+                                            <%= addr.city %>, <%= addr.state %> — <strong>
+                                                        <%= addr.pincode %>
+                                                    </strong>
+                                        </p>
+                                        <p><i class="fas fa-phone-alt"></i>
+                                            <%= addr.mobile %>
+                                        </p>
+                                    </div>
+                                    <!-- Card Footer -->
+                                    <div class="addr-card-footer">
+                                        <button type="button" class="addr-edit-btn"
+                                            onclick="openEditAddress('<%= addr._id %>')">
+                                            <i class="fas fa-pen"></i> Edit
+                                        </button>
+                                        <button type="button" class="addr-delete-btn"
+                                            onclick="deleteAddress('<%= addr._id %>')">
+                                            <i class="fas fa-trash-alt"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                                <% }) %>
+                                    <% } else { %>
+                                        <div class="empty-state" style="grid-column: 1 / -1;">
+                                            <div style="text-align: center; padding: 60px 20px;">
+                                                <i class="fas fa-map-marked-alt"
+                                                    style="font-size: 3rem; color: rgba(0,0,0,0.15); margin-bottom: 16px; display: block;"></i>
+                                                <p style="color: #999; font-size: 1rem; margin: 0;">No addresses saved
+                                                    yet.</p>
+                                                <p style="color: #bbb; font-size: 0.85rem; margin-top: 6px;">Click "Add
+                                                    New Address" to get started.</p>
+                                            </div>
+                                        </div>
+                                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ADD ADDRESS MODAL -->
+<div id="addressModal" class="custom-modal" style="display:none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-container" style="max-width: 560px; padding: 0;">
+        <div
+            style="background: linear-gradient(135deg, var(--accent, #ff914d) 0%, #e07830 100%); padding: 28px 30px 22px; border-radius: 24px 24px 0 0; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div
+                    style="background: rgba(255,255,255,0.2); width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-map-marker-alt" style="font-size: 1.4rem; color: white;"></i>
+                </div>
+                <div>
+                    <h3 style="color: white; margin: 0; font-size: 1.3rem; font-weight: 600;">Add New Address</h3>
+                    <p style="color: rgba(255,255,255,0.8); margin: 2px 0 0; font-size: 0.85rem;">Fill in your delivery
+                        details</p>
+                </div>
+            </div>
+            <button type="button" id="closeAddressModal"
+                style="background: rgba(255,255,255,0.2); border: none; width: 36px; height: 36px; border-radius: 10px; font-size: 1.3rem; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center;">&times;</button>
+        </div>
+        <div style="padding: 28px 30px 30px;">
+            <form id="addAddressForm" style="display: flex; flex-direction: column; gap: 18px;">
+                <div class="form-row" style="gap: 16px;">
+                    <div class="form-group" style="gap: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #333;">Full Name <span
+                                style="color: #dc3545;">*</span></label>
+                        <input type="text" name="fullName" placeholder="Enter full name" required
+                            style="padding: 12px 14px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 0.95rem;">
+                    </div>
+                    <div class="form-group" style="gap: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #333;">Mobile Number <span
+                                style="color: #dc3545;">*</span></label>
+                        <input type="tel" name="mobile" id="addrMobile" placeholder="10-digit number" required
+                            style="padding: 12px 14px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 0.95rem;">
+                        <small class="validation-message" id="addrMobileError"></small>
+                    </div>
+                </div>
+                <div class="form-group" style="gap: 6px;">
+                    <label style="font-size: 0.85rem; font-weight: 600; color: #333;">House Name / Flat No <span
+                            style="color: #dc3545;">*</span></label>
+                    <input type="text" name="houseName" placeholder="e.g. Flat 12B, Sunrise Apartments" required
+                        style="padding: 12px 14px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 0.95rem;">
+                </div>
+                <div class="form-row" style="gap: 16px;">
+                    <div class="form-group" style="gap: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #333;">City <span
+                                style="color: #dc3545;">*</span></label>
+                        <input type="text" name="city" placeholder="Enter city" required
+                            style="padding: 12px 14px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 0.95rem;">
+                    </div>
+                    <div class="form-group" style="gap: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #333;">State <span
+                                style="color: #dc3545;">*</span></label>
+                        <input type="text" name="state" placeholder="Enter state" required
+                            style="padding: 12px 14px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 0.95rem;">
+                    </div>
+                </div>
+                <div class="form-row" style="gap: 16px;">
+                    <div class="form-group" style="gap: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #333;">Pincode <span
+                                style="color: #dc3545;">*</span></label>
+                        <input type="text" name="pincode" id="addrPincode" placeholder="6-digit pincode" required
+                            style="padding: 12px 14px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 0.95rem;">
+                        <small class="validation-message" id="addrPincodeError"></small>
+                    </div>
+                    <div class="form-group" style="gap: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #333;">Address Type</label>
+                        <select name="addressType"
+                            style="width: 100%; padding: 12px 14px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 0.95rem; background: white; cursor: pointer; font-family: 'Poppins', sans-serif; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22><path fill=%22%23666%22 d=%22M7 10l5 5 5-5z%22/></svg>'); background-repeat: no-repeat; background-position: right 14px center;">
+                            <option value="Home">🏠 Home</option>
+                            <option value="Work">💼 Work</option>
+                            <option value="Other">📍 Other</option>
+                        </select>
+                    </div>
+                </div>
+                <label class="addr-default-check"
+                    style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.9rem; color: #444;">
+                    <input type="checkbox" name="isDefault"
+                        style="width: 18px; height: 18px; accent-color: var(--accent, #ff914d); cursor: pointer;">
+                    Set as default address
+                </label>
+                <button type="submit" class="btn primary" id="saveAddressBtn"
+                    style="width: 100%; padding: 14px; font-size: 1rem; margin-top: 6px; letter-spacing: 0.02em;">
+                    <i class="fas fa-plus" style="margin-right: 8px;"></i>Save Address
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT ADDRESS MODAL -->
+<div id="editAddressModal" class="custom-modal" style="display:none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-container" style="max-width: 560px; padding: 0;">
+        <div
+            style="background: linear-gradient(135deg, #4a90d9 0%, #357abd 100%); padding: 28px 30px 22px; border-radius: 24px 24px 0 0; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div
+                    style="background: rgba(255,255,255,0.2); width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-edit" style="font-size: 1.4rem; color: white;"></i>
+                </div>
+                <div>
+                    <h3 style="color: white; margin: 0; font-size: 1.3rem; font-weight: 600;">Edit Address</h3>
+                    <p style="color: rgba(255,255,255,0.8); margin: 2px 0 0; font-size: 0.85rem;">Update your delivery
+                        details</p>
+                </div>
+            </div>
+            <button type="button" id="closeEditAddressModal"
+                style="background: rgba(255,255,255,0.2); border: none; width: 36px; height: 36px; border-radius: 10px; font-size: 1.3rem; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center;">&times;</button>
+        </div>
+        <div style="padding: 28px 30px 30px;">
+            <form id="editAddressForm" style="display: flex; flex-direction: column; gap: 18px;">
+                <input type="hidden" name="addressId" id="editAddrId">
+                <div class="form-row" style="gap: 16px;">
+                    <div class="form-group" style="gap: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #333;">Full Name <span
+                                style="color: #dc3545;">*</span></label>
+                        <input type="text" name="fullName" id="editFullName" required
+                            style="padding: 12px 14px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 0.95rem;">
+                    </div>
+                    <div class="form-group" style="gap: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #333;">Mobile Number <span
+                                style="color: #dc3545;">*</span></label>
+                        <input type="tel" name="mobile" id="editMobile" required
+                            style="padding: 12px 14px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 0.95rem;">
+                        <small class="validation-message" id="editMobileError"></small>
+                    </div>
+                </div>
+                <div class="form-group" style="gap: 6px;">
+                    <label style="font-size: 0.85rem; font-weight: 600; color: #333;">House Name / Flat No <span
+                            style="color: #dc3545;">*</span></label>
+                    <input type="text" name="houseName" id="editHouseName" required
+                        style="padding: 12px 14px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 0.95rem;">
+                </div>
+                <div class="form-row" style="gap: 16px;">
+                    <div class="form-group" style="gap: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #333;">City <span
+                                style="color: #dc3545;">*</span></label>
+                        <input type="text" name="city" id="editCity" required
+                            style="padding: 12px 14px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 0.95rem;">
+                    </div>
+                    <div class="form-group" style="gap: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #333;">State <span
+                                style="color: #dc3545;">*</span></label>
+                        <input type="text" name="state" id="editState" required
+                            style="padding: 12px 14px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 0.95rem;">
+                    </div>
+                </div>
+                <div class="form-row" style="gap: 16px;">
+                    <div class="form-group" style="gap: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #333;">Pincode <span
+                                style="color: #dc3545;">*</span></label>
+                        <input type="text" name="pincode" id="editPincode" required
+                            style="padding: 12px 14px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 0.95rem;">
+                        <small class="validation-message" id="editPincodeError"></small>
+                    </div>
+                    <div class="form-group" style="gap: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #333;">Address Type</label>
+                        <select name="addressType" id="editAddrType"
+                            style="width: 100%; padding: 12px 14px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 0.95rem; background: white; cursor: pointer; font-family: 'Poppins', sans-serif; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22><path fill=%22%23666%22 d=%22M7 10l5 5 5-5z%22/></svg>'); background-repeat: no-repeat; background-position: right 14px center;">
+                            <option value="Home">🏠 Home</option>
+                            <option value="Work">💼 Work</option>
+                            <option value="Other">📍 Other</option>
+                        </select>
+                    </div>
+                </div>
+                <label class="addr-default-check"
+                    style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.9rem; color: #444;">
+                    <input type="checkbox" name="isDefault" id="editIsDefault"
+                        style="width: 18px; height: 18px; accent-color: #4a90d9; cursor: pointer;">
+                    Set as default address
+                </label>
+                <button type="submit" class="btn primary" id="updateAddressBtn"
+                    style="width: 100%; padding: 14px; font-size: 1rem; margin-top: 6px; letter-spacing: 0.02em; background: linear-gradient(135deg, #4a90d9, #357abd);">
+                    <i class="fas fa-save" style="margin-right: 8px;"></i>Update Address
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="/user/js/user-address.js" defer></script>

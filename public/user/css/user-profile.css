@@ -468,6 +468,24 @@ input:disabled {
   border-color: rgba(0, 0, 0, 0.05);
 }
 
+/* INLINE VALIDATION MESSAGES */
+.validation-message {
+  display: block;
+  font-size: 0.8rem;
+  min-height: 1rem;
+  margin-top: 4px;
+  transition: all 0.2s ease;
+}
+
+.validation-message.error {
+  color: #dc3545;
+  animation: slideDown 0.2s ease;
+}
+
+.validation-message.success {
+  color: #28a745;
+}
+
 /* MODAL SYSTEM (Unified for Address, Delete, and Cropper) */
 .custom-modal {
   position: fixed;
@@ -565,6 +583,154 @@ input:disabled {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-top: 20px;
+}
+
+/* ADDRESS CARD STYLES */
+.address-card {
+  background: white;
+  border: 2px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.address-card:hover {
+  border-color: rgba(255, 145, 77, 0.3);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.addr-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.addr-type-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 145, 77, 0.12) 0%, rgba(255, 145, 77, 0.06) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent, #ff914d);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.addr-card-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main, #1a1a1a);
+  margin: 0 0 2px;
+}
+
+.addr-type-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent, #ff914d);
+  background: rgba(255, 145, 77, 0.1);
+  padding: 2px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.addr-card-body {
+  padding: 16px 20px;
+  flex: 1;
+}
+
+.addr-card-body p {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  color: #555;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.5;
+}
+
+.addr-card-body p:last-child {
+  margin-bottom: 0;
+}
+
+.addr-card-body p i {
+  color: rgba(0, 0, 0, 0.25);
+  font-size: 0.85rem;
+  width: 16px;
+  text-align: center;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.addr-card-footer {
+  padding: 12px 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.015);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.addr-delete-btn {
+  background: none;
+  border: 1.5px solid rgba(220, 53, 69, 0.2);
+  color: #dc3545;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Poppins", sans-serif;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.addr-delete-btn:hover {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.addr-edit-btn {
+  background: none;
+  border: 1.5px solid rgba(74, 144, 217, 0.2);
+  color: #4a90d9;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Poppins", sans-serif;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.addr-edit-btn:hover {
+  background: #4a90d9;
+  color: white;
+  border-color: #4a90d9;
+}
+
+.addr-default-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #28a745;
+  background: rgba(40, 167, 69, 0.1);
+  padding: 2px 10px;
+  border-radius: 20px;
+  margin-left: 6px;
+  letter-spacing: 0.03em;
 }
 
 /* SUCCESS MESSAGE STYLING */

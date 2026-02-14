@@ -30,9 +30,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const cancelEditBtn = document.getElementById("cancelEdit");
     const formActions = document.getElementById("formActions");
 
-    const openAddressModal = document.getElementById("openAddressModal");
-    const closeAddressModal = document.getElementById("closeAddressModal");
-    const addressModal = document.getElementById("addressModal");
 
     const imageUpload = document.getElementById('imageUpload');
     const cropperModal = document.getElementById('cropperModal');
@@ -193,22 +190,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==========================================
-    // ADDRESS MODALS
-    // ==========================================
-
-    if (openAddressModal) {
-        openAddressModal.onclick = () => {
-            if (addressModal) addressModal.style.display = "flex";
-        };
-    }
-
-    if (closeAddressModal) {
-        closeAddressModal.onclick = () => {
-            if (addressModal) addressModal.style.display = "none";
-        };
-    }
-
-    // ==========================================
     // PROFILE IMAGE HANDLING (CROPPER & HEIC)
     // ==========================================
 
@@ -324,7 +305,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.addEventListener("click", (e) => {
         if (e.target.classList.contains("modal-overlay")) {
-            const modals = [addressModal, cropperModal, imageDeleteModal, document.getElementById("deleteConfirmModal")];
+            const modals = [cropperModal, imageDeleteModal, document.getElementById("deleteConfirmModal")];
             modals.forEach(m => {
                 if (m) m.style.display = "none";
             });
