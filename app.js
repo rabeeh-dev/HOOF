@@ -14,6 +14,7 @@ const path = require("path");
 const connectDB = require("./config/db");
 const passport = require("./config/passport");
 const { checkBlocked } = require("./middleware/auth");
+const userController = require("./controller/User");
 
 const app = express();
 
@@ -117,12 +118,10 @@ app.use('/admin', (req, res, next) => {
 // ==========================================
 // LANDING PAGE
 // ==========================================
-app.get("/", (req, res) => {
-  res.render("User/landing", {
-    title: "HOOF | Premium Sneakers",
-    layout: "layouts/user",
-  });
-});
+// ==========================================
+// LANDING PAGE
+// ==========================================
+app.get("/", userController.landingPage);
 
 // ==========================================
 // SERVER INITIALIZATION

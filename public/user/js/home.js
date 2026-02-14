@@ -74,3 +74,34 @@ toastStyle.textContent = `
   .message-toast.info { background: #333; }
 `;
 document.head.appendChild(toastStyle);
+
+// ==========================================
+// CART OPERATIONS
+// ==========================================
+
+/**
+ * Adds a product to the cart via AJAX.
+ * @param {string} productId - Product ID.
+ */
+async function addToCart(productId) {
+  try {
+    const response = await fetch('/user/cart/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId, quantity: 1 })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      showMessage("Added to bag!", "success");
+      // Update badge if exists
+      const badge = document.querySelector(".cart-count");
+      if (badge) badge.textContent = parseInt(badge.textContent) + 1;
+    } else {
+      showMessage(result.message || "Login required", "info");
+    }
+  } catch (err) {
+    showMessage("Error adding to cart", "error");
+  }
+}

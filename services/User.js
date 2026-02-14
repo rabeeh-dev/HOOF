@@ -170,6 +170,16 @@ class UserService {
             currentPage: page
         };
     }
+    /**
+     * Retrieves the top 6 newest active products.
+     * @returns {Promise<Array>} Array of product documents.
+     */
+    async getNewArrivals() {
+        return await Product.find({ isBlocked: false })
+            .populate('category')
+            .sort({ createdAt: -1 })
+            .limit(6);
+    }
 }
 
 module.exports = new UserService();

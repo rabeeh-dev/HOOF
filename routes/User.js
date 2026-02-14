@@ -145,12 +145,7 @@ router.post("/reset-password/:token", userController.resetPassword);
  * @route   GET /user/home
  * @access  Private (isUser)
  */
-router.get('/home', isUser, (req, res) => {
-  res.render('User/home', {
-    title: 'Home - ShoeStore',
-    layout: 'layouts/user'
-  });
-});
+router.get('/home', isUser, userController.getHome);
 
 /**
  * @desc    Render user profile dashboard with addresses and details.

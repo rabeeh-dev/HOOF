@@ -366,6 +366,56 @@ exports.resetPassword = async (req, res) => {
 };
 
 // ==========================================
+// LANDING & HOME PAGES
+// ==========================================
+
+/**
+ * @desc    Renders the public landing page with new arrivals.
+ * @route   GET /
+ * @access  Public
+ */
+exports.landingPage = async (req, res) => {
+  try {
+    const newArrivals = await userService.getNewArrivals();
+    res.render("User/landing", {
+      title: "HOOF | Premium Sneakers",
+      layout: "layouts/user",
+      newArrivals
+    });
+  } catch (err) {
+    console.error("Landing Page Error:", err);
+    res.render("User/landing", {
+      title: "HOOF | Premium Sneakers",
+      layout: "layouts/user",
+      newArrivals: []
+    });
+  }
+};
+
+/**
+ * @desc    User homepage (Landing after login) with fresh products.
+ * @route   GET /user/home
+ * @access  Private (isUser)
+ */
+exports.getHome = async (req, res) => {
+  try {
+    const newArrivals = await userService.getNewArrivals();
+    res.render('User/home', {
+      title: 'Home - ShoeStore',
+      layout: 'layouts/user',
+      newArrivals
+    });
+  } catch (err) {
+    console.error("Home Page Error:", err);
+    res.render('User/home', {
+      title: 'Home - ShoeStore',
+      layout: 'layouts/user',
+      newArrivals: []
+    });
+  }
+};
+
+// ==========================================
 // USER PROFILE SECTION (Details & Settings)
 // ==========================================
 

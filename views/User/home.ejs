@@ -17,178 +17,59 @@
     <div class="section-header">
       <p class="band-label">FEATURED</p>
       <h2>NEW ARRIVALS</h2>
+      <p class="section-subtitle">Freshly dropped — shop the latest additions to our collection</p>
     </div>
-    <div class="products-grid">
-      <div class="product-card-home floating-slow">
-        <div class="product-image-home">
-          <img src="/user/images/home-images/shoe4.jpg" alt="Urban Drift" />
-          <div class="product-badge">New</div>
-          <div class="product-actions">
-            <button class="action-btn wishlist">
-              <i class="far fa-heart"></i>
-            </button>
-            <button class="action-btn cart">
-              <i class="fas fa-shopping-bag"></i>
-            </button>
-            <button class="action-btn view">
-              <i class="fas fa-eye"></i>
-            </button>
+    <div class="products-grid-home">
+      <% if (typeof newArrivals !=='undefined' && newArrivals.length> 0) { %>
+        <% newArrivals.forEach((product, index)=> { %>
+          <div class="home-product-card" style="animation-delay: <%= index * 0.1 %>s">
+            <div class="home-product-image" onclick="window.location.href='/user/product-details/<%= product._id %>'">
+              <img src="<%= product.productImage[0] %>" alt="<%= product.productName %>" />
+              <div class="home-card-overlay"></div>
+              <span class="home-badge-new">NEW</span>
+              <% if (product.salePrice < product.regularPrice) { %>
+                <% const discount=Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100);
+                  %>
+                  <span class="home-badge-discount">-<%= discount %>%</span>
+                  <% } %>
+                    <div class="home-card-actions">
+                      <button class="home-action-btn" onclick="event.stopPropagation(); addToCart('<%= product._id %>')"
+                        title="Add to Bag">
+                        <i class="fas fa-shopping-bag"></i>
+                      </button>
+                      <button class="home-action-btn" title="Wishlist">
+                        <i class="far fa-heart"></i>
+                      </button>
+                    </div>
+            </div>
+            <div class="home-product-details">
+              <span class="home-product-category">
+                <%= product.category ? product.category.name : 'Sneakers' %>
+              </span>
+              <h3 class="home-product-name" onclick="window.location.href='/user/product-details/<%= product._id %>'">
+                <%= product.productName %>
+              </h3>
+              <div class="home-product-pricing">
+                <span class="home-current-price">₹<%= product.salePrice.toLocaleString('en-IN') %></span>
+                <% if (product.salePrice < product.regularPrice) { %>
+                  <span class="home-original-price">₹<%= product.regularPrice.toLocaleString('en-IN') %></span>
+                  <% } %>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="product-info">
-          <h3>Urban Drift</h3>
-          <p class="product-price">₹4,999</p>
-          <div class="product-rating">
-            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-              class="fas fa-star"></i><i class="fas fa-star"></i>
-            <span>4.8 (127)</span>
-          </div>
-          <button class="btn primary product-btn">Add to Cart</button>
-        </div>
-      </div>
-
-      <div class="product-card-home floating">
-        <div class="product-image-home">
-          <img src="/user/images/home-images/shoe7.jpg" alt="Street Sonic" />
-          <div class="product-badge orange">Hot</div>
-          <div class="product-actions">
-            <button class="action-btn wishlist">
-              <i class="far fa-heart"></i>
-            </button>
-            <button class="action-btn cart">
-              <i class="fas fa-shopping-bag"></i>
-            </button>
-            <button class="action-btn view">
-              <i class="fas fa-eye"></i>
-            </button>
-          </div>
-        </div>
-        <div class="product-info">
-          <h3>Street Sonic</h3>
-          <p class="product-price">₹5,499</p>
-          <div class="product-rating">
-            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-              class="fas fa-star"></i><i class="far fa-star"></i>
-            <span>4.5 (89)</span>
-          </div>
-          <button class="btn primary product-btn">Add to Cart</button>
-        </div>
-      </div>
-
-      <div class="product-card-home floating-alt">
-        <div class="product-image-home">
-          <img src="/user/images/home-images/shoe3.jpg" alt="Night Runner" />
-          <div class="product-badge">New</div>
-          <div class="product-actions">
-            <button class="action-btn wishlist">
-              <i class="far fa-heart"></i>
-            </button>
-            <button class="action-btn cart">
-              <i class="fas fa-shopping-bag"></i>
-            </button>
-            <button class="action-btn view">
-              <i class="fas fa-eye"></i>
-            </button>
-          </div>
-        </div>
-        <div class="product-info">
-          <h3>Night Runner</h3>
-          <p class="product-price">₹6,299</p>
-          <div class="product-rating">
-            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-              class="fas fa-star"></i><i class="fas fa-star"></i>
-            <span>4.9 (203)</span>
-          </div>
-          <button class="btn primary product-btn">Add to Cart</button>
-        </div>
-      </div>
-
-      <div class="product-card-home">
-        <div class="product-image-home">
-          <img src="/user/images/home-images/Homeshoe.png" alt="Cloud Pace" />
-          <div class="product-badge">Sale</div>
-          <div class="product-actions">
-            <button class="action-btn wishlist">
-              <i class="far fa-heart"></i>
-            </button>
-            <button class="action-btn cart">
-              <i class="fas fa-shopping-bag"></i>
-            </button>
-            <button class="action-btn view">
-              <i class="fas fa-eye"></i>
-            </button>
-          </div>
-        </div>
-        <div class="product-info">
-          <h3>Cloud Pace</h3>
-          <p class="product-price">
-            <span class="old-price">₹7,999</span> ₹5,999
-          </p>
-          <div class="product-rating">
-            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-              class="fas fa-star"></i><i class="far fa-star"></i>
-            <span>4.6 (156)</span>
-          </div>
-          <button class="btn primary product-btn">Add to Cart</button>
-        </div>
-      </div>
-
-      <div class="product-card-home floating-slow">
-        <div class="product-image-home">
-          <img src="/user/images/home-images/shoe4.jpg" alt="Vapor Max" />
-          <div class="product-actions">
-            <button class="action-btn wishlist">
-              <i class="far fa-heart"></i>
-            </button>
-            <button class="action-btn cart">
-              <i class="fas fa-shopping-bag"></i>
-            </button>
-            <button class="action-btn view">
-              <i class="fas fa-eye"></i>
-            </button>
-          </div>
-        </div>
-        <div class="product-info">
-          <h3>Vapor Max</h3>
-          <p class="product-price">₹8,499</p>
-          <div class="product-rating">
-            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-              class="fas fa-star"></i><i class="fas fa-star"></i>
-            <span>5.0 (45)</span>
-          </div>
-          <button class="btn primary product-btn">Add to Cart</button>
-        </div>
-      </div>
-
-      <div class="product-card-home">
-        <div class="product-image-home">
-          <img src="/user/images/home-images/shoe7.jpg" alt="Phantom Flex" />
-          <div class="product-actions">
-            <button class="action-btn wishlist">
-              <i class="far fa-heart"></i>
-            </button>
-            <button class="action-btn cart">
-              <i class="fas fa-shopping-bag"></i>
-            </button>
-            <button class="action-btn view">
-              <i class="fas fa-eye"></i>
-            </button>
-          </div>
-        </div>
-        <div class="product-info">
-          <h3>Phantom Flex</h3>
-          <p class="product-price">₹4,799</p>
-          <div class="product-rating">
-            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-              class="fas fa-star"></i><i class="far fa-star"></i>
-            <span>4.7 (98)</span>
-          </div>
-          <button class="btn primary product-btn">Add to Cart</button>
-        </div>
-      </div>
+          <% }) %>
+            <% } else { %>
+              <div class="home-empty-state">
+                <i class="fas fa-box-open"></i>
+                <p>No new arrivals at the moment.</p>
+                <span>Check back soon for fresh drops!</span>
+              </div>
+              <% } %>
     </div>
     <div class="section-footer">
-      <button class="btn outline">View All Products</button>
+      <a href="/user/shop" class="btn outline view-all-btn">
+        View All Products <i class="fas fa-arrow-right"></i>
+      </a>
     </div>
   </div>
 </section>
