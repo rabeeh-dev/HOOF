@@ -5,8 +5,8 @@
 
 const express = require('express');
 const router = express.Router();
-const adminController = require('../controller/adminController');
-const adminProductController = require('../controller/adminProductController');
+const adminController = require('../controller/Admin');
+const adminProductController = require('../controller/AdminProduct');
 const adminAuth = require('../middleware/adminAuth');
 const upload = require('../middleware/productMulter');
 

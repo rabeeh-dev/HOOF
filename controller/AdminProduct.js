@@ -5,7 +5,7 @@
 
 const Product = require("../model/Product");
 const Category = require("../model/Category");
-const adminProductService = require("../services/adminProductService");
+const adminProductService = require("../services/AdminProduct");
 
 /**
  * @desc    Display product management table with pagination.

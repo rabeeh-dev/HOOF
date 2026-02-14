@@ -8,7 +8,7 @@ const User = require("../model/User");
 const Category = require("../model/Category");
 const bcrypt = require("bcrypt");
 const PDFDocument = require("pdfkit-table");
-const adminProductService = require("../services/adminProductService");
+const adminProductService = require("../services/AdminProduct");
 
 // ==========================================
 // ADMIN AUTHENTICATION SECTION

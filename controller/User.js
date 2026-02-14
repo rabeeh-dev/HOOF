@@ -11,9 +11,9 @@ const { generateOtp } = require("../utils/generateOtp");
 const { sendOtpEmail, sendResetPasswordEmail } = require("../utils/sendEmail");
 const crypto = require("crypto");
 const Address = require("../model/Address");
-const authService = require("../services/authService");
-const passwordService = require("../services/passwordService");
-const userService = require("../services/userService");
+const authService = require("../services/Auth");
+const passwordService = require("../services/Password");
+const userService = require("../services/User");
 
 // ==========================================
 // AUTHENTICATION SECTION (Signup, Login, OTP)

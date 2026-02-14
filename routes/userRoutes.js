@@ -5,7 +5,7 @@
 
 const express = require("express");
 const router = express.Router();
-const userController = require("../controller/userController");
+const userController = require("../controller/User");
 const { isUser, isLoggedOut } = require("../middleware/auth");
 const upload = require('../middleware/multer');
 const passport = require("../config/passport");
@@ -218,7 +218,7 @@ router.get('/profile/change-password-request', isUser, userController.changePass
 // ==========================================
 // ADDRESS MANAGEMENT
 // ==========================================
-const addressController = require("../controller/addressController");
+const addressController = require("../controller/Address");
 
 /**
  * @desc    Create and save a new delivery address.
@@ -262,7 +262,7 @@ router.post("/logout", userController.logout);
 // ==========================================
 // SHOP / PRODUCT LISTING
 // ==========================================
-const productController = require("../controller/productController");
+const productController = require("../controller/Product");
 
 /**
  * @desc    Display the main shop page with filtering, sorting, and pagination.

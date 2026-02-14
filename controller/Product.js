@@ -3,7 +3,7 @@
  * @description Controller for handled product-related operations for the end-user (shop and product details).
  */
 
-const productService = require("../services/productService");
+const productService = require("../services/Product");
 const Category = require("../model/Category");
 const Product = require("../model/Product");
 
