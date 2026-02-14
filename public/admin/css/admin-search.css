@@ -1,0 +1,102 @@
+/* Admin Search Bar Premium Styles */
+.modern-search-bar {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
+    margin-bottom: 24px;
+    box-sizing: border-box;
+}
+
+.modern-search-bar:focus-within {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+.modern-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 0.95rem;
+    color: #334155;
+    background: transparent;
+    font-family: 'Poppins', sans-serif;
+    min-width: 0;
+}
+
+.modern-search-input::placeholder {
+    color: #94a3b8;
+}
+
+.modern-clear-btn {
+    display: none;
+    /* Controlled by JS */
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    border-radius: 50%;
+    cursor: pointer;
+    margin-right: 8px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.modern-clear-btn:hover {
+    background: #e2e8f0;
+    color: #475569;
+    transform: rotate(90deg);
+}
+
+.modern-search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    /* Fits with typical admin dark themes */
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+
+.modern-search-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+}
+
+.modern-search-btn i {
+    font-size: 1rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modern-clear-btn[style*="display: flex"] {
+    animation: fadeIn 0.2s ease forwards;
+}

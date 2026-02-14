@@ -84,9 +84,13 @@
               </span> products</p>
           </div>
           <div class="toolbar-right">
-            <div class="product-search">
+            <div class="product-search" style="position: relative; display: flex; align-items: center;">
               <input type="text" id="searchInput" placeholder="Search sneakers..."
-                value="<%= typeof search !== 'undefined' ? search : '' %>" oninput="handleLiveSearch(event)">
+                value="<%= typeof search !== 'undefined' ? search : '' %>" style="padding-right: 30px;">
+              <button id="clearSearchBtn" onclick="clearSearch()"
+                style="position: absolute; right: 40px; background: none; border: none; cursor: pointer; display: none; color: #666; font-size: 0.9rem;">
+                <i class="fas fa-times"></i>
+              </button>
               <button onclick="applyFilters()"><i class="fas fa-search"></i></button>
             </div>
             <div class="sort-dropdown">
@@ -275,12 +279,36 @@
     navigateToPage(1); // Always reset to page 1 when filtering
   }
 
-  function handleLiveSearch(event) {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      applyFilters();
-    }, 600);
+  function toggleClearButton() {
+    const input = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    if (input && clearBtn) {
+      clearBtn.style.display = input.value.length > 0 ? 'block' : 'none';
+    }
   }
+
+  function clearSearch() {
+    const input = document.getElementById('searchInput');
+    if (input) {
+      input.value = '';
+      toggleClearButton();
+      applyFilters();
+    }
+  }
+
+  // Bind Enter key and Input event
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        applyFilters();
+      }
+    });
+    searchInput.addEventListener('input', toggleClearButton);
+  }
+
+  // Initial check
+  document.addEventListener('DOMContentLoaded', toggleClearButton);
 
   window.addEventListener("pageshow", function (event) {
     if (event.persisted || (typeof window.performance != "undefined" && window.performance.navigation.type === 2)) {

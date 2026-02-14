@@ -48,20 +48,41 @@ if (exportBtn) {
 // ==========================================
 
 const searchInput = document.getElementById('searchInput');
-if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const rows = document.querySelectorAll('.customers-table tbody tr');
+const searchBtn = document.getElementById('searchBtn');
+const clearBtn = document.getElementById('clearSearchBtn');
 
-        rows.forEach(row => {
-            const nameEl = row.querySelector('.customer-info h4');
-            const emailEl = row.querySelector('.contact-text');
-            if (nameEl && emailEl) {
-                const match = nameEl.textContent.toLowerCase().includes(searchTerm) ||
-                    emailEl.textContent.toLowerCase().includes(searchTerm);
-                row.style.display = match ? '' : 'none';
-            }
-        });
+function searchCustomers() {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const rows = document.querySelectorAll('.customers-table tbody tr');
+
+    if (clearBtn) clearBtn.style.display = searchTerm.length > 0 ? 'flex' : 'none';
+
+    rows.forEach(row => {
+        const nameEl = row.querySelector('.customer-info h4');
+        const emailEl = row.querySelector('.contact-text');
+        if (nameEl && emailEl) {
+            const match = nameEl.textContent.toLowerCase().includes(searchTerm) ||
+                emailEl.textContent.toLowerCase().includes(searchTerm);
+            row.style.display = match ? '' : 'none';
+        }
+    });
+}
+
+function clearSearch() {
+    if (searchInput) {
+        searchInput.value = '';
+        searchCustomers();
+    }
+}
+
+if (searchBtn) searchBtn.addEventListener('click', searchCustomers);
+if (clearBtn) clearBtn.addEventListener('click', clearSearch);
+if (searchInput) {
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') searchCustomers();
+    });
+    searchInput.addEventListener('input', () => {
+        if (clearBtn) clearBtn.style.display = searchInput.value.length > 0 ? 'flex' : 'none';
     });
 }
 
