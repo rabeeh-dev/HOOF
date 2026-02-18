@@ -15,6 +15,9 @@ const connectDB = require("./config/db");
 const passport = require("./config/passport");
 const { checkBlocked } = require("./middleware/auth");
 const userController = require("./controller/User");
+const morgan = require('morgan');
+
+
 
 const app = express();
 
@@ -108,6 +111,7 @@ const adminRoutes = require('./routes/Admin');
 app.use("/user", userRoutes);
 app.use("/user/address", addressRoutes);
 app.use("/auth", authRoutes);
+app.use(morgan('dev'));
 
 // Admin routes with layout override
 app.use('/admin', (req, res, next) => {
