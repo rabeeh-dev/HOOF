@@ -292,4 +292,341 @@ router.get('/shop', productController.listProducts);
  */
 router.get('/product-details/:id', productController.loadProductDetails);
 
+// ==========================================
+// CART ROUTES
+// ==========================================
+const Cart = require("../model/Cart");
+
+/**
+ * @desc    Render the cart page with populated items.
+ * @route   GET /user/cart
+ * @access  Private (isUser)
+ */
+router.get('/cart', isUser, async (req, res) => {
+  try {
+    const cart = await Cart.findOne({ userId: req.session.userId })
+      .populate({
+        path: 'items.productId',
+        populate: { path: 'category', select: 'name' }
+      });
+
+    let cartItems = [];
+    let totalAmount = 0;
+    let totalItems = 0;
+
+    if (cart && cart.items.length > 0) {
+      // Filter out items with null products (deleted products)
+      cartItems = cart.items.filter(item => item.productId);
+      cartItems.forEach(item => {
+        item.totalPrice = item.productId.salePrice * item.quantity;
+        totalAmount += item.totalPrice;
+        totalItems += item.quantity;
+      });
+    }
+
+    res.render('User/cart', {
+      title: 'Your Bag - HOOF',
+      layout: 'layouts/user',
+      cartItems,
+      totalAmount,
+      totalItems,
+    });
+  } catch (err) {
+    console.error('Cart page error:', err);
+    res.render('User/cart', {
+      title: 'Your Bag - HOOF',
+      layout: 'layouts/user',
+      cartItems: [],
+      totalAmount: 0,
+      totalItems: 0,
+    });
+  }
+});
+
+/**
+ * @desc    Add a product to cart (or increment quantity).
+ * @route   POST /user/cart/add
+ * @access  Private (isUser)
+ */
+router.post('/cart/add', isUser, async (req, res) => {
+  try {
+    const { productId, quantity = 1 } = req.body;
+    let cart = await Cart.findOne({ userId: req.session.userId });
+
+    if (!cart) {
+      cart = new Cart({ userId: req.session.userId, items: [] });
+    }
+
+    const existingItem = cart.items.find(
+      item => item.productId.toString() === productId
+    );
+
+    if (existingItem) {
+      existingItem.quantity += quantity;
+    } else {
+      cart.items.push({ productId, quantity });
+    }
+
+    await cart.save();
+    res.json({ success: true, message: 'Added to bag!' });
+  } catch (err) {
+    console.error('Add to cart error:', err);
+    res.status(500).json({ success: false, message: 'Could not add to cart' });
+  }
+});
+
+/**
+ * @desc    Update item quantity in cart.
+ * @route   PUT /user/cart/update
+ * @access  Private (isUser)
+ */
+router.put('/cart/update', isUser, async (req, res) => {
+  try {
+    const { productId, quantity } = req.body;
+    const cart = await Cart.findOne({ userId: req.session.userId })
+      .populate({
+        path: 'items.productId',
+        populate: { path: 'category', select: 'name' }
+      });
+
+    if (!cart) {
+      return res.status(404).json({ success: false, message: 'Cart not found' });
+    }
+
+    const item = cart.items.find(
+      i => i.productId._id.toString() === productId
+    );
+
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Item not found' });
+    }
+
+    item.quantity = quantity;
+    await cart.save();
+
+    // Recalculate totals
+    let totalAmount = 0;
+    let totalItems = 0;
+    cart.items.forEach(i => {
+      if (i.productId) {
+        totalAmount += i.productId.salePrice * i.quantity;
+        totalItems += i.quantity;
+      }
+    });
+
+    res.json({
+      success: true,
+      cart: { totalAmount, totalItems }
+    });
+  } catch (err) {
+    console.error('Update cart error:', err);
+    res.status(500).json({ success: false, message: 'Could not update cart' });
+  }
+});
+
+/**
+ * @desc    Remove a single item from cart.
+ * @route   DELETE /user/cart/remove/:id
+ * @access  Private (isUser)
+ */
+router.delete('/cart/remove/:id', isUser, async (req, res) => {
+  try {
+    const cart = await Cart.findOne({ userId: req.session.userId })
+      .populate({
+        path: 'items.productId',
+        populate: { path: 'category', select: 'name' }
+      });
+
+    if (!cart) {
+      return res.status(404).json({ success: false, message: 'Cart not found' });
+    }
+
+    cart.items = cart.items.filter(
+      item => item.productId._id.toString() !== req.params.id
+    );
+    await cart.save();
+
+    // Recalculate totals
+    let totalAmount = 0;
+    let totalItems = 0;
+    cart.items.forEach(i => {
+      if (i.productId) {
+        totalAmount += i.productId.salePrice * i.quantity;
+        totalItems += i.quantity;
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Removed from bag',
+      cart: { totalAmount, totalItems }
+    });
+  } catch (err) {
+    console.error('Remove from cart error:', err);
+    res.status(500).json({ success: false, message: 'Could not remove item' });
+  }
+});
+
+/**
+ * @desc    Apply promo code (placeholder).
+ * @route   POST /user/cart/promo
+ * @access  Private (isUser)
+ */
+router.post('/cart/promo', isUser, async (req, res) => {
+  const { code } = req.body;
+  // TODO: Implement promo code validation
+  res.json({ success: false, message: 'Invalid promo code' });
+});
+
+// ==========================================
+// WISHLIST ROUTES
+// ==========================================
+const Wishlist = require("../model/Wishlist");
+
+/**
+ * @desc    Render the wishlist page.
+ * @route   GET /user/wishlist
+ * @access  Private (isUser)
+ */
+router.get('/wishlist', isUser, async (req, res) => {
+  try {
+    const wishlist = await Wishlist.findOne({ userId: req.session.userId })
+      .populate({
+        path: 'products',
+        populate: { path: 'category', select: 'name' }
+      });
+
+    let wishlistItems = [];
+    if (wishlist && wishlist.products.length > 0) {
+      // Map to match expected template shape
+      wishlistItems = wishlist.products
+        .filter(p => p) // filter deleted products
+        .map(product => ({ productId: product }));
+    }
+
+    res.render('User/wishlist', {
+      title: 'Wishlist - HOOF',
+      layout: 'layouts/user',
+      wishlistItems,
+    });
+  } catch (err) {
+    console.error('Wishlist page error:', err);
+    res.render('User/wishlist', {
+      title: 'Wishlist - HOOF',
+      layout: 'layouts/user',
+      wishlistItems: [],
+    });
+  }
+});
+
+/**
+ * @desc    Add a product to wishlist.
+ * @route   POST /user/wishlist/add
+ * @access  Private (isUser)
+ */
+router.post('/wishlist/add', isUser, async (req, res) => {
+  try {
+    const { productId } = req.body;
+    let wishlist = await Wishlist.findOne({ userId: req.session.userId });
+
+    if (!wishlist) {
+      wishlist = new Wishlist({ userId: req.session.userId, products: [] });
+    }
+
+    if (!wishlist.products.includes(productId)) {
+      wishlist.products.push(productId);
+      await wishlist.save();
+    }
+
+    res.json({ success: true, message: 'Added to wishlist!' });
+  } catch (err) {
+    console.error('Add to wishlist error:', err);
+    res.status(500).json({ success: false, message: 'Could not add to wishlist' });
+  }
+});
+
+/**
+ * @desc    Remove a product from wishlist.
+ * @route   DELETE /user/wishlist/remove/:id
+ * @access  Private (isUser)
+ */
+router.delete('/wishlist/remove/:id', isUser, async (req, res) => {
+  try {
+    const wishlist = await Wishlist.findOne({ userId: req.session.userId });
+    if (!wishlist) {
+      return res.status(404).json({ success: false, message: 'Wishlist not found' });
+    }
+
+    wishlist.products = wishlist.products.filter(
+      p => p.toString() !== req.params.id
+    );
+    await wishlist.save();
+
+    res.json({ success: true, message: 'Removed from wishlist' });
+  } catch (err) {
+    console.error('Remove from wishlist error:', err);
+    res.status(500).json({ success: false, message: 'Could not remove item' });
+  }
+});
+
+/**
+ * @desc    Move all wishlist items to cart.
+ * @route   POST /user/wishlist/move-all
+ * @access  Private (isUser)
+ */
+router.post('/wishlist/move-all', isUser, async (req, res) => {
+  try {
+    const wishlist = await Wishlist.findOne({ userId: req.session.userId });
+    if (!wishlist || wishlist.products.length === 0) {
+      return res.json({ success: false, message: 'Wishlist is empty' });
+    }
+
+    let cart = await Cart.findOne({ userId: req.session.userId });
+    if (!cart) {
+      cart = new Cart({ userId: req.session.userId, items: [] });
+    }
+
+    wishlist.products.forEach(productId => {
+      const existing = cart.items.find(
+        item => item.productId.toString() === productId.toString()
+      );
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.items.push({ productId, quantity: 1 });
+      }
+    });
+
+    await cart.save();
+
+    // Clear wishlist
+    wishlist.products = [];
+    await wishlist.save();
+
+    res.json({ success: true, message: 'All items moved to bag!' });
+  } catch (err) {
+    console.error('Move all to cart error:', err);
+    res.status(500).json({ success: false, message: 'Could not move items' });
+  }
+});
+
+/**
+ * @desc    Clear entire wishlist.
+ * @route   DELETE /user/wishlist/clear
+ * @access  Private (isUser)
+ */
+router.delete('/wishlist/clear', isUser, async (req, res) => {
+  try {
+    const wishlist = await Wishlist.findOne({ userId: req.session.userId });
+    if (wishlist) {
+      wishlist.products = [];
+      await wishlist.save();
+    }
+    res.json({ success: true, message: 'Wishlist cleared' });
+  } catch (err) {
+    console.error('Clear wishlist error:', err);
+    res.status(500).json({ success: false, message: 'Could not clear wishlist' });
+  }
+});
+
 module.exports = router;

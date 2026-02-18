@@ -1,0 +1,85 @@
+<link rel="stylesheet" href="/user/css/wishlist.css" />
+
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">WISHLIST</h1>
+        <p class="page-subtitle">Your saved favourites — all in one place</p>
+    </div>
+</section>
+
+<section class="wishlist-section">
+    <div class="container">
+        <% if (wishlistItems && wishlistItems.length> 0) { %>
+
+            <!-- TOOLBAR -->
+            <div class="wishlist-toolbar">
+                <div class="toolbar-left">
+                    <p class="results-count"><span>
+                            <%= wishlistItems.length %>
+                        </span> items saved</p>
+                </div>
+                <div class="toolbar-right">
+                    <button class="btn outline" onclick="clearWishlist()"><i class="fas fa-trash"></i> Clear
+                        All</button>
+                    <button class="btn primary" onclick="moveAllToCart()"><i class="fas fa-shopping-bag"></i> Move All
+                        to Bag</button>
+                </div>
+            </div>
+
+            <!-- PRODUCTS GRID -->
+            <div class="products-grid" id="wishlistGrid">
+                <% wishlistItems.forEach((item, index)=> { %>
+                    <div class="product-card" id="wishlist-item-<%= item.productId._id %>"
+                        style="animation-delay: <%= index * 0.08 %>s">
+                        <div class="product-image">
+                            <img src="<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>"
+                                onclick="window.location.href='/user/product-details/<%= item.productId._id %>'"
+                                style="cursor:pointer;" />
+                            <% if (item.productId.quantity===0) { %>
+                                <span class="stock-badge">OUT OF STOCK</span>
+                                <% } %>
+                                    <button class="wishlist-btn active"
+                                        onclick="removeFromWishlist('<%= item.productId._id %>')">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-name"
+                                onclick="window.location.href='/user/product-details/<%= item.productId._id %>'"
+                                style="cursor:pointer;">
+                                <%= item.productId.productName %>
+                            </h3>
+                            <p class="product-category">
+                                <%= item.productId.category ? item.productId.category.name : 'Uncategorized' %>
+                            </p>
+                            <div class="product-footer">
+                                <p class="product-price">
+                                    <% if (item.productId.salePrice < item.productId.regularPrice) { %>
+                                        <span class="old-price">₹<%= item.productId.regularPrice %></span>
+                                        <% } %>
+                                            ₹<%= item.productId.salePrice %>
+                                </p>
+                                <button class="add-to-cart-btn btn-icon-circle"
+                                    onclick="addToCartFromWishlist('<%= item.productId._id %>')"
+                                    <%=item.productId.quantity===0 ? 'disabled' : '' %>>
+                                    <i class="fas fa-shopping-bag"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+            </div>
+
+            <% } else { %>
+                <!-- EMPTY STATE -->
+                <div class="wishlist-empty">
+                    <i class="fas fa-heart"></i>
+                    <h2>Nothing saved yet</h2>
+                    <p>Start adding sneakers you love</p>
+                    <a href="/user/shop" class="btn primary">Browse Collection</a>
+                </div>
+                <% } %>
+    </div>
+</section>
+
+<script src="/user/js/wishlist.js" defer></script>

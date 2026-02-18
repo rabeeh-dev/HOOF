@@ -1,0 +1,121 @@
+/* ==================== WISHLIST SECTION ==================== */
+.wishlist-section {
+    padding: 4rem 0;
+    background: var(--bg-band);
+}
+
+/* ==================== TOOLBAR ==================== */
+.wishlist-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+    padding: 1.2rem 1.8rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(20px);
+    animation: fadeIn 0.6s ease;
+}
+
+.wishlist-toolbar .results-count {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.wishlist-toolbar .results-count span {
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.wishlist-toolbar .toolbar-right {
+    display: flex;
+    gap: 0.8rem;
+}
+
+/* ==================== OUT OF STOCK BADGE ==================== */
+.stock-badge {
+    position: absolute;
+    top: 1.2rem;
+    left: 1.2rem;
+    background: #dc3545;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    z-index: 2;
+}
+
+/* ==================== WISHLIST HEART BUTTON (ACTIVE) ==================== */
+.wishlist-btn.active i {
+    color: #ff4d4d;
+}
+
+/* ==================== DISABLED ADD TO CART ==================== */
+.add-to-cart-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.add-to-cart-btn:disabled:hover {
+    box-shadow: 0 8px 20px rgba(255, 145, 77, 0.3);
+    transform: none;
+}
+
+/* ==================== EMPTY STATE ==================== */
+.wishlist-empty {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 24px;
+    padding: 5rem 3rem;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    animation: cardEntry 0.6s ease;
+}
+
+.wishlist-empty i {
+    font-size: 5rem;
+    color: var(--accent);
+    opacity: 0.4;
+    margin-bottom: 1.5rem;
+}
+
+.wishlist-empty h2 {
+    font-family: silver;
+    font-size: 2rem;
+    color: var(--text-main);
+    margin-bottom: 0.8rem;
+}
+
+.wishlist-empty p {
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 992px) {
+    .wishlist-toolbar {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .wishlist-toolbar .toolbar-right {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .wishlist-section {
+        padding: 2rem 0;
+    }
+
+    .wishlist-toolbar {
+        padding: 1rem;
+    }
+}

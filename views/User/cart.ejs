@@ -1,0 +1,128 @@
+<link rel="stylesheet" href="/user/css/cart.css" />
+
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">YOUR BAG</h1>
+        <p class="page-subtitle">Review your selected sneakers before checkout</p>
+    </div>
+</section>
+
+<section class="cart-section">
+    <div class="container">
+        <% if (cartItems && cartItems.length> 0) { %>
+            <div class="cart-layout">
+
+                <!-- LEFT COLUMN: Cart Items -->
+                <div class="cart-items-col">
+                    <div class="cart-toolbar">
+                        <div class="toolbar-left">
+                            <p class="results-count">Your Bag (<span>
+                                    <%= totalItems %>
+                                </span> items)</p>
+                        </div>
+                        <div class="toolbar-right">
+                            <a href="/user/shop" class="btn outline">Continue Shopping</a>
+                        </div>
+                    </div>
+
+                    <div class="cart-items-list">
+                        <% cartItems.forEach((item, index)=> { %>
+                            <div class="cart-item" id="cart-item-<%= item.productId._id %>"
+                                style="animation-delay: <%= index * 0.08 %>s">
+                                <div class="cart-item-image"
+                                    onclick="window.location.href='/user/product-details/<%= item.productId._id %>'">
+                                    <img src="<%= item.productId.productImage[0] %>"
+                                        alt="<%= item.productId.productName %>" />
+                                </div>
+                                <div class="cart-item-info">
+                                    <h3 class="cart-item-name"
+                                        onclick="window.location.href='/user/product-details/<%= item.productId._id %>'">
+                                        <%= item.productId.productName %>
+                                    </h3>
+                                    <span class="cart-item-category">
+                                        <%= item.productId.category ? item.productId.category.name : 'Uncategorized' %>
+                                    </span>
+                                    <div class="cart-item-price-row">
+                                        <span class="cart-item-sale-price">₹<%= item.productId.salePrice %></span>
+                                        <% if (item.productId.salePrice < item.productId.regularPrice) { %>
+                                            <span class="cart-item-regular-price">₹<%= item.productId.regularPrice %>
+                                                    </span>
+                                            <% } %>
+                                    </div>
+                                </div>
+                                <div class="cart-item-actions">
+                                    <div class="qty-control">
+                                        <button class="qty-btn"
+                                            onclick="updateQuantity('<%= item.productId._id %>', <%= item.quantity - 1 %>)">−</button>
+                                        <span class="qty-count" id="qty-<%= item.productId._id %>">
+                                            <%= item.quantity %>
+                                        </span>
+                                        <button class="qty-btn"
+                                            onclick="updateQuantity('<%= item.productId._id %>', <%= item.quantity + 1 %>)">+</button>
+                                    </div>
+                                    <button class="remove-btn" onclick="removeItem('<%= item.productId._id %>')">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                            <% }) %>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: Order Summary -->
+                <div class="order-summary-col">
+                    <div class="order-summary">
+                        <h2 class="summary-title">Order Summary</h2>
+
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span id="summary-subtotal">₹<%= totalAmount %></span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Shipping</span>
+                            <span class="<%= totalAmount >= 999 ? 'shipping-free' : '' %>" id="summary-shipping">
+                                <%= totalAmount>= 999 ? 'FREE' : '₹99' %>
+                            </span>
+                        </div>
+                        <div class="summary-divider"></div>
+                        <div class="summary-row summary-total">
+                            <span>Total</span>
+                            <span id="summary-total">₹<%= totalAmount>= 999 ? totalAmount : totalAmount + 99 %></span>
+                        </div>
+
+                        <div class="promo-section">
+                            <div class="promo-row">
+                                <input type="text" id="promoInput" placeholder="Promo code" />
+                                <button class="btn primary promo-btn" onclick="applyPromo()">Apply</button>
+                            </div>
+                        </div>
+
+                        <a href="/user/checkout" class="checkout-btn">
+                            Proceed to Checkout
+                        </a>
+
+                        <div class="secure-note">
+                            <i class="fas fa-lock"></i> Secure Checkout
+                        </div>
+                        <div class="payment-icons">
+                            <span>Visa</span>
+                            <span>Mastercard</span>
+                            <span>UPI</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <% } else { %>
+                <!-- EMPTY STATE -->
+                <div class="cart-empty">
+                    <i class="fas fa-shopping-bag"></i>
+                    <h2>Your bag is empty</h2>
+                    <p>Looks like you haven't added any sneakers yet.</p>
+                    <a href="/user/shop" class="btn primary">Start Shopping</a>
+                </div>
+                <% } %>
+    </div>
+</section>
+
+<script src="/user/js/cart.js" defer></script>
