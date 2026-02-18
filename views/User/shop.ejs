@@ -50,9 +50,9 @@
               </div>
               <div class="dual-range-slider">
                 <div class="slider-track"></div>
-                <input type="range" id="minPriceRange" min="0" max="20000" step="100" value="<%= minPrice %>"
+                <input type="range" id="minPriceRange" min="0" max="300000" step="100" value="<%= minPrice %>"
                   oninput="updatePriceLabels()">
-                <input type="range" id="maxPriceRange" min="0" max="20000" step="100" value="<%= maxPrice %>"
+                <input type="range" id="maxPriceRange" min="0" max="300000" step="100" value="<%= maxPrice %>"
                   oninput="updatePriceLabels()">
               </div>
             </div>
@@ -131,8 +131,9 @@
                         <% } %>
                           ₹<%= product.salePrice %>
                     </p>
-                    <button class="add-to-cart-btn btn-icon-circle" onclick="addToCart('<%= product._id %>')">
-                      <i class="fas fa-shopping-bag"></i>
+                    <button class="add-to-cart-btn btn-icon-circle"
+                      onclick="window.location.href='/user/product-details/<%= product._id %>'">
+                      <i class="fas fa-arrow-right"></i>
                     </button>
                   </div>
                 </div>

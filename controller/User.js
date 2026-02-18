@@ -717,7 +717,7 @@ exports.loadShop = async (req, res) => {
     const category = req.query.category || null;
     const search = req.query.search || '';
     const sort = req.query.sort || 'newest';
-    const maxPrice = req.query.maxPrice || 20000;
+    const maxPrice = req.query.maxPrice || 300000;
 
     const { products, totalPages, currentPage } = await userService.getShopProducts({
       page,

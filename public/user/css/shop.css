@@ -1074,6 +1074,7 @@ img {
 
 .add-to-cart-btn.btn-icon-circle i {
   font-size: 1.1rem;
+  transform: rotate(30deg);
 }
 
 /* List View */

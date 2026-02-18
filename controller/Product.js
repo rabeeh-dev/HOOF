@@ -35,7 +35,7 @@ exports.listProducts = async (req, res) => {
             selectedCategory: req.query.category || null,
             selectedSort: req.query.sort || 'newest',
             minPrice: req.query.minPrice || 0,
-            maxPrice: req.query.maxPrice || 20000,
+            maxPrice: req.query.maxPrice || 300000,
             selectedSize: req.query.size || null,
             availableSizes,
             search: req.query.search || '',
@@ -82,7 +82,7 @@ exports.loadProductDetails = async (req, res) => {
             product,
             relatedProducts,
             title: `${product.productName} | HOOF`,
-            user: req.session.user || null,
+
             breadcrumbs: [
                 { name: 'Home', url: '/' },
                 { name: 'Shop', url: '/user/shop' },
