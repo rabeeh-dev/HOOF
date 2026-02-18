@@ -229,6 +229,51 @@ router.get('/profile/change-password-request', isUser, userController.changePass
 router.post("/logout", userController.logout);
 
 // ==========================================
+// ABOUT & CONTACT PAGES
+// ==========================================
+
+/**
+ * @desc    Render the About page.
+ * @route   GET /user/about
+ * @access  Public
+ */
+router.get('/about', (req, res) => {
+  res.render('User/about', { title: 'About - HOOF', layout: 'layouts/user' });
+});
+
+/**
+ * @desc    Render the Contact page.
+ * @route   GET /user/contact
+ * @access  Public
+ */
+router.get('/contact', (req, res) => {
+  res.render('User/contact', { title: 'Contact - HOOF', layout: 'layouts/user' });
+});
+
+/**
+ * @desc    Handle contact form submission.
+ * @route   POST /user/contact
+ * @access  Public
+ */
+const { sendContactEmail } = require("../utils/sendEmail");
+
+router.post('/contact', async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({ success: false, message: 'All fields are required.' });
+    }
+
+    await sendContactEmail(name, email, subject, message);
+    res.json({ success: true, message: 'Message received! We will get back to you soon.' });
+  } catch (err) {
+    console.error('Contact form error:', err);
+    res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
+  }
+});
+
+// ==========================================
 // SHOP / PRODUCT LISTING
 // ==========================================
 const productController = require("../controller/Product");
