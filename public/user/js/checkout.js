@@ -38,7 +38,6 @@ function showToast(message, type = "info") {
 
 let selectedAddressId = null;
 let selectedPaymentMethod = null;
-let newAddressData = null;
 
 // ==========================================
 // STEP NAVIGATION
@@ -98,7 +97,6 @@ function updateProgressBar(activeStep) {
 
 function selectAddress(addressId) {
     selectedAddressId = addressId;
-    newAddressData = null;
 
     // Update visual state
     document.querySelectorAll(".address-card").forEach(card => {
@@ -109,66 +107,144 @@ function selectAddress(addressId) {
     if (selectedCard) {
         selectedCard.classList.add("selected");
     }
-
-    // Hide new address form if open
-    const newAddressForm = document.getElementById("newAddressForm");
-    if (newAddressForm && newAddressForm.style.display !== "none") {
-        toggleNewAddressForm();
-    }
 }
 
-function toggleNewAddressForm() {
-    const form = document.getElementById("newAddressForm");
-    if (!form) return;
-
-    const isVisible = form.style.display !== "none";
-    form.style.display = isVisible ? "none" : "block";
-
-    if (!isVisible) {
-        // Clear selected address when showing new form
-        selectedAddressId = null;
-        document.querySelectorAll(".address-card").forEach(card => {
-            card.classList.remove("selected");
-        });
-    }
+function toggleCheckoutAddressForm() {
+    const wrap = document.getElementById("checkoutAddressFormWrap");
+    if (!wrap) return;
+    const open = wrap.style.display !== "none";
+    wrap.style.display = open ? "none" : "block";
 }
 
-function saveNewAddress() {
-    const fullName = document.getElementById("newFullName")?.value.trim();
-    const phone = document.getElementById("newPhone")?.value.trim();
-    const addressLine1 = document.getElementById("newAddressLine1")?.value.trim();
-    const addressLine2 = document.getElementById("newAddressLine2")?.value.trim();
-    const city = document.getElementById("newCity")?.value.trim();
-    const state = document.getElementById("newState")?.value.trim();
-    const pincode = document.getElementById("newPincode")?.value.trim();
-    const setAsDefault = document.getElementById("setAsDefault")?.checked;
+function setInlineValidation(el, msg, type) {
+    if (!el) return;
+    el.textContent = msg || "";
+    el.classList.remove("error", "success");
+    if (type) el.classList.add(type);
+}
 
-    if (!fullName || !phone || !addressLine1 || !city || !state || !pincode) {
-        showToast("Please fill all required fields", "error");
+function validateCheckoutAddressInputs(payload) {
+    const mobileOk = /^[6-9]\d{9}$/.test(payload.mobile);
+    const pinOk = /^\d{6}$/.test(payload.pincode);
+
+    setInlineValidation(document.getElementById("coMobileError"), mobileOk ? "" : "Enter a valid 10-digit mobile number.", mobileOk ? "" : "error");
+    setInlineValidation(document.getElementById("coPincodeError"), pinOk ? "" : "Enter a valid 6-digit pincode.", pinOk ? "" : "error");
+
+    if (!payload.fullName || payload.fullName.trim().length < 3) return { ok: false, message: "Name must be at least 3 characters." };
+    if (!mobileOk) return { ok: false, message: "Enter a valid 10-digit mobile number." };
+    if (!payload.houseName || payload.houseName.trim().length < 2) return { ok: false, message: "House name/Flat is required." };
+    if (!pinOk) return { ok: false, message: "Enter a valid 6-digit pincode." };
+    if (!payload.city || payload.city.trim().length < 2) return { ok: false, message: "City is required." };
+    if (!payload.state || payload.state.trim().length < 2) return { ok: false, message: "State is required." };
+
+    return { ok: true };
+}
+
+function renderCheckoutAddressCard(address) {
+    const safe = (v) => String(v ?? "");
+    const defaultBadge = address.isDefault ? `<span class="default-badge">DEFAULT</span>` : "";
+
+    return `
+        <div class="address-card" data-address-id="${safe(address._id)}" onclick="selectAddress('${safe(address._id)}')">
+            <div class="address-radio">
+                <div class="radio-circle"></div>
+            </div>
+            <div class="address-details">
+                <div class="address-header">
+                    <span class="address-name">${safe(address.fullName)}</span>
+                    ${defaultBadge}
+                </div>
+                <div class="address-phone">${safe(address.mobile)}</div>
+                <div class="address-lines">
+                    ${safe(address.houseName)}<br>
+                    ${safe(address.city)}, ${safe(address.state)} - ${safe(address.pincode)}
+                </div>
+                <a class="address-edit" href="/user/address" onclick="event.stopPropagation();">Manage</a>
+            </div>
+        </div>
+    `;
+}
+
+async function submitCheckoutAddressForm(e) {
+    e.preventDefault();
+
+    const payload = {
+        fullName: document.getElementById("coFullName")?.value.trim() || "",
+        mobile: document.getElementById("coMobile")?.value.trim() || "",
+        houseName: document.getElementById("coHouseName")?.value.trim() || "",
+        city: document.getElementById("coCity")?.value.trim() || "",
+        state: document.getElementById("coState")?.value.trim() || "",
+        pincode: document.getElementById("coPincode")?.value.trim() || "",
+        addressType: document.getElementById("coAddressType")?.value || "Home",
+        isDefault: document.getElementById("coIsDefault")?.checked || false
+    };
+
+    const v = validateCheckoutAddressInputs(payload);
+    if (!v.ok) {
+        showToast(v.message || "Please fill all required fields", "error");
         return;
     }
 
-    // Store new address data
-    newAddressData = {
-        fullName,
-        phone,
-        addressLine1,
-        addressLine2: addressLine2 || "",
-        city,
-        state,
-        pincode,
-        isDefault: setAsDefault || false
-    };
+    const btn = document.getElementById("coSaveAddressBtn");
+    const original = btn ? btn.innerHTML : "";
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    }
 
-    selectedAddressId = null;
-    showToast("Address saved", "success");
-}
+    try {
+        const res = await fetch("/user/address/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
 
-function editAddress(addressId) {
-    // For now, just go back to step 1 and let user select
-    // In a full implementation, you might open a modal or navigate to address management
-    goToStep(1);
-    showToast("Please select an address or add a new one", "info");
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+            showToast(data.message || "Failed to add address", "error");
+            return;
+        }
+
+        // Remove empty state if present
+        const empty = document.getElementById("noAddressesState");
+        if (empty) empty.remove();
+
+        // Ensure saved list exists
+        let list = document.getElementById("savedAddresses");
+        if (!list) {
+            const body = document.querySelector("#stepAddress .checkout-card-body");
+            list = document.createElement("div");
+            list.className = "saved-addresses";
+            list.id = "savedAddresses";
+            body?.insertBefore(list, body.firstChild);
+        }
+
+        const address = data.address;
+        if (address) {
+            if (payload.isDefault) {
+                // If default chosen, clear other badges in UI for consistency
+                document.querySelectorAll(".default-badge").forEach(b => b.remove());
+            }
+            list.insertAdjacentHTML("afterbegin", renderCheckoutAddressCard(address));
+            selectAddress(address._id);
+        }
+
+        // Reset + collapse form
+        document.getElementById("checkoutAddAddressForm")?.reset();
+        setInlineValidation(document.getElementById("coMobileError"), "");
+        setInlineValidation(document.getElementById("coPincodeError"), "");
+        document.getElementById("checkoutAddressFormWrap").style.display = "none";
+
+        showToast("Address added successfully!", "success");
+    } catch (err) {
+        console.error("Checkout add address error:", err);
+        showToast("Failed to add address.", "error");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = original;
+        }
+    }
 }
 
 // ==========================================
@@ -247,6 +323,20 @@ function selectPayment(type) {
 // ==========================================
 
 document.addEventListener("DOMContentLoaded", () => {
+    const checkoutAddAddressForm = document.getElementById("checkoutAddAddressForm");
+    if (checkoutAddAddressForm) {
+        checkoutAddAddressForm.addEventListener("submit", submitCheckoutAddressForm);
+    }
+
+    const mobile = document.getElementById("coMobile");
+    if (mobile) {
+        mobile.addEventListener("input", () => setInlineValidation(document.getElementById("coMobileError"), ""));
+    }
+    const pincode = document.getElementById("coPincode");
+    if (pincode) {
+        pincode.addEventListener("input", () => setInlineValidation(document.getElementById("coPincodeError"), ""));
+    }
+
     const cardNumberInput = document.getElementById("cardNumber");
     if (cardNumberInput) {
         cardNumberInput.addEventListener("input", (e) => {
@@ -301,29 +391,7 @@ function validateStep1() {
     if (selectedAddressId) {
         return true;
     }
-
-    if (newAddressData) {
-        return true;
-    }
-
-    // Check if new address form is visible and filled
-    const newAddressForm = document.getElementById("newAddressForm");
-    if (newAddressForm && newAddressForm.style.display !== "none") {
-        const fullName = document.getElementById("newFullName")?.value.trim();
-        const phone = document.getElementById("newPhone")?.value.trim();
-        const addressLine1 = document.getElementById("newAddressLine1")?.value.trim();
-
-        if (!fullName || !phone || !addressLine1) {
-            showToast("Please fill all required address fields", "error");
-            return false;
-        }
-
-        // Save address data
-        saveNewAddress();
-        return true;
-    }
-
-    showToast("Please select an address or add a new one", "error");
+    showToast("Please select a saved address (or add one below)", "error");
     return false;
 }
 
@@ -403,14 +471,6 @@ function populateReviewStep() {
                     ${lines}
                 `;
             }
-        } else if (newAddressData) {
-            addressHtml = `
-                <strong>${newAddressData.fullName}</strong><br>
-                ${newAddressData.phone}<br>
-                ${newAddressData.addressLine1}<br>
-                ${newAddressData.addressLine2 ? newAddressData.addressLine2 + "<br>" : ""}
-                ${newAddressData.city}, ${newAddressData.state} - ${newAddressData.pincode}
-            `;
         }
 
         deliverySummary.innerHTML = addressHtml || "No address selected";
@@ -480,7 +540,6 @@ async function placeOrder() {
         // Prepare payload
         const payload = {
             addressId: selectedAddressId,
-            newAddress: newAddressData,
             paymentMethod: selectedPaymentMethod,
             paymentDetails: paymentDetails
         };

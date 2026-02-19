@@ -704,8 +704,79 @@ router.delete('/wishlist/clear', isUser, async (req, res) => {
 
 router.get('/checkout',isUser,userController.loadCheckout)
 router.post('/checkout',isUser,userController.placeOrder)
+// Checkout API endpoint (used by checkout.js fetch)
+router.post('/checkout/place-order', isUser, async (req, res) => {
+  try {
+    const checkoutService = require("../services/Checkout");
+    const userId = req.session.userId;
+    const { addressId } = req.body || {};
+
+    if (!addressId) {
+      return res.status(400).json({ success: false, message: "Please select a delivery address." });
+    }
+
+    const order = await checkoutService.createOrder(userId, addressId);
+
+    return res.status(200).json({
+      success: true,
+      redirectUrl: `/user/order-success/${order._id}`
+    });
+  } catch (err) {
+    console.error("Place order API error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err?.message || "Failed to place order."
+    });
+  }
+});
 router.get('/order-success/:id', isUser, async (req, res) => {
-  res.render('User/order-success');
+  try {
+    const Order = require("../model/Order");
+    const User = require("../model/User");
+
+    const orderId = req.params.id;
+    const userId = req.session.userId;
+
+    const [orderDoc, userDoc] = await Promise.all([
+      Order.findOne({ _id: orderId, userId }).lean(),
+      User.findById(userId).lean()
+    ]);
+
+    if (!orderDoc) return res.redirect("/user/orders");
+
+    const createdAt = orderDoc.createdAt ? new Date(orderDoc.createdAt) : new Date();
+    const estimatedDeliveryDate = new Date(createdAt);
+    estimatedDeliveryDate.setDate(estimatedDeliveryDate.getDate() + 5);
+
+    const order = {
+      ...orderDoc,
+      estimatedDelivery: estimatedDeliveryDate.toISOString(),
+      items: Array.isArray(orderDoc.items)
+        ? orderDoc.items.map(i => ({
+          quantity: i.quantity,
+          product: {
+            productName: i.productName,
+            productImage: [i.productImage],
+            salePrice: i.priceAtPurchase
+          }
+        }))
+        : []
+    };
+
+    const user = {
+      name: userDoc?.fullName || userDoc?.name || ""
+    };
+
+    res.render("User/order-success", {
+      layout: false,
+      order,
+      user,
+      title: "Order Success | HOOF"
+    });
+  } catch (err) {
+    console.error("Order success render error:", err);
+    res.redirect("/user/orders");
+  }
 });
 
 

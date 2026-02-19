@@ -237,25 +237,27 @@
 
 /* ==================== ADD ADDRESS TOGGLE ==================== */
 .add-address-toggle {
-    border: 2px dashed rgba(0, 0, 0, 0.2);
-    border-radius: 14px;
-    padding: 1rem;
     width: 100%;
-    background: transparent;
-    color: #666;
-    font-size: 0.9rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    box-shadow: 0 12px 28px rgba(255, 145, 77, 0.3);
     transition: all 0.3s ease;
     font-family: inherit;
 }
 
 .add-address-toggle:hover {
-    border-color: var(--accent);
-    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px rgba(255, 145, 77, 0.45);
 }
 
 /* ==================== NEW ADDRESS FORM ==================== */
@@ -322,6 +324,87 @@
 .form-checkbox input[type="checkbox"] {
     width: auto;
     cursor: pointer;
+}
+
+.form-group select {
+    width: 100%;
+    padding: 0.9rem 1.1rem;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    background: white;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text-main);
+    transition: all 0.3s ease;
+}
+
+.form-group select:focus {
+    border-color: var(--accent);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 145, 77, 0.1);
+}
+
+.address-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+.manage-address-btn {
+    border: 2px dashed rgba(0, 0, 0, 0.2);
+    border-radius: 14px;
+    padding: 1rem;
+    width: 100%;
+    background: transparent;
+    color: #666;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    text-decoration: none;
+}
+
+.manage-address-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.no-addresses {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-bottom: 1.2rem;
+}
+
+.no-addresses p {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.req {
+    color: #dc3545;
+}
+
+.validation-message {
+    font-size: 0.8rem;
+    height: 1.2em;
+    display: block;
+    margin-top: 4px;
+}
+
+.validation-message.error {
+    color: #dc3545;
+}
+
+.validation-message.success {
+    color: #2ecc71;
 }
 
 /* ==================== PAYMENT OPTIONS ==================== */

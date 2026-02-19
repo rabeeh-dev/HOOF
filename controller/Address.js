@@ -91,7 +91,21 @@ exports.addAddress = async (req, res) => {
         });
 
         await newAddress.save();
-        res.status(200).json({ success: true, message: "Address added successfully!" });
+        res.status(200).json({
+            success: true,
+            message: "Address added successfully!",
+            address: {
+                _id: newAddress._id,
+                fullName: newAddress.fullName,
+                mobile: newAddress.mobile,
+                houseName: newAddress.houseName,
+                city: newAddress.city,
+                state: newAddress.state,
+                pincode: newAddress.pincode,
+                addressType: newAddress.addressType,
+                isDefault: newAddress.isDefault
+            }
+        });
 
     } catch (error) {
         console.error("Add Address Error:", error);

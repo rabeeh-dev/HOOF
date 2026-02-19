@@ -1,0 +1,124 @@
+<link rel="stylesheet" href="/user/css/shop.css" />
+<link rel="stylesheet" href="/user/css/order-success.css" />
+
+<section class="order-success-page">
+    <canvas id="confettiCanvas"></canvas>
+
+    <div class="bg-shapes" aria-hidden="true">
+        <div class="bg-circle circle-1"></div>
+        <div class="bg-circle circle-2"></div>
+        <div class="bg-circle circle-3"></div>
+    </div>
+
+    <div class="content-wrap">
+        <div class="success-card">
+            <div class="card-band" aria-hidden="true"></div>
+
+            <!-- Success Icon -->
+            <div class="success-icon-wrap">
+                <div class="ring ring-outer"></div>
+                <div class="ring ring-dashed"></div>
+
+                <div class="icon-core">
+                    <i class="fas fa-check check-icon"></i>
+                </div>
+
+                <div class="mini-icon mini-top"><i class="fas fa-shoe-prints"></i></div>
+                <div class="mini-icon mini-right"><i class="fas fa-star"></i></div>
+                <div class="mini-icon mini-bottom"><i class="fas fa-heart"></i></div>
+                <div class="mini-icon mini-left"><i class="fas fa-bolt"></i></div>
+            </div>
+
+            <!-- Headline -->
+            <div class="headline-block">
+                <h1 class="headline">Order Placed!</h1>
+                <p class="subhead">Thank you, <%= user?.name || "there" %>! Your sneakers are on their way.</p>
+
+                <div class="order-badge">
+                    <i class="fas fa-hashtag"></i>
+                    <span class="badge-label">Order</span>
+                    <span class="badge-id">
+                        <%= (order?._id ? order._id.toString().slice(-8) : "--------") %>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Details strip -->
+            <div class="details-strip">
+                <div class="info-pill">
+                    <i class="fas fa-calendar-check"></i>
+                    <div class="pill-label">Order Date</div>
+                    <div class="pill-value">
+                        <%= new Date(order?.createdAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) %>
+                    </div>
+                </div>
+                <div class="info-pill">
+                    <i class="fas fa-truck"></i>
+                    <div class="pill-label">Est. Delivery</div>
+                    <div class="pill-value">
+                        <%= new Date(order?.estimatedDelivery || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) %>
+                    </div>
+                </div>
+                <div class="info-pill">
+                    <i class="fas fa-credit-card"></i>
+                    <div class="pill-label">Payment</div>
+                    <div class="pill-value">
+                        <%= (order?.paymentMethod || "COD").toString().toUpperCase() %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items preview -->
+            <div class="items-heading">What's in your order</div>
+            <div class="items-list" id="itemsList">
+                <% (order?.items || []).forEach((it, idx) => { %>
+                    <div class="item-row" style="animation-delay:<%= (1.4 + idx * 0.1).toFixed(1) %>s">
+                        <img src="<%= it.product?.productImage?.[0] || it.productImage || '/user/images/placeholder.png' %>"
+                            alt="<%= it.product?.productName || it.productName || 'Item' %>" />
+                        <div class="item-name"><%= it.product?.productName || it.productName %></div>
+                        <div class="item-qty">Qty: <%= it.quantity %></div>
+                        <div class="item-price">₹<%= (it.product?.salePrice ?? it.priceAtPurchase ?? 0).toLocaleString('en-IN') %></div>
+                    </div>
+                <% }) %>
+            </div>
+
+            <!-- Total highlight -->
+            <div class="total-band">
+                <div class="total-label">
+                    <div class="total-label-top">Total Paid</div>
+                </div>
+                <div class="total-amount" id="totalAmount" data-amount="<%= order?.totalAmount || 0 %>">₹0</div>
+            </div>
+
+            <!-- Actions -->
+            <div class="action-row">
+                <a href="/user/orders" class="action-btn primary" id="trackOrderBtn">
+                    <i class="fas fa-location-arrow"></i>
+                    Track Order
+                </a>
+                <a href="/user/shop" class="action-btn outline">
+                    <i class="fas fa-shopping-bag"></i>
+                    Continue Shopping
+                </a>
+            </div>
+
+            <!-- Trust strip -->
+            <div class="trust-strip">
+                <div class="trust-item">
+                    <i class="fas fa-shield-alt"></i>
+                    100% Authentic
+                </div>
+                <div class="trust-item">
+                    <i class="fas fa-undo"></i>
+                    Easy Returns
+                </div>
+                <div class="trust-item">
+                    <i class="fas fa-headset"></i>
+                    24/7 Support
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="/user/js/order-success.js" defer></script>
