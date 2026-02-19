@@ -702,9 +702,10 @@ router.delete('/wishlist/clear', isUser, async (req, res) => {
 
 //Checkout page 
 
-router.get('/checkout',isUser,userController.loadCheckout)
-router.post('/checkout',isUser,userController.placeOrder)
-// Checkout API endpoint (used by checkout.js fetch)
+router.get('/checkout', isUser, userController.loadCheckout)
+router.post('/checkout', isUser, userController.placeOrder)
+
+
 router.post('/checkout/place-order', isUser, async (req, res) => {
   try {
     const checkoutService = require("../services/Checkout");
@@ -729,6 +730,8 @@ router.post('/checkout/place-order', isUser, async (req, res) => {
     });
   }
 });
+
+
 router.get('/order-success/:id', isUser, async (req, res) => {
   try {
     const Order = require("../model/Order");
@@ -779,5 +782,11 @@ router.get('/order-success/:id', isUser, async (req, res) => {
   }
 });
 
+
+router.get('/orders', isUser, userController.loadOrders);
+router.get('/orders/:id', isUser, userController.loadOrderDetails);
+router.put('/orders/cancel/:id', isUser, userController.cancelOrder);
+router.put('/orders/return/:id', isUser, userController.returnOrder);
+router.get('/orders/invoice/:id', isUser, userController.downloadInvoice);
 
 module.exports = router;

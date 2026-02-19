@@ -1,0 +1,254 @@
+/* ==================== ORDER DETAIL PAGE — order-detail.css ==================== */
+/* Reuses variables from user-profile.css and orders.css */
+
+/* DETAIL BLOCK (Section Card) */
+.order-detail-block {
+    background: white;
+    border: 2px solid rgba(0, 0, 0, 0.06);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    animation: fadeIn 0.5s ease backwards;
+}
+
+.order-detail-block:hover {
+    border-color: rgba(255, 145, 77, 0.2);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+.order-detail-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.order-detail-block-body {
+    padding: 20px;
+}
+
+.order-detail-block-footer {
+    padding: 12px 20px;
+    background: rgba(0, 0, 0, 0.015);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ITEM ROW */
+.detail-item-row {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.detail-item-row:last-child {
+    border-bottom: none;
+}
+
+.detail-item-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.detail-item-image:hover,
+.detail-item-image.hover-scale {
+    transform: scale(1.05);
+}
+
+.detail-item-info {
+    flex: 1;
+}
+
+.detail-item-pricing {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* ACTION BUTTONS */
+.action-buttons-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+}
+
+.action-btn-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.9rem 2rem;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    /* default */
+    background: transparent;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: "Poppins", sans-serif;
+}
+
+.action-btn-detail:hover {
+    transform: translateY(-2px);
+}
+
+.action-btn-cancel {
+    border-color: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+}
+
+.action-btn-cancel:hover {
+    background: #dc3545;
+    color: white;
+    border-color: #dc3545;
+    box-shadow: 0 8px 20px rgba(220, 53, 69, 0.3);
+}
+
+.action-btn-return {
+    border-color: rgba(255, 145, 77, 0.2);
+    color: var(--accent);
+}
+
+.action-btn-return:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    box-shadow: 0 8px 20px rgba(255, 145, 77, 0.3);
+}
+
+.action-btn-invoice {
+    border-color: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+}
+
+.action-btn-invoice:hover {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.3);
+}
+
+.action-btn-support {
+    border-color: rgba(74, 144, 217, 0.2);
+    color: #4a90d9;
+}
+
+.action-btn-support:hover {
+    background: #4a90d9;
+    color: white;
+    border-color: #4a90d9;
+    box-shadow: 0 8px 20px rgba(74, 144, 217, 0.3);
+}
+
+/* STATES */
+.cancelled-block {
+    background: rgba(220, 53, 69, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(220, 53, 69, 0.15);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.returned-block {
+    background: rgba(255, 145, 77, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 145, 77, 0.15);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+/* SIDEBAR EXTRAS */
+.sidebar-order-id {
+    text-align: center;
+    margin-bottom: 0.8rem;
+}
+
+.sidebar-order-total {
+    font-family: silver;
+    font-size: 2rem;
+    color: var(--accent);
+    letter-spacing: 0.03em;
+    display: block;
+    text-align: center;
+}
+
+/* SUPPORT CARD */
+.support-contact-card {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 14px;
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.support-contact-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    background: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+
+    /* profile-layout handled in user-profile.css, but ensure stacking works */
+    .profile-sidebar {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .tab-content-wrapper {
+        padding: 1.5rem !important;
+    }
+
+    .action-buttons-row {
+        justify-content: center;
+    }
+
+    .action-btn-detail {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .action-btn-detail {
+        padding: 0.8rem 1.4rem;
+        font-size: 0.88rem;
+    }
+
+    .detail-item-image {
+        width: 60px;
+        height: 60px;
+    }
+
+    .stepper-label {
+        font-size: 0.62rem;
+    }
+
+    .detail-item-row {
+        gap: 0.8rem;
+    }
+
+    .detail-item-info h4 {
+        font-size: 0.9rem !important;
+    }
+}

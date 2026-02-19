@@ -1,0 +1,280 @@
+<link rel="stylesheet" href="/user/css/user-profile.css" />
+<link rel="stylesheet" href="/user/css/orders.css" />
+
+<section class="profile-section">
+  <div class="container">
+    <div class="profile-header-title">
+      <h1>My Orders</h1>
+      <p>Track and manage all your orders</p>
+    </div>
+
+    <div class="profile-layout">
+
+      <!-- SIDEBAR -->
+      <div class="profile-sidebar">
+        <div class="profile-card">
+          <div class="profile-avatar-wrapper">
+            <div class="profile-avatar">
+              <% if (user.profileImage) { %>
+                <img src="<%= user.profileImage %>" alt="Profile">
+                <% } else { %>
+                  <span>
+                    <%= user.fullName.charAt(0) %>
+                  </span>
+                  <% } %>
+            </div>
+          </div>
+          <h3 class="profile-name">
+            <%= user.fullName %>
+          </h3>
+          <a href="/user/profile" class="btn-edit-profile"
+            style="text-decoration:none;display:flex;justify-content:center;align-items:center;gap:8px;">
+            <i class="fas fa-arrow-left"></i>Back to Profile
+          </a>
+
+          <!-- ORDER STATS -->
+          <div class="order-stats-strip">
+            <div class="stat-item">
+              <div class="stat-value">
+                <%= orders.length %>
+              </div>
+              <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <div class="stat-value">
+                <%= orders.filter(o=> o.status === 'Delivered').length %>
+              </div>
+              <div class="stat-label">Delivered</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <div class="stat-value">
+                <%= orders.filter(o=> !['Delivered','Cancelled','Returned'].includes(o.status)).length %>
+              </div>
+              <div class="stat-label">Active</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <div class="profile-main">
+        <!-- TABS -->
+        <div class="profile-tabs">
+          <button class="tab-btn active" id="tabAll">
+            <i class="fas fa-box"></i><span>All Orders</span>
+          </button>
+          <button class="tab-btn" id="tabReturns">
+            <i class="fas fa-undo"></i><span>Returns</span>
+          </button>
+        </div>
+
+        <div class="tab-content-wrapper">
+          <!-- CONTENT HEADER -->
+          <div class="content-header"
+            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:1rem;">
+            <h2 style="margin:0;">Your Orders</h2>
+            <div class="orders-filter-row">
+              <input type="text" id="orderSearch" placeholder="Search orders..." class="order-search-input" />
+              <select id="statusFilter" class="order-status-select">
+                <option value="">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Processing">Processing</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Out for Delivery">Out for Delivery</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="Return Requested">Return Requested</option>
+                <option value="Returned">Returned</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ORDERS LIST -->
+          <div class="orders-list" id="ordersList">
+
+            <% if (!orders || orders.length===0) { %>
+              <div class="orders-empty-state">
+                <i class="fas fa-box-open"></i>
+                <p>No orders yet</p>
+                <span>Start shopping to see your orders here</span>
+                <a href="/user/shop" class="btn primary"
+                  style="margin-top:1.5rem;text-decoration:none;display:inline-block;">Browse Collection</a>
+              </div>
+              <% } else { %>
+                <% orders.forEach((order, index)=> {
+                  const statusMap = {
+                  'Pending': 'pending',
+                  'Processing': 'processing',
+                  'Shipped': 'shipped',
+                  'Out for Delivery': 'out-for-delivery',
+                  'Delivered': 'delivered',
+                  'Cancelled': 'cancelled',
+                  'Return Requested': 'return-requested',
+                  'Returned': 'returned'
+                  };
+                  const iconMap = {
+                  'Pending': 'fa-box',
+                  'Processing': 'fa-box',
+                  'Shipped': 'fa-shipping-fast',
+                  'Out for Delivery': 'fa-shipping-fast',
+                  'Delivered': 'fa-check-circle',
+                  'Cancelled': 'fa-times-circle',
+                  'Return Requested': 'fa-undo',
+                  'Returned': 'fa-undo'
+                  };
+                  const statusClass = statusMap[order.status] || 'pending';
+                  const iconClass = iconMap[order.status] || 'fa-box';
+                  const shortId = String(order._id).slice(-8).toUpperCase();
+                  const orderDate = new Date(order.createdAt).toLocaleDateString('en-IN', { day:'numeric',
+                  month:'short', year:'numeric' });
+                  %>
+                  <div class="order-card" style="animation-delay: <%= index * 0.06 %>s"
+                    data-status="<%= order.status %>" data-id="<%= order._id %>"
+                    data-payment-method="<%= order.paymentMethod %>" data-payment-status="<%= order.paymentStatus %>"
+                    data-total="<%= order.totalAmount %>" data-date="<%= orderDate %>"
+                    data-estimated-delivery="<%= order.estimatedDelivery ? new Date(order.estimatedDelivery).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : 'TBD' %>"
+                    data-address-name="<%= order.shippingAddress ? order.shippingAddress.fullName : '' %>"
+                    data-address-phone="<%= order.shippingAddress ? order.shippingAddress.mobile : '' %>"
+                    data-address-house="<%= order.shippingAddress ? order.shippingAddress.houseName : '' %>"
+                    data-address-city="<%= order.shippingAddress ? order.shippingAddress.city : '' %>"
+                    data-address-state="<%= order.shippingAddress ? order.shippingAddress.state : '' %>"
+                    data-address-pincode="<%= order.shippingAddress ? order.shippingAddress.pincode : '' %>">
+
+                    <!-- CARD HEADER -->
+                    <div class="order-card-header">
+                      <div style="display:flex;align-items:center;gap:14px;">
+                        <div class="order-icon-box">
+                          <i class="fas <%= iconClass %>"></i>
+                        </div>
+                        <div>
+                          <h4 class="order-num">Order #<%= shortId %>
+                          </h4>
+                          <span class="order-date">
+                            <%= orderDate %>
+                          </span>
+                        </div>
+                      </div>
+                      <span class="order-status-badge status-<%= statusClass %>">
+                        <span class="status-dot"></span>
+                        <%= order.status %>
+                      </span>
+                    </div>
+
+                    <!-- CARD BODY -->
+                    <div class="order-card-body">
+                      <div class="order-items-mini">
+                        <% order.items.slice(0, 2).forEach(item=> { %>
+                          <div class="order-item-row">
+                            <img src="<%= item.productImage || '/user/images/placeholder.jpg' %>"
+                              alt="<%= item.productName || 'Product' %>" />
+                            <span class="order-item-name">
+                              <%= item.productName || 'Product' %>
+                            </span>
+                            <span class="order-item-qty">x<%= item.quantity %></span>
+                            <span class="order-item-price">₹<%= (item.priceAtPurchase || 0).toLocaleString('en-IN') %>
+                            </span>
+                          </div>
+                          <% }) %>
+                            <% if (order.items.length> 2) { %>
+                              <button class="order-more-btn"
+                                onclick="window.location.href='/user/orders/<%= order._id %>'">
+                                and <%= order.items.length - 2 %> more item(s)
+                              </button>
+                              <% } %>
+                      </div>
+
+                      <div class="order-meta-row">
+                        <span class="order-meta-item">
+                          <i class="fas fa-credit-card"></i>
+                          <%= order.paymentMethod %>
+                        </span>
+                        <span class="order-meta-item">
+                          <i class="fas fa-truck"></i>
+                          <% if (order.status==='Delivered' ) { %>
+                            Delivered
+                            <% } else { %>
+                              Est. <%= order.estimatedDelivery ? new
+                                Date(order.estimatedDelivery).toLocaleDateString('en-IN', {day:'numeric',month:'short'})
+                                : 'TBD' %>
+                                <% } %>
+                        </span>
+                        <% if (order.shippingAddress) { %>
+                          <span class="order-meta-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %>
+                          </span>
+                          <% } %>
+                      </div>
+                    </div>
+
+                    <!-- CARD FOOTER -->
+                    <div class="order-card-footer">
+                      <div class="order-total-wrap">
+                        <span class="order-total-label">Total</span>
+                        <span class="order-total-amount">₹<%= order.totalAmount.toLocaleString('en-IN') %></span>
+                      </div>
+                      <div class="order-actions">
+                        <button class="order-action-btn view-btn"
+                          onclick="window.location.href='/user/orders/<%= order._id %>'">
+                          <i class="fas fa-eye"></i> View Details
+                        </button>
+                        <% if (order.status==='Pending' ) { %>
+                          <button class="order-action-btn cancel-btn" onclick="cancelOrder('<%= order._id %>')">
+                            <i class="fas fa-times"></i> Cancel
+                          </button>
+                          <% } %>
+                            <% if (order.status==='Delivered' ) { %>
+                              <button class="order-action-btn return-btn" onclick="requestReturn('<%= order._id %>')">
+                                <i class="fas fa-undo"></i> Return
+                              </button>
+                              <button class="order-action-btn invoice-btn"
+                                onclick="downloadInvoice('<%= order._id %>')">
+                                <i class="fas fa-file-invoice"></i> Invoice
+                              </button>
+                              <% } %>
+                      </div>
+                    </div>
+
+                  </div>
+                  <% }) %>
+                    <% } %>
+
+          </div><!-- end orders-list -->
+        </div><!-- end tab-content-wrapper -->
+      </div><!-- end profile-main -->
+    </div><!-- end profile-layout -->
+  </div><!-- end container -->
+</section>
+
+<!-- ORDER DETAIL MODAL REMOVED -->
+
+
+<!-- CANCEL CONFIRMATION MODAL -->
+<div id="cancelConfirmModal" class="custom-modal" style="display:none;z-index:1100;">
+  <div class="modal-overlay"></div>
+  <div class="modal-container" style="max-width:400px;text-align:center;padding:30px;">
+    <div style="margin-bottom:15px;">
+      <i class="fas fa-exclamation-triangle" style="font-size:3rem;color:#dc3545;"></i>
+    </div>
+    <h3 style="margin-bottom:10px;">Cancel Order?</h3>
+    <p style="color:#666;margin-bottom:20px;">Are you sure you want to cancel this order? This action cannot be undone.
+    </p>
+
+    <div id="cancelSummary"
+      style="background:#f8f9fa;padding:15px;border-radius:8px;margin-bottom:20px;text-align:left;">
+      <!-- Populated by JS -->
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="btn outline" onclick="closeCancelModal()" style="padding:0.6rem 1.2rem;">No, Keep Order</button>
+      <button id="confirmCancelBtn" class="btn primary"
+        style="padding:0.6rem 1.2rem;background:#dc3545;border-color:#dc3545;">Yes, Cancel Order</button>
+    </div>
+  </div>
+</div>
+
+
+
+<script src="/user/js/orders.js" defer></script>
