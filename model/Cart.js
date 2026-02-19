@@ -24,6 +24,10 @@ const cartSchema = new mongoose.Schema({
             default: 1,
             min: 1,
         },
+        size: {
+            type: String, // Store size variant
+            required: false // Optional for backward compatibility or non-sized products
+        },
     }],
 }, { timestamps: true });
 

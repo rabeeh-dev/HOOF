@@ -30,9 +30,30 @@ function showToast(message, type = "info") {
 // UPDATE QUANTITY
 // ==========================================
 
-async function updateQuantity(productId, newQty) {
+async function updateQuantity(productId, change) {
+    const qtySpan = document.getElementById(`qty-${productId}`);
+    if (!qtySpan) return;
+
+    let currentQty = parseInt(qtySpan.innerText);
+    let newQty = currentQty + change;
+
+    // Minimum limit check
     if (newQty < 1) {
-        removeItem(productId);
+        // Optional: Ask for confirmation to remove
+        return;
+    }
+
+    // Maximum limit check (5 per item)
+    if (newQty > 5) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Limit Exceeded',
+            text: 'You can only add a maximum of 5 items per product.',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+        });
         return;
     }
 
@@ -46,16 +67,32 @@ async function updateQuantity(productId, newQty) {
 
         if (result.success) {
             // Update count in DOM
-            const countEl = document.getElementById(`qty-${productId}`);
-            if (countEl) countEl.textContent = newQty;
+            qtySpan.textContent = newQty;
 
             // Update summary totals
             updateSummary(result.cart);
         } else {
-            showToast(result.message || "Could not update quantity", "error");
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || "Could not update quantity",
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
         }
     } catch (err) {
-        showToast("Error updating quantity", "error");
+        console.error(err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: "Something went wrong",
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+        });
     }
 }
 

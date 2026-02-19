@@ -198,13 +198,49 @@
     }
 
     function updateQuantity(change) {
-        if (!selectedSize || maxStock === 0) return;
+        if (!selectedSize) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Select Size',
+                text: 'Please select a size first.',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+            return;
+        }
 
         const input = document.getElementById('quantity');
-        let newVal = parseInt(input.value) + change;
-        if (newVal >= 1 && newVal <= 5 && newVal <= maxStock) {
-            input.value = newVal;
+        let currentVal = parseInt(input.value) || 1;
+        let newVal = currentVal + change;
+
+        // Min limit check
+        if (newVal < 1) return;
+
+        // Max limit check (Total 5)
+        if (newVal > 5) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Limit Exceeded',
+                text: 'You can only add a maximum of 5 items per product.',
+                confirmButtonColor: '#000'
+            });
+            return;
         }
+
+        // Stock limit check
+        if (newVal > maxStock) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Out of Stock',
+                text: `Sorry, we only have ${maxStock} items available in this size.`,
+                confirmButtonColor: '#d33'
+            });
+            return;
+        }
+
+        input.value = newVal;
     }
 
     async function addToCart(productId) {
@@ -222,6 +258,28 @@
         }
 
         const quantity = parseInt(document.getElementById('quantity').value) || 1;
+
+        // Frontend Limit Checks
+        if (quantity > 5) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Limit Exceeded',
+                text: 'You can only add a maximum of 5 items per product.',
+                confirmButtonColor: '#000'
+            });
+            return;
+        }
+
+        if (quantity > maxStock) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Out of Stock',
+                text: `Sorry, we only have ${maxStock} items available in this size.`,
+                confirmButtonColor: '#d33'
+            });
+            return;
+        }
+
         const btn = document.getElementById('addToCartBtn');
         const originalContent = btn.innerHTML;
         btn.disabled = true;
@@ -245,12 +303,24 @@
             if (result.success) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Added to Bag',
-                    text: result.message || 'Product added to your cart',
-                    toast: true,
-                    position: 'top-end',
+                    title: 'Added to Bag!',
+                    html: `<div style="display:flex; align-items:center; gap:1rem; justify-content:center; margin-top:1rem;">
+                            <img src="${document.getElementById('mainImage').src}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;">
+                            <div style="text-align:left;">
+                                <p style="margin:0; font-weight:700; font-size:1rem;">${result.message || 'Product Added'}</p>
+                                <p style="margin:0; font-size:0.9rem; color:#666;">Size: ${selectedSize} | Qty: ${quantity}</p>
+                            </div>
+                           </div>`,
                     showConfirmButton: false,
-                    timer: 3000
+                    timer: 3000,
+                    width: '400px',
+                    padding: '1.5rem',
+                    background: '#fff url(/user/images/confetti.png)', // detailed background optional
+                    backdrop: `
+                        rgba(0,0,123,0.1)
+                        left top
+                        no-repeat
+                    `
                 });
 
                 // Update cart count if exists
@@ -258,7 +328,9 @@
                 if (badge) {
                     // Start from 0 if empty/NaN, else increment
                     const current = parseInt(badge.textContent) || 0;
-                    badge.textContent = current + 1;
+                    // Ideally fetch fresh count, but incrementing works for now
+                    badge.textContent = current + quantity; // Add specific quantity
+                    badge.style.display = 'flex'; // Ensure it's visible
                 }
             } else {
                 if (result.message === 'Login required') {

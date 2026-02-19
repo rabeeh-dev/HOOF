@@ -46,19 +46,19 @@
                                         <span class="cart-item-sale-price">₹<%= item.productId.salePrice %></span>
                                         <% if (item.productId.salePrice < item.productId.regularPrice) { %>
                                             <span class="cart-item-regular-price">₹<%= item.productId.regularPrice %>
-                                                    </span>
+                                            </span>
                                             <% } %>
                                     </div>
                                 </div>
                                 <div class="cart-item-actions">
                                     <div class="qty-control">
                                         <button class="qty-btn"
-                                            onclick="updateQuantity('<%= item.productId._id %>', <%= item.quantity - 1 %>)">−</button>
+                                            onclick="updateQuantity('<%= item.productId._id %>', -1)">−</button>
                                         <span class="qty-count" id="qty-<%= item.productId._id %>">
                                             <%= item.quantity %>
                                         </span>
                                         <button class="qty-btn"
-                                            onclick="updateQuantity('<%= item.productId._id %>', <%= item.quantity + 1 %>)">+</button>
+                                            onclick="updateQuantity('<%= item.productId._id %>', 1)">+</button>
                                     </div>
                                     <button class="remove-btn" onclick="removeItem('<%= item.productId._id %>')">
                                         <i class="fas fa-trash"></i> Remove

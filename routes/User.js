@@ -343,6 +343,8 @@ router.get('/cart', isUser, async (req, res) => {
   }
 });
 
+const Product = require("../model/Product");
+
 /**
  * @desc    Add a product to cart (or increment quantity).
  * @route   POST /user/cart/add
@@ -350,21 +352,47 @@ router.get('/cart', isUser, async (req, res) => {
  */
 router.post('/cart/add', isUser, async (req, res) => {
   try {
-    const { productId, quantity = 1 } = req.body;
-    let cart = await Cart.findOne({ userId: req.session.userId });
+    const { productId, quantity = 1, size } = req.body;
 
+    // 1. Validate Product and Variant Stock
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    const variant = product.variants.find(v => v.size === size);
+    if (!variant) {
+      return res.status(404).json({ success: false, message: 'Size not available' });
+    }
+
+    let cart = await Cart.findOne({ userId: req.session.userId });
     if (!cart) {
       cart = new Cart({ userId: req.session.userId, items: [] });
     }
 
     const existingItem = cart.items.find(
-      item => item.productId.toString() === productId
+      item => item.productId.toString() === productId && item.size === size
     );
+
+    let currentQty = existingItem ? existingItem.quantity : 0;
+    const newTotalQty = currentQty + quantity;
+
+    if (newTotalQty > variant.quantity) {
+      return res.status(400).json({
+        success: false,
+        message: `Stock limit exceeded. Only ${variant.quantity} available.`
+      });
+    }
+
+    // Max limit per item check (optional, e.g., 5)
+    if (newTotalQty > 5) {
+      return res.status(400).json({ success: false, message: 'Max 5 items allowed per product.' });
+    }
 
     if (existingItem) {
       existingItem.quantity += quantity;
     } else {
-      cart.items.push({ productId, quantity });
+      cart.items.push({ productId, quantity, size }); // Ensure size is saved in cart item
     }
 
     await cart.save();
@@ -382,12 +410,14 @@ router.post('/cart/add', isUser, async (req, res) => {
  */
 router.put('/cart/update', isUser, async (req, res) => {
   try {
-    const { productId, quantity } = req.body;
+    const { productId, quantity, size } = req.body; // Ensure size is passed or fetched
+
+    // We need to know the size to check stock. 
+    // If size isn't passed in body, we might need to fetch it from cart first.
+    // For now, let's assume the frontend passes the size or we look it up.
+
     const cart = await Cart.findOne({ userId: req.session.userId })
-      .populate({
-        path: 'items.productId',
-        populate: { path: 'category', select: 'name' }
-      });
+      .populate('items.productId'); // Minimal populate to get product ID if needed
 
     if (!cart) {
       return res.status(404).json({ success: false, message: 'Cart not found' });
@@ -395,19 +425,50 @@ router.put('/cart/update', isUser, async (req, res) => {
 
     const item = cart.items.find(
       i => i.productId._id.toString() === productId
+      // Note: Ideally we should match by size too if we support multiple sizes of same product
+      // && i.size === size 
     );
 
     if (!item) {
-      return res.status(404).json({ success: false, message: 'Item not found' });
+      return res.status(404).json({ success: false, message: 'Item not found in cart' });
+    }
+
+    // Get the product details (fresh from DB to get stock)
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    // We use the size from the cart item if not passed
+    const itemSize = size || item.size;
+    const variant = product.variants.find(v => v.size == itemSize); // weak check for string/number match
+
+    if (!variant) {
+      return res.status(400).json({ success: false, message: 'Variant unavailable' });
+    }
+
+    if (quantity > variant.quantity) {
+      return res.status(400).json({
+        success: false,
+        message: `Stock limit exceeded. Only ${variant.quantity} available.`
+      });
+    }
+
+    if (quantity > 5) {
+      return res.status(400).json({ success: false, message: 'Max 5 items allowed per product.' });
     }
 
     item.quantity = quantity;
     await cart.save();
 
     // Recalculate totals
+    // Need to populate properly for price calc
+    const populatedCart = await Cart.findOne({ userId: req.session.userId })
+      .populate('items.productId');
+
     let totalAmount = 0;
     let totalItems = 0;
-    cart.items.forEach(i => {
+    populatedCart.items.forEach(i => {
       if (i.productId) {
         totalAmount += i.productId.salePrice * i.quantity;
         totalItems += i.quantity;

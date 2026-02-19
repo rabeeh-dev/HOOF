@@ -72,6 +72,10 @@ app.set('trust proxy', 1);
 // Custom middleware to check if user is blocked
 app.use(checkBlocked);
 
+// Header Cart Count Middleware
+const fetchCartCount = require("./middleware/cartCount");
+app.use(fetchCartCount);
+
 // ==========================================
 // PASSPORT AUTHENTICATION
 // ==========================================
@@ -111,7 +115,6 @@ const adminRoutes = require('./routes/Admin');
 app.use("/user", userRoutes);
 app.use("/user/address", addressRoutes);
 app.use("/auth", authRoutes);
-app.use(morgan('dev'));
 
 // Admin routes with layout override
 app.use('/admin', (req, res, next) => {
@@ -119,9 +122,7 @@ app.use('/admin', (req, res, next) => {
   next();
 }, adminRoutes);
 
-// ==========================================
-// LANDING PAGE
-// ==========================================
+
 // ==========================================
 // LANDING PAGE
 // ==========================================
