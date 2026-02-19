@@ -296,6 +296,7 @@ router.get('/product-details/:id', productController.loadProductDetails);
 // CART ROUTES
 // ==========================================
 const Cart = require("../model/Cart");
+const Wishlist = require("../model/Wishlist");
 
 /**
  * @desc    Render the cart page with populated items.
@@ -396,6 +397,13 @@ router.post('/cart/add', isUser, async (req, res) => {
     }
 
     await cart.save();
+
+    // Remove from wishlist if exists
+    await Wishlist.updateOne(
+      { userId: req.session.userId },
+      { $pull: { products: productId } }
+    );
+
     res.json({ success: true, message: 'Added to bag!' });
   } catch (err) {
     console.error('Add to cart error:', err);
@@ -542,7 +550,6 @@ router.post('/cart/promo', isUser, async (req, res) => {
 // ==========================================
 // WISHLIST ROUTES
 // ==========================================
-const Wishlist = require("../model/Wishlist");
 
 /**
  * @desc    Render the wishlist page.

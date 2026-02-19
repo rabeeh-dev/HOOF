@@ -168,31 +168,6 @@ function updateSummary(cart) {
 // PROMO CODE (Placeholder)
 // ==========================================
 
-async function applyPromo() {
-    const input = document.getElementById("promoInput");
-    const code = input?.value.trim();
-    if (!code) {
-        showToast("Please enter a promo code", "info");
-        return;
-    }
-
-    try {
-        const response = await fetch("/user/cart/promo", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ code }),
-        });
-        const result = await response.json();
-
-        if (result.success) {
-            showToast("Promo code applied!", "success");
-        } else {
-            showToast(result.message || "Invalid promo code", "error");
-        }
-    } catch (err) {
-        showToast("Could not apply promo code", "error");
-    }
-}
 
 // ==========================================
 // PAGESHOW CACHE BUSTER

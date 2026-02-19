@@ -436,6 +436,10 @@
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
 }
 
+.btn-wishlist.active i {
+    color: #ff3b30;
+}
+
 /* Meta */
 .product-meta {
     display: flex;
@@ -546,7 +550,8 @@
     transform: translateY(10px);
 }
 
-.product-card:hover .card-wishlist-btn {
+.product-card:hover .card-wishlist-btn,
+.card-wishlist-btn.active {
     opacity: 1;
     transform: translateY(0);
 }
@@ -554,6 +559,10 @@
 .card-wishlist-btn:hover {
     background: var(--accent);
     color: white;
+}
+
+.card-wishlist-btn.active i {
+    color: var(--accent);
 }
 
 .card-badge {

@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="/user/css/shop.css" />
 <link rel="stylesheet" href="/user/css/wishlist.css" />
 
 <section class="page-header">
@@ -21,27 +22,24 @@
                 <div class="toolbar-right">
                     <button class="btn outline" onclick="clearWishlist()"><i class="fas fa-trash"></i> Clear
                         All</button>
-                    <button class="btn primary" onclick="moveAllToCart()"><i class="fas fa-shopping-bag"></i> Move All
-                        to Bag</button>
                 </div>
             </div>
 
             <!-- PRODUCTS GRID -->
             <div class="products-grid" id="wishlistGrid">
                 <% wishlistItems.forEach((item, index)=> { %>
-                    <div class="product-card" id="wishlist-item-<%= item.productId._id %>"
-                        style="animation-delay: <%= index * 0.08 %>s">
+                    <!-- Use product-card structure from Shop -->
+                    <div class="product-card" id="wishlist-item-<%= item.productId._id %>">
                         <div class="product-image">
                             <img src="<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>"
                                 onclick="window.location.href='/user/product-details/<%= item.productId._id %>'"
                                 style="cursor:pointer;" />
-                            <% if (item.productId.quantity===0) { %>
-                                <span class="stock-badge">OUT OF STOCK</span>
-                                <% } %>
-                                    <button class="wishlist-btn active"
-                                        onclick="removeFromWishlist('<%= item.productId._id %>')">
-                                        <i class="fas fa-heart"></i>
-                                    </button>
+
+                            <!-- Wishlist Button (Always Active here) -->
+                            <button class="wishlist-btn active"
+                                onclick="toggleWishlist(this, '<%= item.productId._id %>')">
+                                <i class="fas fa-heart"></i>
+                            </button>
                         </div>
                         <div class="product-info">
                             <h3 class="product-name"
@@ -62,7 +60,7 @@
                                 <button class="add-to-cart-btn btn-icon-circle"
                                     onclick="addToCartFromWishlist('<%= item.productId._id %>')"
                                     <%=item.productId.quantity===0 ? 'disabled' : '' %>>
-                                    <i class="fas fa-shopping-bag"></i>
+                                    <i class="fas fa-arrow-right"></i>
                                 </button>
                             </div>
                         </div>
@@ -81,5 +79,65 @@
                 <% } %>
     </div>
 </section>
+
+<!-- Inline script for toggle logic specific to Wishlist page (removes element) -->
+<script>
+    async function toggleWishlist(btn, productId) {
+        // On wishlist page, we only support removing.
+        // But for consistency with the shop page logic, we check active state.
+        // Here, it should always be active initially.
+
+        try {
+            const response = await fetch(`/user/wishlist/remove/${productId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Removed',
+                    text: 'Item removed from wishlist',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+
+                // Remove the card from DOM
+                const card = document.getElementById(`wishlist-item-${productId}`);
+                if (card) {
+                    card.style.transition = 'all 0.3s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.9)';
+                    setTimeout(() => {
+                        card.remove();
+                        // Update count or reload if empty?
+                        // Simple way: check if grid is empty
+                        const grid = document.getElementById('wishlistGrid');
+                        if (grid && grid.children.length === 0) {
+                            location.reload();
+                        }
+                    }, 300);
+                }
+                // Update Wishlist Count in nav
+                const wishlistBadge = document.querySelector('.nav-icon[title="Wishlist"] .nav-badge');
+                if (wishlistBadge) {
+                    let current = parseInt(wishlistBadge.textContent) || 0;
+                    wishlistBadge.textContent = Math.max(0, current - 1);
+                }
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    text: result.message
+                });
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+</script>
 
 <script src="/user/js/wishlist.js" defer></script>

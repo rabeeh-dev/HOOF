@@ -6,6 +6,7 @@
 const productService = require("../services/Product");
 const Category = require("../model/Category");
 const Product = require("../model/Product");
+const Wishlist = require("../model/Wishlist");
 
 /**
  * @desc    Renders the shop/listing page with filters, sorting, and pagination.
@@ -26,6 +27,15 @@ exports.listProducts = async (req, res) => {
         // 3. Define available sizes (static for now)
         const availableSizes = ["6", "7", "8", "9", "10", "11", "12"];
 
+        // 3.5 Fetch User's Wishlist (if logged in)
+        let wishlistProductIds = [];
+        if (req.session.userId) {
+            const wishlist = await Wishlist.findOne({ userId: req.session.userId }).select('products');
+            if (wishlist && wishlist.products) {
+                wishlistProductIds = wishlist.products.map(id => id.toString());
+            }
+        }
+
         // 4. Render Page with all necessary parameters
         res.render('User/shop', {
             products,
@@ -39,6 +49,7 @@ exports.listProducts = async (req, res) => {
             selectedSize: req.query.size || null,
             availableSizes,
             search: req.query.search || '',
+            wishlistProductIds, // Pass the wishlist IDs to the view
             title: "Shop | HOOF"
         });
     } catch (error) {
@@ -71,6 +82,7 @@ exports.loadProductDetails = async (req, res) => {
         }
 
         // Fetch related products (same category, exclude current, only active products)
+        // Fetch related products (same category, exclude current, only active products)
         const relatedProducts = await Product.find({
             category: product.category._id,
             _id: { $ne: productId },
@@ -78,9 +90,19 @@ exports.loadProductDetails = async (req, res) => {
             status: "Available"
         }).limit(4);
 
+        // Fetch User's Wishlist (if logged in)
+        let wishlistProductIds = [];
+        if (req.session.userId) {
+            const wishlist = await Wishlist.findOne({ userId: req.session.userId }).select('products');
+            if (wishlist && wishlist.products) {
+                wishlistProductIds = wishlist.products.map(id => id.toString());
+            }
+        }
+
         res.render("User/product-details", {
             product,
             relatedProducts,
+            wishlistProductIds,
             title: `${product.productName} | HOOF`,
 
             breadcrumbs: [

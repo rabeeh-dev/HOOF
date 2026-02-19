@@ -927,7 +927,7 @@ img {
 }
 
 .wishlist-btn.active i {
-  color: #ff4d4d;
+  color: var(--accent);
 }
 
 .product-overlay {

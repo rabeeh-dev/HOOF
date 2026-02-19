@@ -76,6 +76,10 @@ app.use(checkBlocked);
 const fetchCartCount = require("./middleware/cartCount");
 app.use(fetchCartCount);
 
+// Header Wishlist Count Middleware
+const fetchWishlistCount = require("./middleware/wishlistCount");
+app.use(fetchWishlistCount);
+
 // ==========================================
 // PASSPORT AUTHENTICATION
 // ==========================================
