@@ -1,17 +1,22 @@
 <% /* Computed variables */ const shortId=String(order._id).slice(-8).toUpperCase(); const orderDate=new
     Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric' , month: 'short' , year: 'numeric' }); const
-    statusClass=order.status.toLowerCase().replace(/\s+/g, '-' ); /* Logic helpers */ /* Cancel: Show if
-    Placed/Confirmed/Pending/Processing. Hide if Shipped/Delivered. */ const canCancel=['Pending', 'Processing'
-    , 'PLACED' , 'CONFIRMED' , 'Placed' , 'Confirmed' ].includes(order.status); /* Return & Review: Show only if
-    Delivered */ const canReturn=order.status==='Delivered' ; const canReview=order.status==='Delivered' ; const
-    isDelivered=order.status==='Delivered' ; const isCancelled=order.status.toLowerCase()==='cancelled' ; const
-    isReturned=['Returned', 'Return Requested' ].includes(order.status); /* Stepper logic */ const steps=[ {
-    label: "Confirmed" , icon: "fa-check" , value: "Pending" }, { label: "Processing" , icon: "fa-cog" ,
-    value: "Processing" }, { label: "Shipped" , icon: "fa-shipping-fast" , value: "Shipped" }, {
-    label: "Out for Delivery" , icon: "fa-truck" , value: "Out for Delivery" }, { label: "Delivered" ,
-    icon: "fa-box-open" , value: "Delivered" } ]; const statusMap={ 'Pending' : 1, 'PLACED' : 1, 'Placed' :
-    1, 'Confirmed' : 1, 'CONFIRMED' : 1, 'Processing' : 2, 'Shipped' : 3, 'Out for Delivery' : 4, 'Delivered' : 5 };
-    const currentStepInfo=statusMap[order.status] || 0; %>
+    statusClass=order.status.toLowerCase().replace(/\s+/g, '-' ); /* Logic helpers */ const
+    canCancel=['pending', 'processing' , 'placed' , 'confirmed' ].includes(order.status.toLowerCase()); const
+    canReturn=order.status.toLowerCase()==='delivered' ; const canReview=order.status.toLowerCase()==='delivered' ;
+    const isDelivered=order.status.toLowerCase()==='delivered' ; const
+    isCancelled=order.status.toLowerCase()==='cancelled' ; const isReturned=['returned', 'return requested'
+    ].includes(order.status.toLowerCase()); /* Stepper logic */ const steps=[ { label: "Confirmed" , icon: "fa-check" ,
+    value: "Pending" }, { label: "Processing" , icon: "fa-cog" , value: "Processing" }, { label: "Shipped" ,
+    icon: "fa-shipping-fast" , value: "Shipped" }, { label: "Out for Delivery" , icon: "fa-truck" ,
+    value: "Out for Delivery" }, { label: "Delivered" , icon: "fa-box-open" , value: "Delivered" } ]; const
+    statusMap={ 'pending' : 1, 'placed' : 1, 'confirmed' : 1, 'processing' : 2, 'shipped' : 3, 'out for delivery' :
+    4, 'delivered' : 5, 'return requested' : 6, 'returned' : 7, 'cancelled' : 0 }; const normalizeStatus=(s)=> (s ||
+    '').toLowerCase();
+    const currentStatus = normalizeStatus(order.status);
+    let currentStepInfo = statusMap[currentStatus] || 0;
+
+    if (currentStatus === 'delivered') currentStepInfo = 5;
+    %>
 
     <link rel="stylesheet" href="/user/css/user-profile.css" />
     <link rel="stylesheet" href="/user/css/orders.css" />
@@ -174,7 +179,7 @@
                         </div>
 
                         <!-- BLOCK 2: ORDER ITEMS -->
-                        <div class="order-detail-block">
+                        <div class="order-detail-block" id="order-items">
                             <div class="order-detail-block-header">
                                 <div style="display:flex;align-items:center;gap:14px;">
                                     <div class="order-icon-box" style="background:rgba(74,144,217,0.1);color:#4a90d9;">
@@ -369,7 +374,7 @@
 
                                             <% if (canReview) { %>
                                                 <button class="action-btn-detail action-btn-review"
-                                                    onclick="document.querySelector('.order-detail-block:nth-child(2)').scrollIntoView({behavior: 'smooth'})"
+                                                    onclick="document.getElementById('order-items').scrollIntoView({behavior: 'smooth'})"
                                                     style="background:rgba(255, 215, 0, 0.1);color:#d4af37;border:1px solid rgba(255, 215, 0, 0.3);">
                                                     <i class="fas fa-star"></i> Review Products
                                                 </button>

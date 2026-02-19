@@ -6,6 +6,7 @@
 const Admin = require("../model/Admin");
 const User = require("../model/User");
 const Category = require("../model/Category");
+const Order = require("../model/Order");
 const bcrypt = require("bcrypt");
 const PDFDocument = require("pdfkit-table");
 const adminProductService = require("../services/AdminProduct");
@@ -374,4 +375,145 @@ exports.toggleCategoryStatus = async (req, res) => {
         console.error("Toggle Category Status Error:", error);
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
+};
+
+// ==========================================
+// ORDER MANAGEMENT SECTION
+// ==========================================
+
+/**
+ * @desc    Load order management list with filters, search, and stats.
+ * @route   GET /admin/orders
+ * @access  Private (Admin Only)
+ */
+exports.loadOrders = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const skip = (page - 1) * limit;
+
+        const { status, payment, search } = req.query;
+        let query = {};
+
+        if (status) query.status = status;
+        if (payment) query.paymentMethod = payment;
+        if (search) {
+            query.$or = [
+                { _id: { $regex: search, $options: 'i' } },
+                { 'shippingAddress.fullName': { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const totalOrders = await Order.countDocuments(query);
+        const orders = await Order.find(query)
+            .populate('userId', 'fullName email')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        // Stats aggregation
+        const stats = {
+            total: await Order.countDocuments({}),
+            pending: await Order.countDocuments({ status: 'Pending' }),
+            processing: await Order.countDocuments({ status: 'Processing' }),
+            delivered: await Order.countDocuments({ status: 'DELIVERED' }),
+            totalRevenue: (await Order.aggregate([
+                { $match: { status: 'DELIVERED' } },
+                { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+            ]))[0]?.total || 0
+        };
+
+        res.render('Admin/admin-orders', {
+            orders,
+            currentPage: page,
+            totalPages: Math.ceil(totalOrders / limit) || 1,
+            totalOrders,
+            selectedStatus: status || '',
+            selectedPayment: payment || '',
+            search: search || '',
+            stats,
+            title: "Orders | HOOF Admin",
+            layout: false
+        });
+    } catch (error) {
+        console.error("Load Orders Error:", error.message);
+        res.status(500).send("Error loading orders");
+    }
+};
+
+/**
+ * @desc    Fetch single order details for modal.
+ * @route   GET /admin/orders/:id/detail
+ * @access  Private (Admin Only)
+ */
+exports.getOrderDetail = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id)
+            .populate('userId', 'fullName email')
+            .populate('items.productId');
+        if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+        res.json({ success: true, order });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * @desc    Update order status and history.
+ * @route   PATCH /admin/orders/:id/status
+ * @access  Private (Admin Only)
+ */
+exports.updateOrderStatus = async (req, res) => {
+    try {
+        const { status, notes } = req.body;
+        const order = await Order.findById(req.params.id);
+        if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+        order.status = status;
+        order.statusHistory.push({
+            status,
+            note: notes || `Status updated to ${status} by admin`
+        });
+
+        // Auto-update payment status if delivered
+        if (status === 'DELIVERED') {
+            order.paymentStatus = 'Paid';
+        }
+
+        await order.save();
+        res.json({ success: true, message: "Status updated successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * @desc    Cancel order from admin side.
+ * @route   PATCH /admin/orders/:id/cancel
+ * @access  Private (Admin Only)
+ */
+exports.cancelOrderAdmin = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+        order.status = 'CANCELLED';
+        order.statusHistory.push({
+            status: 'CANCELLED',
+            note: 'Cancelled by administrator'
+        });
+
+        await order.save();
+        res.json({ success: true, message: "Order cancelled successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * @desc    Export orders (Placeholder).
+ * @route   GET /admin/orders/export
+ */
+exports.exportOrders = (req, res) => {
+    res.status(501).send("Export feature not implemented yet");
 };

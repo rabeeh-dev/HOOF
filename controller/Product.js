@@ -1,12 +1,8 @@
-/**
- * @file controller/productController.js
- * @description Controller for handled product-related operations for the end-user (shop and product details).
- */
-
 const productService = require("../services/Product");
 const Category = require("../model/Category");
 const Product = require("../model/Product");
 const Wishlist = require("../model/Wishlist");
+const Review = require("../model/Review");
 
 /**
  * @desc    Renders the shop/listing page with filters, sorting, and pagination.
@@ -58,19 +54,35 @@ exports.listProducts = async (req, res) => {
     }
 };
 
-/**
- * @desc    Render single product details page.
- * @route   GET /user/product-details/:id
- * @access  Public
- * @param   {Object} req - Express request object.
- * @param   {Object} res - Express response object.
- * @returns {void}
- */
+exports.addReview = async (req, res) => {
+    try {
+        const { productId, rating, comment } = req.body;
+        const userId = req.session.userId;
+
+        if (!userId) {
+            return res.status(401).json({ success: false, message: "Please login to write a review" });
+        }
+
+        const newReview = new Review({
+            userId,
+            productId,
+            rating,
+            comment
+        });
+
+        await newReview.save();
+        res.json({ success: true, message: "Review added successfully!" });
+
+    } catch (error) {
+        console.error("Add Review Error:", error);
+        res.status(500).json({ success: false, message: "Failed to add review" });
+    }
+};
+
 exports.loadProductDetails = async (req, res) => {
     try {
         const productId = req.params.id;
 
-        // Validate if productId is a valid MongoDB ObjectId
         if (!productId.match(/^[0-9a-fA-F]{24}$/)) {
             return res.redirect('/user/shop');
         }
@@ -81,8 +93,6 @@ exports.loadProductDetails = async (req, res) => {
             return res.redirect('/user/shop');
         }
 
-        // Fetch related products (same category, exclude current, only active products)
-        // Fetch related products (same category, exclude current, only active products)
         const relatedProducts = await Product.find({
             category: product.category._id,
             _id: { $ne: productId },
@@ -90,7 +100,9 @@ exports.loadProductDetails = async (req, res) => {
             status: "Available"
         }).limit(4);
 
-        // Fetch User's Wishlist (if logged in)
+        // Fetch Reviews
+        const reviews = await Review.find({ productId }).populate('userId', 'fullName').sort({ createdAt: -1 });
+
         let wishlistProductIds = [];
         if (req.session.userId) {
             const wishlist = await Wishlist.findOne({ userId: req.session.userId }).select('products');
@@ -102,9 +114,9 @@ exports.loadProductDetails = async (req, res) => {
         res.render("User/product-details", {
             product,
             relatedProducts,
+            reviews,
             wishlistProductIds,
             title: `${product.productName} | HOOF`,
-
             breadcrumbs: [
                 { name: 'Home', url: '/' },
                 { name: 'Shop', url: '/user/shop' },

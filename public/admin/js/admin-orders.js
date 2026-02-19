@@ -1,0 +1,371 @@
+/**
+ * @file public/admin/js/admin-orders.js
+ * @description Administrative logic for order management, including searching, filtering, status updates, and detailed view.
+ */
+
+document.addEventListener('DOMContentLoaded', () => {
+    // ==========================================
+    // SIDEBAR & NAVIGATION
+    // ==========================================
+
+    const createMobileToggle = () => {
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        if (window.innerWidth <= 768 && !document.querySelector('.sidebar-toggle')) {
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = 'sidebar-toggle';
+            toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            mainContent.insertBefore(toggleBtn, mainContent.firstChild);
+
+            toggleBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
+            mainContent.addEventListener('click', (e) => {
+                if (!e.target.closest('.sidebar-toggle') && sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
+                }
+            });
+        }
+    };
+
+    createMobileToggle();
+    window.addEventListener('resize', createMobileToggle);
+
+    // Logout handler
+    const logoutBtn = document.querySelector('.logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            showCustomConfirm('Logout', 'Are you sure you want to logout?', () => {
+                window.location.href = '/admin/logout';
+            });
+        });
+    }
+
+    // ==========================================
+    // FILTERS & SEARCH
+    // ==========================================
+
+    const filterToggleBtn = document.getElementById('filterToggleBtn');
+    const filterPanel = document.getElementById('filterPanel');
+    const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    const statusFilter = document.getElementById('statusFilter');
+    const paymentFilter = document.getElementById('paymentFilter');
+    const searchInput = document.getElementById('searchInput');
+
+    // Toggle Filter Panel
+    if (filterToggleBtn) {
+        filterToggleBtn.addEventListener('click', () => {
+            const isHidden = window.getComputedStyle(filterPanel).display === 'none';
+            filterPanel.style.display = isHidden ? 'block' : 'none';
+            filterToggleBtn.classList.toggle('active');
+            const icon = filterToggleBtn.querySelector('i');
+            icon.className = isHidden ? 'fas fa-times' : 'fas fa-filter';
+        });
+    }
+
+    // Apply Filters Function
+    const applyFilters = () => {
+        const status = statusFilter.value;
+        const payment = paymentFilter.value;
+        const search = searchInput.value.trim();
+        const url = new URL(window.location.href);
+
+        if (status) url.searchParams.set('status', status);
+        else url.searchParams.delete('status');
+
+        if (payment) url.searchParams.set('payment', payment);
+        else url.searchParams.delete('payment');
+
+        if (search) url.searchParams.set('search', search);
+        else url.searchParams.delete('search');
+
+        url.searchParams.set('page', '1'); // Reset to page 1 on filter
+        window.location.href = url.toString();
+    };
+
+    if (applyFiltersBtn) applyFiltersBtn.addEventListener('click', applyFilters);
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', () => {
+            window.location.href = '/admin/orders';
+        });
+    }
+
+    // Search with Debounce
+    let debounceTimer;
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(applyFilters, 600);
+        });
+    }
+
+    // ==========================================
+    // ORDER DETAILS MODAL
+    // ==========================================
+
+    const orderDetailModal = document.getElementById('orderDetailModal');
+    const closeOrderDetailModal = document.getElementById('closeOrderDetailModal');
+    const closeDetailBtn = document.getElementById('closeDetailBtn');
+    let currentDetailOrderId = null;
+
+    window.viewOrderDetail = async (orderId) => {
+        currentDetailOrderId = orderId;
+        try {
+            const response = await fetch(`/admin/orders/${orderId}/detail`);
+            const data = await response.json();
+
+            if (data.success) {
+                const order = data.order;
+
+                // Populate Modal Fields
+                document.getElementById('modalOrderId').textContent = '#' + String(order._id).slice(-8).toUpperCase();
+                document.getElementById('modalCustomerName').textContent = order.userId?.fullName || order.shippingAddress.fullName;
+                document.getElementById('modalEmail').textContent = order.userId?.email || '--';
+                document.getElementById('modalOrderDate').textContent = new Date(order.createdAt).toLocaleString('en-IN', {
+                    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+
+                const paymentStatus = order.paymentStatus || 'Pending';
+                document.getElementById('modalPayment').innerHTML = `
+                    ${order.paymentMethod} 
+                    <span class="payment-status-mini ${paymentStatus.toLowerCase()}">${paymentStatus}</span>
+                `;
+
+                const addr = order.shippingAddress;
+                document.getElementById('modalAddress').textContent = `${addr.street}, ${addr.city}, ${addr.state} - ${addr.zip}, ${addr.country}. Phone: ${addr.phone}`;
+
+                // Populate Items List
+                const listContainer = document.getElementById('modalItemsList');
+                listContainer.innerHTML = '';
+                order.items.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'modal-item-row';
+                    row.innerHTML = `
+                        <img src="${item.productImage}" alt="${item.productName}" class="modal-item-img">
+                        <div class="modal-item-name">${item.productName}</div>
+                        <div class="modal-item-qty">x${item.quantity}</div>
+                        <div class="modal-item-price">₹${item.priceAtPurchase.toLocaleString('en-IN')}</div>
+                    `;
+                    listContainer.appendChild(row);
+                });
+
+                document.getElementById('modalTotal').textContent = `₹${order.totalAmount.toLocaleString('en-IN')}`;
+
+                orderDetailModal.style.display = 'flex';
+            } else {
+                showToast(data.message || 'Error fetching details', 'error');
+            }
+        } catch (err) {
+            showToast('Connection failed', 'error');
+        }
+    };
+
+    const closeDetail = () => orderDetailModal.style.display = 'none';
+    if (closeOrderDetailModal) closeOrderDetailModal.addEventListener('click', closeDetail);
+    if (closeDetailBtn) closeDetailBtn.addEventListener('click', closeDetail);
+    if (orderDetailModal) {
+        orderDetailModal.querySelector('.modal-overlay').addEventListener('click', closeDetail);
+    }
+
+    // ==========================================
+    // UPDATE STATUS MODAL
+    // ==========================================
+
+    const updateStatusModal = document.getElementById('updateStatusModal');
+    const closeUpdateStatusModal = document.getElementById('closeUpdateStatusModal');
+    const cancelStatusBtn = document.getElementById('cancelStatusBtn');
+    const confirmStatusUpdate = document.getElementById('confirmStatusUpdate');
+    const newStatusSelect = document.getElementById('newStatusSelect');
+    const statusNotes = document.getElementById('statusNotes');
+    let currentStatusOrderId = null;
+
+    window.openStatusModal = (orderId, currentStatus) => {
+        currentStatusOrderId = orderId;
+        document.getElementById('statusModalOrderId').textContent = '#' + String(orderId).slice(-8).toUpperCase();
+
+        const badge = document.getElementById('currentStatusBadge');
+        badge.textContent = currentStatus;
+        badge.className = 'status-badge ' + currentStatus.toLowerCase().replace(/\s+/g, '-');
+
+        newStatusSelect.value = currentStatus;
+        statusNotes.value = '';
+
+        // Hide detail modal if it's open
+        orderDetailModal.style.display = 'none';
+        updateStatusModal.style.display = 'flex';
+    };
+
+    const closeStatusModal = () => updateStatusModal.style.display = 'none';
+    if (closeUpdateStatusModal) closeUpdateStatusModal.addEventListener('click', closeStatusModal);
+    if (cancelStatusBtn) cancelStatusBtn.addEventListener('click', closeStatusModal);
+    if (updateStatusModal) {
+        updateStatusModal.querySelector('.modal-overlay').addEventListener('click', closeStatusModal);
+    }
+
+    if (confirmStatusUpdate) {
+        confirmStatusUpdate.addEventListener('click', async () => {
+            const status = newStatusSelect.value;
+            const notes = statusNotes.value.trim();
+
+            confirmStatusUpdate.textContent = 'Updating...';
+            confirmStatusUpdate.disabled = true;
+
+            try {
+                const response = await fetch(`/admin/orders/${currentStatusOrderId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status, notes })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccessAlert('Status Updated', `Order status changed to ${status} successfully.`);
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast(data.message || 'Update failed', 'error');
+                }
+            } catch (err) {
+                showToast('Connection failed', 'error');
+            } finally {
+                confirmStatusUpdate.textContent = 'Update Status';
+                confirmStatusUpdate.disabled = false;
+            }
+        });
+    }
+
+    // Attach "Update Status" from the detail modal
+    const updateFromDetail = document.getElementById('updateStatusFromDetail');
+    if (updateFromDetail) {
+        updateFromDetail.addEventListener('click', () => {
+            // Read status from hidden data or re-pass it
+            const row = document.querySelector(`tr[data-id="${currentDetailOrderId}"]`);
+            const currentStatus = row ? row.dataset.status : 'Pending';
+            openStatusModal(currentDetailOrderId, currentStatus);
+        });
+    }
+
+    // ==========================================
+    // CANCEL ORDER
+    // ==========================================
+
+    window.cancelOrder = (orderId) => {
+        showCustomConfirm(
+            'Cancel Order',
+            'Are you sure you want to cancel this order? This action cannot be undone.',
+            async () => {
+                try {
+                    const response = await fetch(`/admin/orders/${orderId}/cancel`, { method: 'PATCH' });
+                    const data = await response.json();
+                    if (data.success) {
+                        showSuccessAlert('Cancelled', 'The order has been successfully cancelled.');
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        showToast(data.message || 'Cancellation failed', 'error');
+                    }
+                } catch (err) {
+                    showToast('Connection failed', 'error');
+                }
+            }
+        );
+    };
+
+    // ==========================================
+    // UI UTILITIES (Matching user-management.js)
+    // ==========================================
+
+    function showToast(message, type = 'info') {
+        const existing = document.querySelector('.toast');
+        if (existing) existing.remove();
+
+        const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `<i class="fas ${icons[type]}"></i><span>${message}</span>`;
+        document.body.appendChild(toast);
+
+        setTimeout(() => toast.classList.add('show'), 100);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    function showSuccessAlert(title, message) {
+        const modal = document.createElement('div');
+        modal.className = 'custom-modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-overlay"></div>
+            <div class="modal-container" style="max-width: 420px; text-align: center;">
+                <div class="modal-header" style="justify-content: center; border: none; padding-bottom: 0;">
+                    <div style="background: rgba(39, 174, 96, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                        <i class="fas fa-check-circle" style="font-size: 2.5rem; color: #27ae60;"></i>
+                    </div>
+                </div>
+                <h3 style="margin-bottom: 10px;">${title}</h3>
+                <p style="color: #666; margin-bottom: 25px; line-height: 1.6;">${message}</p>
+                <div class="modal-footer" style="display: flex; gap: 12px; border: none; padding: 0;">
+                    <button type="button" class="modal-btn confirm close-modal" style="flex: 1; background-color: #27ae60;">OK</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        const close = () => modal.remove();
+        modal.querySelector('.close-modal').addEventListener('click', close);
+        modal.querySelector('.modal-overlay').addEventListener('click', close);
+    }
+
+    function showCustomConfirm(title, message, onConfirm) {
+        const modal = document.createElement('div');
+        modal.className = 'custom-modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-overlay"></div>
+            <div class="modal-container">
+                <div class="modal-header">
+                    <div class="modal-icon-wrapper">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+                <h3>${title}</h3>
+                <p>${message}</p>
+                <div class="modal-footer">
+                    <button class="modal-btn confirm">Confirm</button>
+                    <button class="modal-btn cancel">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        const closeModal = () => modal.remove();
+        modal.querySelector('.modal-btn.cancel').addEventListener('click', closeModal);
+        modal.querySelector('.modal-overlay').addEventListener('click', closeModal);
+        modal.querySelector('.modal-btn.confirm').addEventListener('click', () => {
+            closeModal();
+            onConfirm();
+        });
+    }
+
+    // ==========================================
+    // KEYBOARD SHORTCUTS
+    // ==========================================
+
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            if (searchInput) searchInput.focus();
+        }
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.custom-modal').forEach(m => m.style.display = 'none');
+        }
+    });
+
+    // Back-forward refresh
+    window.addEventListener("pageshow", function (event) {
+        const navEntries = performance.getEntriesByType('navigation');
+        const isBackForward = navEntries.length > 0 && navEntries[0].type === 'back_forward';
+        if (event.persisted || isBackForward) {
+            window.location.reload();
+        }
+    });
+});

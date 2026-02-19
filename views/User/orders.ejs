@@ -103,143 +103,133 @@
                   style="margin-top:1.5rem;text-decoration:none;display:inline-block;">Browse Collection</a>
               </div>
               <% } else { %>
-                <% orders.forEach((order, index)=> {
-                  const statusMap = {
-                  'Pending': 'pending',
-                  'Processing': 'processing',
-                  'Shipped': 'shipped',
-                  'Out for Delivery': 'out-for-delivery',
-                  'Delivered': 'delivered',
-                  'Cancelled': 'cancelled',
-                  'Return Requested': 'return-requested',
-                  'Returned': 'returned'
-                  };
-                  const iconMap = {
-                  'Pending': 'fa-box',
-                  'Processing': 'fa-box',
-                  'Shipped': 'fa-shipping-fast',
-                  'Out for Delivery': 'fa-shipping-fast',
-                  'Delivered': 'fa-check-circle',
-                  'Cancelled': 'fa-times-circle',
-                  'Return Requested': 'fa-undo',
-                  'Returned': 'fa-undo'
-                  };
-                  const statusClass = statusMap[order.status] || 'pending';
-                  const iconClass = iconMap[order.status] || 'fa-box';
-                  const shortId = String(order._id).slice(-8).toUpperCase();
-                  const orderDate = new Date(order.createdAt).toLocaleDateString('en-IN', { day:'numeric',
-                  month:'short', year:'numeric' });
-                  %>
-                  <div class="order-card" style="animation-delay: <%= index * 0.06 %>s"
-                    data-status="<%= order.status %>" data-id="<%= order._id %>"
-                    data-payment-method="<%= order.paymentMethod %>" data-payment-status="<%= order.paymentStatus %>"
-                    data-total="<%= order.totalAmount %>" data-date="<%= orderDate %>"
-                    data-estimated-delivery="<%= order.estimatedDelivery ? new Date(order.estimatedDelivery).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : 'TBD' %>"
-                    data-address-name="<%= order.shippingAddress ? order.shippingAddress.fullName : '' %>"
-                    data-address-phone="<%= order.shippingAddress ? order.shippingAddress.mobile : '' %>"
-                    data-address-house="<%= order.shippingAddress ? order.shippingAddress.houseName : '' %>"
-                    data-address-city="<%= order.shippingAddress ? order.shippingAddress.city : '' %>"
-                    data-address-state="<%= order.shippingAddress ? order.shippingAddress.state : '' %>"
-                    data-address-pincode="<%= order.shippingAddress ? order.shippingAddress.pincode : '' %>">
+                <% orders.forEach((order, index)=> { %>
+                  <% const statusInfo={ 'pending' : { class: 'pending' , icon: 'fa-clock' }, 'processing' : {
+                    class: 'processing' , icon: 'fa-cog' }, 'shipped' : { class: 'shipped' , icon: 'fa-shipping-fast'
+                    }, 'out for delivery' : { class: 'out-for-delivery' , icon: 'fa-truck' }, 'delivered' : {
+                    class: 'delivered' , icon: 'fa-check-circle' }, 'cancelled' : { class: 'cancelled' ,
+                    icon: 'fa-times-circle' }, 'return requested' : { class: 'return-requested' , icon: 'fa-undo'
+                    }, 'returned' : { class: 'returned' , icon: 'fa-reply' } }; const normalizedStatus=(order.status
+                    || '' ).toLowerCase(); const statusData=statusInfo[normalizedStatus] || { class: 'pending' ,
+                    icon: 'fa-box' }; const statusClass=statusData.class; const iconClass=statusData.icon; const
+                    shortId=String(order._id).slice(-8).toUpperCase(); const orderDate=new
+                    Date(order.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+                    %>
+                    <div class="order-card" style="animation-delay: <%= index * 0.06 %>s"
+                      data-status="<%= order.status %>" data-id="<%= order._id %>"
+                      data-payment-method="<%= order.paymentMethod %>" data-payment-status="<%= order.paymentStatus %>"
+                      data-total="<%= order.totalAmount %>" data-date="<%= orderDate %>"
+                      data-estimated-delivery="<%= order.estimatedDelivery ? new Date(order.estimatedDelivery).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : 'TBD' %>"
+                      data-address-name="<%= order.shippingAddress ? order.shippingAddress.fullName : '' %>"
+                      data-address-phone="<%= order.shippingAddress ? order.shippingAddress.mobile : '' %>"
+                      data-address-house="<%= order.shippingAddress ? order.shippingAddress.houseName : '' %>"
+                      data-address-city="<%= order.shippingAddress ? order.shippingAddress.city : '' %>"
+                      data-address-state="<%= order.shippingAddress ? order.shippingAddress.state : '' %>"
+                      data-address-pincode="<%= order.shippingAddress ? order.shippingAddress.pincode : '' %>">
 
-                    <!-- CARD HEADER -->
-                    <div class="order-card-header">
-                      <div style="display:flex;align-items:center;gap:14px;">
-                        <div class="order-icon-box">
-                          <i class="fas <%= iconClass %>"></i>
-                        </div>
-                        <div>
-                          <h4 class="order-num">Order #<%= shortId %>
-                          </h4>
-                          <span class="order-date">
-                            <%= orderDate %>
-                          </span>
-                        </div>
-                      </div>
-                      <span class="order-status-badge status-<%= statusClass %>">
-                        <span class="status-dot"></span>
-                        <%= order.status %>
-                      </span>
-                    </div>
-
-                    <!-- CARD BODY -->
-                    <div class="order-card-body">
-                      <div class="order-items-mini">
-                        <% order.items.slice(0, 2).forEach(item=> { %>
-                          <div class="order-item-row">
-                            <img src="<%= item.productImage || '/user/images/placeholder.jpg' %>"
-                              alt="<%= item.productName || 'Product' %>" />
-                            <span class="order-item-name">
-                              <%= item.productName || 'Product' %>
-                            </span>
-                            <span class="order-item-qty">x<%= item.quantity %></span>
-                            <span class="order-item-price">₹<%= (item.priceAtPurchase || 0).toLocaleString('en-IN') %>
+                      <!-- CARD HEADER -->
+                      <div class="order-card-header">
+                        <div style="display:flex;align-items:center;gap:14px;">
+                          <div class="order-icon-box">
+                            <i class="fas <%= iconClass %>"></i>
+                          </div>
+                          <div>
+                            <h4 class="order-num">Order #<%= shortId %>
+                            </h4>
+                            <span class="order-date">
+                              <%= orderDate %>
                             </span>
                           </div>
-                          <% }) %>
-                            <% if (order.items.length> 2) { %>
-                              <button class="order-more-btn"
-                                onclick="window.location.href='/user/orders/<%= order._id %>'">
-                                and <%= order.items.length - 2 %> more item(s)
-                              </button>
-                              <% } %>
+                        </div>
+                        <span class="order-status-badge status-<%= statusClass %>">
+                          <span class="status-dot"></span>
+                          <%= order.status %>
+                        </span>
                       </div>
 
-                      <div class="order-meta-row">
-                        <span class="order-meta-item">
-                          <i class="fas fa-credit-card"></i>
-                          <%= order.paymentMethod %>
-                        </span>
-                        <span class="order-meta-item">
-                          <i class="fas fa-truck"></i>
-                          <% if (order.status==='Delivered' ) { %>
-                            Delivered
-                            <% } else { %>
-                              Est. <%= order.estimatedDelivery ? new
-                                Date(order.estimatedDelivery).toLocaleDateString('en-IN', {day:'numeric',month:'short'})
-                                : 'TBD' %>
+                      <!-- CARD BODY -->
+                      <div class="order-card-body">
+                        <div class="order-items-mini">
+                          <% order.items.slice(0, 2).forEach(item=> { %>
+                            <div class="order-item-row">
+                              <img src="<%= item.productImage || '/user/images/placeholder.jpg' %>"
+                                alt="<%= item.productName || 'Product' %>" />
+                              <span class="order-item-name">
+                                <%= item.productName || 'Product' %>
+                              </span>
+                              <span class="order-item-qty">x<%= item.quantity %></span>
+                              <span class="order-item-price">₹<%= (item.priceAtPurchase || 0).toLocaleString('en-IN') %>
+                              </span>
+                            </div>
+                            <% }) %>
+                              <% if (order.items.length> 2) { %>
+                                <button class="order-more-btn"
+                                  onclick="window.location.href='/user/orders/<%= order._id %>'">
+                                  and <%= order.items.length - 2 %> more item(s)
+                                </button>
                                 <% } %>
-                        </span>
-                        <% if (order.shippingAddress) { %>
+                        </div>
+
+                        <div class="order-meta-row">
                           <span class="order-meta-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %>
+                            <i class="fas fa-credit-card"></i>
+                            <%= order.paymentMethod %>
                           </span>
-                          <% } %>
-                      </div>
-                    </div>
-
-                    <!-- CARD FOOTER -->
-                    <div class="order-card-footer">
-                      <div class="order-total-wrap">
-                        <span class="order-total-label">Total</span>
-                        <span class="order-total-amount">₹<%= order.totalAmount.toLocaleString('en-IN') %></span>
-                      </div>
-                      <div class="order-actions">
-                        <button class="order-action-btn view-btn"
-                          onclick="window.location.href='/user/orders/<%= order._id %>'">
-                          <i class="fas fa-eye"></i> View Details
-                        </button>
-                        <% if (order.status==='Pending' ) { %>
-                          <button class="order-action-btn cancel-btn" onclick="cancelOrder('<%= order._id %>')">
-                            <i class="fas fa-times"></i> Cancel
-                          </button>
-                          <% } %>
+                          <span class="order-meta-item">
+                            <i class="fas fa-truck"></i>
                             <% if (order.status==='Delivered' ) { %>
-                              <button class="order-action-btn return-btn" onclick="requestReturn('<%= order._id %>')">
-                                <i class="fas fa-undo"></i> Return
-                              </button>
-                              <button class="order-action-btn invoice-btn"
-                                onclick="downloadInvoice('<%= order._id %>')">
-                                <i class="fas fa-file-invoice"></i> Invoice
-                              </button>
-                              <% } %>
+                              Delivered
+                              <% } else { %>
+                                Est. <%= order.estimatedDelivery ? new
+                                  Date(order.estimatedDelivery).toLocaleDateString('en-IN',
+                                  {day:'numeric',month:'short'}) : 'TBD' %>
+                                  <% } %>
+                          </span>
+                          <% if (order.shippingAddress) { %>
+                            <span class="order-meta-item">
+                              <i class="fas fa-map-marker-alt"></i>
+                              <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %>
+                            </span>
+                            <% } %>
+                        </div>
                       </div>
-                    </div>
 
-                  </div>
-                  <% }) %>
-                    <% } %>
+                      <!-- CARD FOOTER -->
+                      <div class="order-card-footer">
+                        <div class="order-total-wrap">
+                          <span class="order-total-label">Total</span>
+                          <span class="order-total-amount">₹<%= order.totalAmount.toLocaleString('en-IN') %></span>
+                        </div>
+                        <div class="order-actions">
+                          <button class="order-action-btn view-btn"
+                            onclick="window.location.href='/user/orders/<%= order._id %>'">
+                            <i class="fas fa-eye"></i> View Details
+                          </button>
+                          <% if (normalizedStatus==='pending' || normalizedStatus==='processing' ) { %>
+                            <button class="order-action-btn cancel-btn" onclick="cancelOrder('<%= order._id %>')">
+                              <i class="fas fa-times"></i> Cancel
+                            </button>
+                            <% } %>
+                              <% if (normalizedStatus==='delivered' ) { %>
+                                <button class="order-action-btn return-btn" onclick="requestReturn('<%= order._id %>')">
+                                  <i class="fas fa-undo"></i> Return
+                                </button>
+                                <button class="order-action-btn review-btn"
+                                  onclick="window.location.href='/user/orders/<%= order._id %>#items'"
+                                  style="background:rgba(255, 215, 0, 0.1);color:#d4af37;border:1px solid rgba(255, 215, 0, 0.3);">
+                                  <i class="fas fa-star"></i> Review
+                                </button>
+                                <button class="order-action-btn invoice-btn"
+                                  onclick="downloadInvoice('<%= order._id %>')">
+                                  <i class="fas fa-file-invoice"></i> Invoice
+                                </button>
+                                <% } %>
+                        </div>
+                      </div>
+
+                    </div>
+                    <% }) %>
+                      <% } %>
 
           </div><!-- end orders-list -->
         </div><!-- end tab-content-wrapper -->

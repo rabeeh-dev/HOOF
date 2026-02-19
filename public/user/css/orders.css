@@ -114,6 +114,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -183,43 +184,51 @@
 }
 
 .status-pending {
-  background: rgba(212, 160, 23, 0.12);
-  color: #d4a017;
+  background: rgba(255, 193, 7, 0.15);
+  color: #bfa126;
+  border: 1px solid rgba(255, 193, 7, 0.3);
 }
 
 .status-processing {
-  background: rgba(74, 144, 217, 0.12);
-  color: #4a90d9;
+  background: rgba(52, 152, 219, 0.15);
+  color: #2980b9;
+  border: 1px solid rgba(52, 152, 219, 0.3);
 }
 
 .status-shipped {
-  background: rgba(102, 126, 234, 0.12);
-  color: #667eea;
+  background: rgba(155, 89, 182, 0.15);
+  color: #8e44ad;
+  border: 1px solid rgba(155, 89, 182, 0.3);
 }
 
 .status-out-for-delivery {
-  background: rgba(255, 145, 77, 0.12);
-  color: var(--accent);
+  background: rgba(230, 126, 34, 0.15);
+  color: #d35400;
+  border: 1px solid rgba(230, 126, 34, 0.3);
 }
 
 .status-delivered {
-  background: rgba(40, 167, 69, 0.12);
-  color: #28a745;
+  background: rgba(46, 204, 113, 0.15);
+  color: #27ae60;
+  border: 1px solid rgba(46, 204, 113, 0.3);
 }
 
 .status-cancelled {
-  background: rgba(220, 53, 69, 0.12);
-  color: #dc3545;
+  background: rgba(231, 76, 60, 0.15);
+  color: #c0392b;
+  border: 1px solid rgba(231, 76, 60, 0.3);
 }
 
 .status-return-requested {
-  background: rgba(255, 193, 7, 0.12);
-  color: #e07830;
+  background: rgba(243, 156, 18, 0.15);
+  color: #d68910;
+  border: 1px solid rgba(243, 156, 18, 0.3);
 }
 
 .status-returned {
-  background: rgba(108, 117, 125, 0.12);
-  color: #6c757d;
+  background: rgba(149, 165, 166, 0.15);
+  color: #7f8c8d;
+  border: 1px solid rgba(149, 165, 166, 0.3);
 }
 
 /* CARD BODY */
@@ -637,9 +646,17 @@
   transform: translateX(0);
 }
 
-.toast-notification.success { background: #28a745; }
-.toast-notification.error { background: #dc3545; }
-.toast-notification.info { background: #333; }
+.toast-notification.success {
+  background: #28a745;
+}
+
+.toast-notification.error {
+  background: #dc3545;
+}
+
+.toast-notification.info {
+  background: #333;
+}
 
 /* MODAL BODY SCROLL */
 .modal-body-scroll::-webkit-scrollbar {
@@ -660,6 +677,7 @@
   .orders-filter-row {
     width: 100%;
   }
+
   .order-search-input {
     flex: 1;
     width: auto;
@@ -671,16 +689,20 @@
     flex-direction: column;
     align-items: flex-start;
   }
+
   .order-actions {
     width: 100%;
   }
+
   .payment-pills-grid {
     grid-template-columns: 1fr;
   }
+
   .order-stepper {
     overflow-x: auto;
     padding-bottom: 0.5rem;
   }
+
   .stepper-label {
     font-size: 0.62rem;
   }
@@ -691,15 +713,18 @@
     flex-direction: column;
     align-items: stretch;
   }
+
   .order-search-input,
   .order-status-select {
     width: 100%;
   }
+
   .order-card-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.8rem;
   }
+
   .order-meta-row {
     gap: 1rem;
   }

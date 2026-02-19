@@ -292,6 +292,7 @@ router.get('/shop', productController.listProducts);
  * @access  Public / Private
  */
 router.get('/product-details/:id', productController.loadProductDetails);
+router.post('/product/:id/review', isUser, productController.addReview);
 
 // ==========================================
 // CART ROUTES

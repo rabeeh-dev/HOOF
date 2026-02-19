@@ -16,6 +16,7 @@ const passwordService = require("../services/Password");
 const userService = require("../services/User");
 const checkoutService = require('../services/Checkout');
 const Order = require('../model/Order');
+const PDFDocument = require('pdfkit');
 
 
 // ==========================================
@@ -901,27 +902,72 @@ exports.downloadInvoice = async (req, res) => {
     const order = await Order.findOne({
       _id: req.params.id,
       userId: req.session.userId
-    });
+    }).populate('items.productId');
 
     if (!order || order.status !== "Delivered") {
       return res.status(404).send("Invoice not available");
     }
 
-    // Generate PDF logic here or return a placeholder
-    // For now, prompt implies we just need a route that returns something download-able
-    // I'll send a simple text file for now if no PDF generator is installed, 
-    // or better, I'll check if I can use a library. 
-    // Assuming simple response for now as I don't see pdfkit in list_dir output (I didn't check package.json deep enough)
-    // The prompt says "fetch GET ... create blob URL". So it expects a file.
-
-    // I'll create a simple PDF using PDFKit if available, or just text.
-    // Let's check package.json first? No, I'll just send text/plain for now to satisfy the route, 
-    // as installing packages is risky without approval.
-    // Wait, the prompt implies "downloadInvoiceFromModal" logic: "create anchor with download attribute".
+    const doc = new PDFDocument({ margin: 50 });
+    let filename = `invoice-${order._id}.pdf`;
+    filename = encodeURIComponent(filename);
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=invoice-${order._id}.pdf`);
-    res.send("Invoice content placeholder"); // In a real app, generate PDF here.
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    doc.pipe(res);
+
+    // Header
+    doc.fontSize(20).text('INVOICE', { align: 'center' });
+    doc.moveDown();
+
+    // Company Info
+    doc.fontSize(12).text('HOOF Premium Sneakers', { align: 'right' });
+    doc.text('123 Sneaker Street, Kerala, India', { align: 'right' });
+    doc.moveDown();
+
+    // Order Info
+    doc.text(`Order ID: #${String(order._id).slice(-8).toUpperCase()}`);
+    doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`);
+    doc.text(`Status: ${order.status}`);
+    doc.moveDown();
+
+    // Shipping Address
+    doc.fontSize(14).text('Shipping Address', { underline: true });
+    doc.fontSize(10).text(order.shippingAddress.fullName);
+    doc.text(order.shippingAddress.houseName);
+    doc.text(`${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.pincode}`);
+    doc.text(`Phone: ${order.shippingAddress.mobile}`);
+    doc.moveDown();
+
+    // Table Header
+    const tableTop = 330;
+    doc.fontSize(12).text('Item', 50, tableTop);
+    doc.text('Qty', 300, tableTop);
+    doc.text('Price', 400, tableTop);
+    doc.text('Total', 500, tableTop);
+    doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
+
+    // Table Content
+    let y = tableTop + 30;
+    order.items.forEach(item => {
+      doc.fontSize(10).text(item.productName || (item.productId ? item.productId.productName : 'Product'), 50, y);
+      doc.text(item.quantity.toString(), 300, y);
+      doc.text(`₹${item.priceAtPurchase.toLocaleString()}`, 400, y);
+      doc.text(`₹${(item.quantity * item.priceAtPurchase).toLocaleString()}`, 500, y);
+      y += 20;
+    });
+
+    // Summary
+    doc.moveTo(50, y + 10).lineTo(550, y + 10).stroke();
+    y += 25;
+    doc.fontSize(12).text('Grand Total:', 400, y);
+    doc.text(`₹${order.totalAmount.toLocaleString()}`, 500, y);
+
+    // Footer
+    doc.fontSize(10).text('Thank you for shopping with HOOF!', 50, 700, { align: 'center' });
+
+    doc.end();
 
   } catch (err) {
     console.error("Invoice Error:", err);

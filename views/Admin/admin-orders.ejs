@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orders | HOOF Admin</title>
+    <link rel="stylesheet" href="/admin/css/user-management.css" />
+    <link rel="stylesheet" href="/admin/css/admin-orders.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
+</head>
+
+<body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">HOOF</div>
+            <p class="admin-label">Admin</p>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/admin/dashboard" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/admin/products" class="nav-item">
+                <i class="fas fa-box"></i>
+                <span>Products</span>
+            </a>
+            <a href="/admin/categories" class="nav-item">
+                <i class="fas fa-tags"></i>
+                <span>Categories</span>
+            </a>
+            <a href="/admin/orders" class="nav-item active">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Orders</span>
+            </a>
+            <a href="/admin/customers" class="nav-item">
+                <i class="fas fa-users"></i>
+                <span>Customers</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-ticket-alt"></i>
+                <span>Coupons</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="admin-profile">
+                <div class="admin-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="admin-info">
+                    <h4>Admin User</h4>
+                    <p>View Profile</p>
+                </div>
+                <button class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <!-- HEADER -->
+        <header class="page-header">
+            <div>
+                <h1>Orders Management</h1>
+                <p style="color: #718096; margin-top: 5px; font-size: 0.9rem;">Track and manage customer orders
+                    efficiently</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-filter-toggle" id="filterToggleBtn">
+                    <i class="fas fa-filter"></i>
+                    Filters
+                </button>
+                <button class="btn-export" onclick="window.location.href='/admin/orders/export'">
+                    <i class="fas fa-download"></i>
+                    Export
+                </button>
+            </div>
+        </header>
+
+        <!-- STATS STRIP -->
+        <div class="stats-strip">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(236, 72, 153, 0.1); color: #ec4899;">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+                <div>
+                    <div class="stat-value">
+                        <%= stats.total %>
+                    </div>
+                    <div class="stat-label">Total Orders</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div>
+                    <div class="stat-value">
+                        <%= stats.pending %>
+                    </div>
+                    <div class="stat-label">Pending</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div>
+                    <div class="stat-value">
+                        <%= stats.processing %>
+                    </div>
+                    <div class="stat-label">Processing</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div>
+                    <div class="stat-value">
+                        <%= stats.delivered %>
+                    </div>
+                    <div class="stat-label">Delivered</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;">
+                    <i class="fas fa-rupee-sign"></i>
+                </div>
+                <div>
+                    <div class="stat-value">₹<%= stats.totalRevenue.toLocaleString('en-IN') %>
+                    </div>
+                    <div class="stat-label">Total Revenue</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILTER PANEL -->
+        <div class="filter-panel" id="filterPanel">
+            <div class="filter-grid">
+                <div class="filter-item">
+                    <label class="filter-label">Order Status</label>
+                    <select id="statusFilter" class="filter-select">
+                        <option value="">All Statuses</option>
+                        <option value="Pending" <%=selectedStatus==='Pending' ? 'selected' : '' %>>Pending</option>
+                        <option value="Processing" <%=selectedStatus==='Processing' ? 'selected' : '' %>>Processing
+                        </option>
+                        <option value="SHIPPED" <%=selectedStatus==='SHIPPED' ? 'selected' : '' %>>Shipped</option>
+                        <option value="Out for Delivery" <%=selectedStatus==='Out for Delivery' ? 'selected' : '' %>>Out
+                            for Delivery</option>
+                        <option value="DELIVERED" <%=selectedStatus==='DELIVERED' ? 'selected' : '' %>>Delivered
+                        </option>
+                        <option value="CANCELLED" <%=selectedStatus==='CANCELLED' ? 'selected' : '' %>>Cancelled
+                        </option>
+                        <option value="Return Requested" <%=selectedStatus==='Return Requested' ? 'selected' : '' %>
+                            >Return Requested</option>
+                        <option value="Returned" <%=selectedStatus==='Returned' ? 'selected' : '' %>>Returned</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label class="filter-label">Payment Method</label>
+                    <select id="paymentFilter" class="filter-select">
+                        <option value="">All Methods</option>
+                        <option value="UPI" <%=selectedPayment==='UPI' ? 'selected' : '' %>>UPI</option>
+                        <option value="Card" <%=selectedPayment==='Card' ? 'selected' : '' %>>Card</option>
+                        <option value="COD" <%=selectedPayment==='COD' ? 'selected' : '' %>>COD</option>
+                    </select>
+                </div>
+                <div class="filter-actions-row">
+                    <button class="btn-clear" id="clearFiltersBtn">Reset</button>
+                    <button class="btn-apply" id="applyFiltersBtn">Apply Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ORDERS CARD -->
+        <div class="orders-card">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search by Order ID, Customer Name or Email..." id="searchInput"
+                    value="<%= search %>" />
+                <span id="resultsCount">
+                    <%= totalOrders %> Found
+                </span>
+            </div>
+
+            <div class="table-container">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID & Date</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th>Amount & Payment</th>
+                            <th>Payment Method</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if(orders && orders.length> 0) { %>
+                            <% orders.forEach((order, index)=> { %>
+                                <tr data-id="<%= order._id %>" data-status="<%= order.status %>">
+                                    <td>
+                                        <div class="order-cell">
+                                            <span class="order-id">#<%= String(order._id).slice(-8).toUpperCase() %>
+                                                    </span>
+                                            <span class="order-date">
+                                                <%= new Date(order.createdAt).toLocaleDateString('en-IN', {
+                                                    day: 'numeric' , month: 'short' , year: 'numeric' }) %>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="customer-cell">
+                                            <div
+                                                class="customer-avatar <%= ['red', 'blue', 'green', 'yellow', 'purple'][index % 5] %>">
+                                                <%= order.userId ? order.userId.fullName.charAt(0).toUpperCase() : 'G'
+                                                    %>
+                                            </div>
+                                            <div class="customer-info">
+                                                <h4>
+                                                    <%= order.userId ? order.userId.fullName : 'Guest' %>
+                                                </h4>
+                                                <p>
+                                                    <%= order.userId ? order.userId.email : order.shippingAddress.email
+                                                        || '' %>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="items-preview">
+                                            <% if(order.items && order.items.length> 0) { %>
+                                                <img src="<%= order.items[0].productImage %>" class="item-image-small"
+                                                    alt="Product">
+                                                <% if(order.items.length> 1) { %>
+                                                    <div class="item-count-bubble">+<%= order.items.length - 1 %>
+                                                    </div>
+                                                    <% } %>
+                                                        <% } %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="amount-cell">
+                                            <span class="total-amount">₹<%= order.totalAmount.toLocaleString('en-IN') %>
+                                                    </span>
+                                            <span
+                                                class="payment-status-mini <%= order.paymentStatus ? order.paymentStatus.toLowerCase() : 'pending' %>">
+                                                <%= order.paymentStatus || 'Pending' %>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="font-size: 0.9rem; font-weight: 500; color: #4a5568;">
+                                            <%= order.paymentMethod %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="status-badge <%= order.status.toLowerCase().replace(/\s+/g, '-') %>">
+                                            <%= order.status %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn view" title="View Details"
+                                                onclick="viewOrderDetail('<%= order._id %>')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="action-btn edit" title="Update Status"
+                                                onclick="openStatusModal('<%= order._id %>', '<%= order.status %>')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <% if(!['DELIVERED', 'CANCELLED' , 'Returned' ].includes(order.status)) { %>
+                                                <button class="action-btn delete cancel-btn" title="Cancel Order"
+                                                    onclick="cancelOrder('<%= order._id %>')">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                                <% } %>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="7" style="text-align: center; padding: 4rem;">
+                                                <div
+                                                    style="display: flex; flex-direction: column; align-items: center; color: #a0aec0;">
+                                                    <i class="fas fa-inbox"
+                                                        style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                                    <p>No orders found matching your criteria</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PAGINATION -->
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Page <strong>
+                        <%= currentPage %>
+                    </strong> of <strong>
+                        <%= totalPages %>
+                    </strong>
+                </div>
+                <div class="pagination-buttons">
+                    <% if (currentPage> 1) { %>
+                        <a href="/admin/orders?page=<%= currentPage - 1 %>&status=<%= selectedStatus %>&payment=<%= selectedPayment %>&search=<%= search %>"
+                            class="page-link">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <% } %>
+
+                            <% let startPage=Math.max(1, currentPage - 2); let endPage=Math.min(totalPages, startPage +
+                                4); if (endPage - startPage < 4) startPage=Math.max(1, endPage - 4); %>
+
+                                <% for(let i=startPage; i <=endPage; i++) { %>
+                                    <a href="/admin/orders?page=<%= i %>&status=<%= selectedStatus %>&payment=<%= selectedPayment %>&search=<%= search %>"
+                                        class="page-link <%= i === currentPage ? 'active' : '' %>">
+                                        <%= i %>
+                                    </a>
+                                    <% } %>
+
+                                        <% if (currentPage < totalPages) { %>
+                                            <a href="/admin/orders?page=<%= currentPage + 1 %>&status=<%= selectedStatus %>&payment=<%= selectedPayment %>&search=<%= search %>"
+                                                class="page-link">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </a>
+                                            <% } %>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ORDER DETAIL MODAL -->
+    <div id="orderDetailModal" class="custom-modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-container detail-modal">
+            <div class="modal-header-band">
+                <div class="header-left">
+                    <div class="header-icon-box">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <div class="header-text">
+                        <h3>Order Details</h3>
+                        <p id="modalOrderId">#00000000</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="closeOrderDetailModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body-content">
+                <div class="modal-info-grid">
+                    <div class="modal-info-block">
+                        <span class="modal-detail-label">Customer Name</span>
+                        <span class="modal-detail-value" id="modalCustomerName">--</span>
+                    </div>
+                    <div class="modal-info-block">
+                        <span class="modal-detail-label">Email</span>
+                        <span class="modal-detail-value" id="modalEmail">--</span>
+                    </div>
+                    <div class="modal-info-block">
+                        <span class="modal-detail-label">Order Date</span>
+                        <span class="modal-detail-value" id="modalOrderDate">--</span>
+                    </div>
+                    <div class="modal-info-block">
+                        <span class="modal-detail-label">Payment</span>
+                        <span class="modal-detail-value" id="modalPayment">--</span>
+                    </div>
+                </div>
+
+                <div class="modal-info-block">
+                    <span class="modal-detail-label">Delivery Address</span>
+                    <p class="modal-address-text" id="modalAddress"
+                        style="color: #2d3748; line-height: 1.5; margin: 0;">--</p>
+                </div>
+
+                <div class="modal-items-section">
+                    <span class="modal-detail-label" style="margin-bottom: 0.5rem;">Items Ordered</span>
+                    <div class="modal-items-list" id="modalItemsList">
+                        <!-- Items populated by JS -->
+                    </div>
+                </div>
+
+                <div class="modal-total-row">
+                    <span class="modal-detail-label" style="margin:0;">Total Amount</span>
+                    <span class="modal-total-value" id="modalTotal">₹0.00</span>
+                </div>
+            </div>
+            <div class="modal-footer-strip">
+                <button class="modal-btn cancel" id="closeDetailBtn">Close</button>
+                <button class="modal-btn confirm" id="updateStatusFromDetail">Update Status</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UPDATE STATUS MODAL -->
+    <div id="updateStatusModal" class="custom-modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-container status-modal">
+            <div class="modal-header-band">
+                <div class="header-left">
+                    <div class="header-icon-box" style="color: #d69e2e; background: #fffaf0;">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div class="header-text">
+                        <h3>Update Order Status</h3>
+                        <p id="statusModalOrderId">#00000000</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="closeUpdateStatusModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body-content" style="gap: 1.5rem; display: flex; flex-direction: column;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; background: #f7fafc; padding: 1rem; border-radius: 12px;">
+                    <span class="modal-detail-label" style="margin: 0;">Current Status</span>
+                    <span id="currentStatusBadge" class="status-badge">--</span>
+                </div>
+
+                <div style="text-align: center; color: #a0aec0;">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+
+                <div class="new-status-field">
+                    <label class="modal-detail-label">New Status</label>
+                    <select id="newStatusSelect" class="filter-select" style="width: 100%;">
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="SHIPPED">Shipped</option>
+                        <option value="Out for Delivery">Out for Delivery</option>
+                        <option value="DELIVERED">Delivered</option>
+                        <option value="CANCELLED">Cancelled</option>
+                        <option value="Return Requested">Return Requested</option>
+                        <option value="Returned">Returned</option>
+                    </select>
+                </div>
+
+                <div class="notes-field">
+                    <label class="modal-detail-label">Add Notes (Optional)</label>
+                    <textarea id="statusNotes" class="search-input"
+                        style="width: 100%; min-height: 80px; resize: vertical;"
+                        placeholder="Write a note about this status update..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer-strip">
+                <button class="modal-btn cancel" id="cancelStatusBtn">Cancel</button>
+                <button class="modal-btn confirm" id="confirmStatusUpdate">Update Status</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/admin/js/admin-orders.js" defer></script>
+</body>
+
+</html>

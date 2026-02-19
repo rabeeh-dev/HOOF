@@ -153,8 +153,270 @@
                 </div>
             </div>
             <% } %>
+
+                <!-- Reviews Section -->
+                <div class="reviews-section" id="reviews">
+                    <h2 class="section-title">Customer Reviews</h2>
+
+                    <div class="reviews-container">
+                        <!-- Left: Review Listing -->
+                        <div class="reviews-list-col">
+                            <% if (reviews && reviews.length> 0) { %>
+                                <% reviews.forEach(review=> { %>
+                                    <div class="review-item">
+                                        <div class="review-header">
+                                            <div class="reviewer-info">
+                                                <span class="reviewer-name">
+                                                    <%= review.userId.fullName %>
+                                                </span>
+                                                <span class="review-date">
+                                                    <%= new Date(review.createdAt).toLocaleDateString() %>
+                                                </span>
+                                            </div>
+                                            <div class="review-stars">
+                                                <% for(let i=1; i<=5; i++) { %>
+                                                    <i class="fa<%= i <= review.rating ? 's' : 'r' %> fa-star"></i>
+                                                    <% } %>
+                                            </div>
+                                        </div>
+                                        <div class="review-body">
+                                            <p>
+                                                <%= review.comment %>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <% }) %>
+                                        <% } else { %>
+                                            <div class="no-reviews">
+                                                <i class="far fa-star"></i>
+                                                <p>No reviews yet. Be the first to review this product!</p>
+                                            </div>
+                                            <% } %>
+                        </div>
+
+                        <!-- Right: Add Review Form -->
+                        <div class="add-review-col">
+                            <div class="review-form-card">
+                                <h3>Write a Review</h3>
+                                <form id="reviewForm" class="review-form">
+                                    <input type="hidden" name="productId" value="<%= product._id %>">
+
+                                    <div class="rating-group">
+                                        <label>Your Rating</label>
+                                        <div class="star-rating">
+                                            <input type="radio" id="star5" name="rating" value="5" /><label for="star5"
+                                                class="fas fa-star"></label>
+                                            <input type="radio" id="star4" name="rating" value="4" /><label for="star4"
+                                                class="fas fa-star"></label>
+                                            <input type="radio" id="star3" name="rating" value="3" /><label for="star3"
+                                                class="fas fa-star"></label>
+                                            <input type="radio" id="star2" name="rating" value="2" /><label for="star2"
+                                                class="fas fa-star"></label>
+                                            <input type="radio" id="star1" name="rating" value="1" /><label for="star1"
+                                                class="fas fa-star"></label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="comment">Your Comment</label>
+                                        <textarea id="comment" name="comment" rows="4"
+                                            placeholder="What did you like or dislike about this product?"
+                                            required></textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-submit-review">Submit Review</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
     </div>
 </section>
+
+<style>
+    /* Reviews Styling */
+    .reviews-section {
+        margin-top: 60px;
+        padding-top: 40px;
+        border-top: 1px solid #eee;
+    }
+
+    .reviews-container {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 40px;
+    }
+
+    .review-item {
+        padding: 20px;
+        border-bottom: 1px solid #f5f5f5;
+        margin-bottom: 10px;
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .reviewer-name {
+        font-weight: 700;
+        display: block;
+    }
+
+    .review-date {
+        font-size: 0.85rem;
+        color: #888;
+    }
+
+    .review-stars i {
+        color: #d4af37;
+        font-size: 0.8rem;
+    }
+
+    .review-body p {
+        line-height: 1.6;
+        color: #555;
+    }
+
+    .no-reviews {
+        text-align: center;
+        padding: 40px;
+        background: #fbfbfb;
+        border-radius: 12px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .no-reviews i {
+        font-size: 2rem;
+        color: #ddd;
+        margin-bottom: 15px;
+    }
+
+    .review-form-card {
+        background: #fff;
+        padding: 25px;
+        border-radius: 16px;
+        border: 1px solid #eee;
+        position: sticky;
+        top: 100px;
+    }
+
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 5px;
+        margin-bottom: 15px;
+    }
+
+    .star-rating input {
+        display: none;
+    }
+
+    .star-rating label {
+        font-size: 1.5rem;
+        color: #ddd;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .star-rating input:checked~label,
+    .star-rating label:hover,
+    .star-rating label:hover~label {
+        color: #d4af37;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .form-group textarea {
+        width: 100%;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 12px;
+        font-family: inherit;
+        font-size: 0.95rem;
+        resize: none;
+        transition: border-color 0.2s;
+    }
+
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #000;
+    }
+
+    .btn-submit-review {
+        width: 100%;
+        background: #000;
+        color: #fff;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+
+    .btn-submit-review:hover {
+        opacity: 0.9;
+    }
+
+    @media (max-width: 992px) {
+        .reviews-container {
+            grid-template-columns: 1fr;
+        }
+
+        .review-form-card {
+            position: static;
+            margin-top: 30px;
+        }
+    }
+</style>
+
+<script>
+    document.getElementById('reviewForm')?.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+
+        if (!data.rating) {
+            Swal.fire({ icon: 'warning', title: 'Rating Required', text: 'Please select a star rating.' });
+            return;
+        }
+
+        try {
+            const res = await fetch(`/user/product/${data.productId}/review`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                Swal.fire({ icon: 'success', title: 'Submitted!', text: result.message }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Oops', text: result.message });
+            }
+        } catch (err) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong' });
+        }
+    });
+</script>
 
 <script>
     let selectedSize = null;

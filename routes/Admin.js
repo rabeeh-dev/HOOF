@@ -139,7 +139,44 @@ router.get('/products/edit/:id', adminAuth.isLogin, adminProductController.loadE
 router.post('/products/edit/:id', adminAuth.isLogin, upload.array('productImages', 4), adminProductController.updateProduct);
 
 // ==========================================
-// LOGOUT
+// ORDER MANAGEMENT SECTION
+// ==========================================
+
+/**
+ * @desc    Load order management list with filters and search.
+ * @route   GET /admin/orders
+ * @access  Private (Admin Only)
+ */
+router.get('/orders', adminAuth.isLogin, adminController.loadOrders);
+
+/**
+ * @desc    Get order details as JSON.
+ * @route   GET /admin/orders/:id/detail
+ * @access  Private (Admin Only)
+ */
+router.get('/orders/:id/detail', adminAuth.isLogin, adminController.getOrderDetail);
+
+/**
+ * @desc    Update order status.
+ * @route   PATCH /admin/orders/:id/status
+ * @access  Private (Admin Only)
+ */
+router.patch('/orders/:id/status', adminAuth.isLogin, adminController.updateOrderStatus);
+
+/**
+ * @desc    Cancel an order (Admin).
+ * @route   PATCH /admin/orders/:id/cancel
+ * @access  Private (Admin Only)
+ */
+router.patch('/orders/:id/cancel', adminAuth.isLogin, adminController.cancelOrderAdmin);
+
+/**
+ * @desc    Export orders.
+ * @route   GET /admin/orders/export
+ * @access  Private (Admin Only)
+ */
+router.get('/orders/export', adminAuth.isLogin, adminController.exportOrders);
+
 // ==========================================
 
 /**
