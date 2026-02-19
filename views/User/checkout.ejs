@@ -1,0 +1,343 @@
+<link rel="stylesheet" href="/user/css/shop.css" />
+<link rel="stylesheet" href="/user/css/checkout.css" />
+
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">CHECKOUT</h1>
+        <p class="page-subtitle">You're one step away from your perfect pair</p>
+    </div>
+</section>
+
+<!-- Progress Bar -->
+<section class="checkout-progress">
+    <div class="container">
+        <div class="progress-steps">
+            <div class="step-item active" data-step="1">
+                <div class="step-circle">1</div>
+                <span class="step-label">Address</span>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-item" data-step="2">
+                <div class="step-circle">2</div>
+                <span class="step-label">Payment</span>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-item" data-step="3">
+                <div class="step-circle">3</div>
+                <span class="step-label">Confirm</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="checkout-section">
+    <div class="container">
+        <div class="checkout-layout">
+            <!-- LEFT COLUMN: Multi-Step Form -->
+            <div class="checkout-form-col">
+                <!-- Step 1: Delivery Address -->
+                <div id="stepAddress" class="checkout-step">
+                    <div class="checkout-card">
+                        <div class="checkout-card-header">
+                            <h2>Delivery Address</h2>
+                            <p>Select a saved address or add a new one</p>
+                        </div>
+
+                        <div class="checkout-card-body">
+                            <!-- Saved Addresses -->
+                            <% if (addresses && addresses.length > 0) { %>
+                                <div class="saved-addresses">
+                                    <% addresses.forEach((address) => { %>
+                                        <div class="address-card" data-address-id="<%= address._id %>" onclick="selectAddress('<%= address._id %>')">
+                                            <div class="address-radio">
+                                                <div class="radio-circle"></div>
+                                            </div>
+                                            <div class="address-details">
+                                                <div class="address-header">
+                                                    <span class="address-name"><%= address.fullName %></span>
+                                                    <% if (address.isDefault) { %>
+                                                        <span class="default-badge">DEFAULT</span>
+                                                    <% } %>
+                                                </div>
+                                                <div class="address-phone"><%= address.phone %></div>
+                                                <div class="address-lines">
+                                                    <%= address.addressLine1 %><br>
+                                                    <% if (address.addressLine2) { %>
+                                                        <%= address.addressLine2 %><br>
+                                                    <% } %>
+                                                    <%= address.city %>, <%= address.state %> - <%= address.pincode %>
+                                                </div>
+                                                <button class="address-edit" onclick="event.stopPropagation(); editAddress('<%= address._id %>')">Edit</button>
+                                            </div>
+                                        </div>
+                                    <% }) %>
+                                </div>
+                            <% } %>
+
+                            <!-- Add New Address Toggle -->
+                            <button class="add-address-toggle" onclick="toggleNewAddressForm()">
+                                <i class="fas fa-plus"></i>
+                                Add New Address
+                            </button>
+
+                            <!-- New Address Form -->
+                            <div id="newAddressForm" class="new-address-form" style="display: none;">
+                                <div class="form-fields">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Full Name</label>
+                                            <input type="text" id="newFullName" placeholder="Enter full name" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Phone</label>
+                                            <input type="tel" id="newPhone" placeholder="Enter phone number" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Address Line 1</label>
+                                        <input type="text" id="newAddressLine1" placeholder="Street address, house number" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Address Line 2 (Optional)</label>
+                                        <input type="text" id="newAddressLine2" placeholder="Apartment, suite, etc.">
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>City</label>
+                                            <input type="text" id="newCity" placeholder="Enter city" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>State</label>
+                                            <input type="text" id="newState" placeholder="Enter state" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Pincode</label>
+                                        <input type="text" id="newPincode" placeholder="Enter pincode" required>
+                                    </div>
+                                    <div class="form-checkbox">
+                                        <input type="checkbox" id="setAsDefault">
+                                        <label for="setAsDefault">Set as default address</label>
+                                    </div>
+                                    <button type="button" class="btn primary" onclick="saveNewAddress()">Save Address</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="checkout-card-footer">
+                            <button class="btn-continue" onclick="validateAndContinue(1)">Continue to Payment</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Payment Method -->
+                <div id="stepPayment" class="checkout-step" style="display: none;">
+                    <div class="checkout-card">
+                        <div class="checkout-card-header">
+                            <div class="header-row">
+                                <h2>Payment Method</h2>
+                                <button class="back-link" onclick="goToStep(1)">← Back to Address</button>
+                            </div>
+                        </div>
+
+                        <div class="checkout-card-body">
+                            <!-- Payment Options -->
+                            <div class="payment-options">
+                                <!-- UPI Option -->
+                                <div class="payment-card" data-payment="upi" onclick="selectPayment('upi')">
+                                    <div class="payment-radio">
+                                        <div class="radio-circle"></div>
+                                    </div>
+                                    <div class="payment-details">
+                                        <i class="fas fa-mobile-alt"></i>
+                                        <div>
+                                            <div class="payment-label">UPI Payment</div>
+                                            <div class="payment-sublabel">Pay via GPay, PhonePe, Paytm</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="upiFields" class="payment-fields" style="display: none;">
+                                    <input type="text" id="upiId" placeholder="yourname@upi" class="form-input">
+                                </div>
+
+                                <!-- Card Option -->
+                                <div class="payment-card" data-payment="card" onclick="selectPayment('card')">
+                                    <div class="payment-radio">
+                                        <div class="radio-circle"></div>
+                                    </div>
+                                    <div class="payment-details">
+                                        <i class="fas fa-credit-card"></i>
+                                        <div>
+                                            <div class="payment-label">Credit / Debit Card</div>
+                                            <div class="payment-sublabel">Visa, Mastercard, Rupay</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="cardFields" class="payment-fields" style="display: none;">
+                                    <div class="form-group">
+                                        <label>Card Number</label>
+                                        <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" class="form-input">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Cardholder Name</label>
+                                        <input type="text" id="cardholderName" placeholder="John Doe" class="form-input">
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Expiry (MM/YY)</label>
+                                            <input type="text" id="cardExpiry" placeholder="12/25" maxlength="5" class="form-input">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>CVV</label>
+                                            <input type="text" id="cardCvv" placeholder="123" maxlength="3" class="form-input">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- COD Option -->
+                                <div class="payment-card <%= totalAmount > 5000 ? 'disabled' : '' %>" data-payment="cod" onclick="selectPayment('cod')" <%= totalAmount > 5000 ? 'style="pointer-events: none;"' : '' %>>
+                                    <div class="payment-radio">
+                                        <div class="radio-circle"></div>
+                                    </div>
+                                    <div class="payment-details">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                        <div>
+                                            <div class="payment-label">Cash on Delivery</div>
+                                            <div class="payment-sublabel">Pay when your order arrives</div>
+                                            <% if (totalAmount > 5000) { %>
+                                                <div class="cod-warning">COD not available for orders above ₹5000</div>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="checkout-card-footer">
+                            <button class="btn-continue" onclick="validateAndContinue(2)">Proceed to Review</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Order Review -->
+                <div id="stepConfirm" class="checkout-step" style="display: none;">
+                    <div class="checkout-card">
+                        <div class="checkout-card-header">
+                            <div class="header-row">
+                                <h2>Review Your Order</h2>
+                                <button class="back-link" onclick="goToStep(2)">← Back to Payment</button>
+                            </div>
+                        </div>
+
+                        <div class="checkout-card-body">
+                            <!-- Delivery Summary -->
+                            <div class="review-block">
+                                <div class="review-header">
+                                    <h3>Delivery To</h3>
+                                    <button class="edit-link" onclick="goToStep(1)">Edit</button>
+                                </div>
+                                <div class="review-content" id="deliverySummary">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+
+                            <!-- Payment Summary -->
+                            <div class="review-block">
+                                <div class="review-header">
+                                    <h3>Payment Method</h3>
+                                    <button class="edit-link" onclick="goToStep(2)">Edit</button>
+                                </div>
+                                <div class="review-content" id="paymentSummary">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+
+                            <!-- Order Items -->
+                            <div class="review-block">
+                                <h3>Order Items</h3>
+                                <div class="order-items-list">
+                                    <% if (typeof cartItems !== 'undefined' && cartItems.length > 0) { %>
+                                        <% cartItems.forEach((item) => { %>
+                                            <div class="order-item">
+                                                <img src="<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>">
+                                                <div class="order-item-name"><%= item.productId.productName %></div>
+                                                <span class="order-item-qty">Qty: <%= item.quantity %></span>
+                                                <span class="order-item-price">₹<%= item.totalPrice %></span>
+                                            </div>
+                                        <% }) %>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="checkout-card-footer">
+                            <button class="btn-place-order" onclick="placeOrder()">Place Order</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Order Summary -->
+            <div class="order-summary-col">
+                <div class="order-summary-card">
+                    <h2>Order Summary</h2>
+                    <div class="summary-items">
+                        <% if (typeof cartItems !== 'undefined' && cartItems.length > 0) { %>
+                            <% const maxItems = 4; %>
+                            <% cartItems.slice(0, maxItems).forEach((item) => { %>
+                                <div class="summary-item">
+                                    <img src="<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>">
+                                    <div class="summary-item-name"><%= item.productId.productName %></div>
+                                    <span class="summary-item-qty"><%= item.quantity %></span>
+                                    <span class="summary-item-price">₹<%= item.totalPrice %></span>
+                                </div>
+                            <% }) %>
+                            <% if (cartItems.length > maxItems) { %>
+                                <div class="more-items">
+                                    <a href="#" onclick="return false;">and <%= cartItems.length - maxItems %> more items</a>
+                                </div>
+                            <% } %>
+                        <% } %>
+                    </div>
+                    <div class="summary-breakdown">
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span>₹<%= totalAmount %></span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Shipping</span>
+                            <span class="<%= totalAmount >= 999 ? 'shipping-free' : '' %>">
+                                <%= totalAmount >= 999 ? 'FREE' : '₹99' %>
+                            </span>
+                        </div>
+                        <div class="summary-divider"></div>
+                        <div class="summary-row summary-total">
+                            <span>Total</span>
+                            <span>₹<%= totalAmount >= 999 ? totalAmount : totalAmount + 99 %></span>
+                        </div>
+                    </div>
+                    <div class="delivery-info">
+                        <i class="fas fa-truck"></i>
+                        <span>Estimated delivery: 3-5 business days</span>
+                    </div>
+                    <div class="security-badges">
+                        <div class="badge-item">
+                            <i class="fas fa-lock"></i>
+                            <span>Secure</span>
+                        </div>
+                        <div class="badge-item">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Authentic</span>
+                        </div>
+                        <div class="badge-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Guaranteed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="/user/js/checkout.js" defer></script>

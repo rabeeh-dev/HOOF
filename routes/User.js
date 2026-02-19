@@ -9,6 +9,7 @@ const userController = require("../controller/User");
 const { isUser, isLoggedOut } = require("../middleware/auth");
 const upload = require('../middleware/multer');
 const passport = require("../config/passport");
+const checkoutService = require('../services/Checkout');
 
 // ==========================================
 // AUTHENTICATION ROUTES (Signup, Login, OTP)
@@ -683,6 +684,7 @@ router.post('/wishlist/move-all', isUser, async (req, res) => {
  * @route   DELETE /user/wishlist/clear
  * @access  Private (isUser)
  */
+
 router.delete('/wishlist/clear', isUser, async (req, res) => {
   try {
     const wishlist = await Wishlist.findOne({ userId: req.session.userId });
@@ -696,5 +698,15 @@ router.delete('/wishlist/clear', isUser, async (req, res) => {
     res.status(500).json({ success: false, message: 'Could not clear wishlist' });
   }
 });
+
+
+//Checkout page 
+
+router.get('/checkout',isUser,userController.loadCheckout)
+router.post('/checkout',isUser,userController.placeOrder)
+router.get('/order-success/:id', isUser, async (req, res) => {
+  res.render('User/order-success');
+});
+
 
 module.exports = router;

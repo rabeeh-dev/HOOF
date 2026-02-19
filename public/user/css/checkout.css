@@ -1,0 +1,759 @@
+/* ==================== CHECKOUT PROGRESS BAR ==================== */
+.checkout-progress {
+    background: var(--bg-main);
+    padding: 1.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+}
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.step-item.active .step-circle {
+    background: var(--accent);
+    color: white;
+}
+
+.step-label {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.step-connector {
+    width: 80px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.3);
+    align-self: center;
+    margin: 0 1rem;
+    position: relative;
+}
+
+.step-connector.active {
+    background: var(--accent);
+}
+
+/* ==================== CHECKOUT SECTION ==================== */
+.checkout-section {
+    background: var(--bg-band);
+    padding: 4rem 0;
+}
+
+.checkout-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 3rem;
+    align-items: start;
+}
+
+/* ==================== CHECKOUT CARD ==================== */
+.checkout-card {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 24px;
+    padding: 2.5rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    animation: fadeInUp 0.5s ease;
+}
+
+.checkout-card-header {
+    margin-bottom: 2rem;
+}
+
+.checkout-card-header h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+}
+
+.checkout-card-header p {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.back-link {
+    color: var(--accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0;
+    font-family: inherit;
+    transition: opacity 0.3s ease;
+}
+
+.back-link:hover {
+    opacity: 0.7;
+}
+
+.checkout-card-body {
+    margin-bottom: 2rem;
+}
+
+.checkout-card-footer {
+    margin-top: 2rem;
+}
+
+/* ==================== ADDRESS CARDS ==================== */
+.saved-addresses {
+    margin-bottom: 1.5rem;
+}
+
+.address-card {
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 14px;
+    padding: 1.2rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.address-card:hover {
+    border-color: var(--accent);
+    background: rgba(255, 145, 77, 0.04);
+}
+
+.address-card.selected {
+    border-color: var(--accent);
+    background: rgba(255, 145, 77, 0.04);
+    box-shadow: 0 4px 16px rgba(255, 145, 77, 0.15);
+}
+
+.address-radio {
+    flex-shrink: 0;
+}
+
+.radio-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.address-card.selected .radio-circle {
+    border-color: var(--accent);
+    background: var(--accent);
+}
+
+.address-card.selected .radio-circle::after {
+    content: "";
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+}
+
+.address-details {
+    flex: 1;
+}
+
+.address-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.3rem;
+}
+
+.address-name {
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: 1rem;
+}
+
+.default-badge {
+    background: rgba(255, 145, 77, 0.15);
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    border-radius: 20px;
+    padding: 0.2rem 0.7rem;
+}
+
+.address-phone {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.address-lines {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.5;
+}
+
+.address-edit {
+    color: var(--accent);
+    font-size: 0.82rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    padding: 0;
+    font-family: inherit;
+    transition: opacity 0.3s ease;
+}
+
+.address-edit:hover {
+    opacity: 0.7;
+}
+
+/* ==================== ADD ADDRESS TOGGLE ==================== */
+.add-address-toggle {
+    border: 2px dashed rgba(0, 0, 0, 0.2);
+    border-radius: 14px;
+    padding: 1rem;
+    width: 100%;
+    background: transparent;
+    color: #666;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.add-address-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* ==================== NEW ADDRESS FORM ==================== */
+.new-address-form {
+    margin-top: 1rem;
+}
+
+.form-fields {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 14px;
+    padding: 1.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1.2rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #666;
+    font-weight: 600;
+    font-family: Roboto;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-input {
+    width: 100%;
+    background: white;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+    font-size: 0.9rem;
+    font-family: Poppins;
+    color: var(--text-main);
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-input:focus {
+    border-color: var(--accent);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 145, 77, 0.1);
+}
+
+.form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 1rem;
+}
+
+.form-checkbox input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+}
+
+/* ==================== PAYMENT OPTIONS ==================== */
+.payment-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.payment-card {
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 14px;
+    padding: 1.2rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.payment-card:hover {
+    border-color: var(--accent);
+    background: rgba(255, 145, 77, 0.04);
+}
+
+.payment-card.selected {
+    border-color: var(--accent);
+    background: rgba(255, 145, 77, 0.04);
+    box-shadow: 0 4px 16px rgba(255, 145, 77, 0.15);
+}
+
+.payment-card.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.payment-radio {
+    flex-shrink: 0;
+}
+
+.payment-card .radio-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.payment-card.selected .radio-circle {
+    border-color: var(--accent);
+    background: var(--accent);
+}
+
+.payment-card.selected .radio-circle::after {
+    content: "";
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+}
+
+.payment-details {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.payment-details i {
+    font-size: 1.5rem;
+    color: var(--accent);
+}
+
+.payment-label {
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: 1rem;
+    margin-bottom: 0.2rem;
+}
+
+.payment-sublabel {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.cod-warning {
+    font-size: 0.8rem;
+    color: #dc3545;
+    margin-top: 0.3rem;
+}
+
+.payment-fields {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.payment-fields.show {
+    max-height: 500px;
+}
+
+/* ==================== REVIEW BLOCKS ==================== */
+.review-block {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.review-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.edit-link {
+    color: var(--accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0;
+    font-family: inherit;
+    transition: opacity 0.3s ease;
+}
+
+.edit-link:hover {
+    opacity: 0.7;
+}
+
+.review-content {
+    color: #555;
+    line-height: 1.6;
+    font-size: 0.9rem;
+}
+
+.order-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.order-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.order-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.order-item img {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.order-item-name {
+    flex: 1;
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 0.9rem;
+}
+
+.order-item-qty {
+    font-size: 0.85rem;
+    color: #666;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.3rem 0.6rem;
+    border-radius: 12px;
+}
+
+.order-item-price {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 0.95rem;
+}
+
+/* ==================== BUTTONS ==================== */
+.btn-continue {
+    width: 100%;
+    padding: 1.1rem;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 12px 28px rgba(255, 145, 77, 0.3);
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.btn-continue:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px rgba(255, 145, 77, 0.4);
+}
+
+.btn-place-order {
+    width: 100%;
+    padding: 1.3rem;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+    border-radius: 14px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 16px 36px rgba(255, 145, 77, 0.4);
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.btn-place-order:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 44px rgba(255, 145, 77, 0.5);
+}
+
+.btn-place-order:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ==================== ORDER SUMMARY ==================== */
+.order-summary-card {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    position: sticky;
+    top: 100px;
+}
+
+.order-summary-card h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-main);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.summary-items {
+    margin-bottom: 1.5rem;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.summary-item img {
+    width: 55px;
+    height: 55px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.summary-item-name {
+    flex: 1;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.summary-item-qty {
+    font-size: 0.8rem;
+    color: #666;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+}
+
+.summary-item-price {
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: 0.9rem;
+}
+
+.more-items {
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.more-items a {
+    color: var(--accent);
+    font-size: 0.85rem;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.more-items a:hover {
+    text-decoration: underline;
+}
+
+.summary-breakdown {
+    margin-bottom: 1.5rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+.summary-row .shipping-free {
+    color: #2ecc71;
+    font-weight: 600;
+}
+
+.summary-divider {
+    height: 2px;
+    background: rgba(0, 0, 0, 0.08);
+    margin: 1rem 0;
+}
+
+.summary-total {
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.summary-total span:last-child {
+    color: var(--accent);
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+.delivery-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.delivery-info i {
+    color: var(--accent);
+}
+
+.security-badges {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.badge-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.badge-item i {
+    color: var(--accent);
+    font-size: 1.2rem;
+}
+
+.badge-item span {
+    font-size: 0.78rem;
+    color: #999;
+    font-weight: 600;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 992px) {
+    .checkout-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .order-summary-card {
+        position: static;
+    }
+}
+
+@media (max-width: 480px) {
+    .checkout-section {
+        padding: 2rem 0;
+    }
+
+    .checkout-card {
+        padding: 1.5rem;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .progress-steps {
+        gap: 0.5rem;
+    }
+
+    .step-connector {
+        width: 40px;
+        margin: 0 0.5rem;
+    }
+
+    .step-circle {
+        width: 35px;
+        height: 35px;
+        font-size: 0.8rem;
+    }
+
+    .step-label {
+        font-size: 0.75rem;
+    }
+}

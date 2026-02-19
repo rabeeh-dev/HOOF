@@ -14,6 +14,7 @@ const Address = require("../model/Address");
 const authService = require("../services/Auth");
 const passwordService = require("../services/Password");
 const userService = require("../services/User");
+const checkoutService = require('../services/Checkout');
 
 // ==========================================
 // AUTHENTICATION SECTION (Signup, Login, OTP)
@@ -742,5 +743,37 @@ exports.loadShop = async (req, res) => {
   } catch (error) {
     console.error("Shop Load Error:", error);
     res.redirect("/");
+  }
+};
+
+
+//checkout 
+
+exports.loadCheckout = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+
+    const data = await checkoutService.prepareCheckout(userId);
+  console.log("Checkout Data:", data);
+    res.render('User/checkout', data);
+
+  } catch (err) {
+    console.error(err);
+    res.redirect('/user/cart');
+  }
+};
+
+exports.placeOrder = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const { addressId } = req.body;
+
+    const order = await checkoutService.createOrder(userId, addressId);
+
+    res.redirect(`/user/order-success/${order._id}`);
+
+  } catch (err) {
+    console.error(err);
+    res.redirect('/user/checkout');
   }
 };
