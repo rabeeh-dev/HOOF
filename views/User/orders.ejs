@@ -60,15 +60,6 @@
 
       <!-- MAIN CONTENT -->
       <div class="profile-main">
-        <!-- TABS -->
-        <div class="profile-tabs">
-          <button class="tab-btn active" id="tabAll">
-            <i class="fas fa-box"></i><span>All Orders</span>
-          </button>
-          <button class="tab-btn" id="tabReturns">
-            <i class="fas fa-undo"></i><span>Returns</span>
-          </button>
-        </div>
 
         <div class="tab-content-wrapper">
           <!-- CONTENT HEADER -->
@@ -109,9 +100,11 @@
                     }, 'out for delivery' : { class: 'out-for-delivery' , icon: 'fa-truck' }, 'delivered' : {
                     class: 'delivered' , icon: 'fa-check-circle' }, 'cancelled' : { class: 'cancelled' ,
                     icon: 'fa-times-circle' }, 'return requested' : { class: 'return-requested' , icon: 'fa-undo'
-                    }, 'returned' : { class: 'returned' , icon: 'fa-reply' } }; const normalizedStatus=(order.status
-                    || '' ).toLowerCase(); const statusData=statusInfo[normalizedStatus] || { class: 'pending' ,
-                    icon: 'fa-box' }; const statusClass=statusData.class; const iconClass=statusData.icon; const
+                    }, 'return approved' : { class: 'return-approved' , icon: 'fa-check-circle' }, 'picked up' : {
+                    class: 'picked-up' , icon: 'fa-box' }, 'returned' : { class: 'returned' , icon: 'fa-reply' } };
+                    const normalizedStatus=(order.status || '' ).toLowerCase(); const
+                    statusData=statusInfo[normalizedStatus] || { class: 'pending' , icon: 'fa-box' }; const
+                    statusClass=statusData.class; const iconClass=statusData.icon; const
                     shortId=String(order._id).slice(-8).toUpperCase(); const orderDate=new
                     Date(order.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
                     %>

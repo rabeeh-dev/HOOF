@@ -877,7 +877,7 @@ exports.returnOrder = async (req, res) => {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    if (order.status !== "Delivered") {
+    if (order.status.toLowerCase() !== "delivered") {
       return res.status(400).json({ success: false, message: "Order cannot be returned" });
     }
 

@@ -492,6 +492,18 @@ body {
     border: 1px solid #fbd38d;
 }
 
+.status-badge.return-approved {
+    background: #ebf8ff;
+    color: #3182ce;
+    border: 1px solid #90cdf4;
+}
+
+.status-badge.picked-up {
+    background: #faf5ff;
+    color: #805ad5;
+    border: 1px solid #d6bcfa;
+}
+
 .status-badge.returned {
     background: #edf2f7;
     color: #4a5568;

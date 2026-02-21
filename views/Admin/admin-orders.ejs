@@ -167,6 +167,10 @@
                         </option>
                         <option value="Return Requested" <%=selectedStatus==='Return Requested' ? 'selected' : '' %>
                             >Return Requested</option>
+                        <option value="Return Approved" <%=selectedStatus==='Return Approved' ? 'selected' : '' %>
+                            >Return Approved</option>
+                        <option value="Picked Up" <%=selectedStatus==='Picked Up' ? 'selected' : '' %>>Picked Up
+                        </option>
                         <option value="Returned" <%=selectedStatus==='Returned' ? 'selected' : '' %>>Returned</option>
                     </select>
                 </div>
@@ -217,7 +221,7 @@
                                     <td>
                                         <div class="order-cell">
                                             <span class="order-id">#<%= String(order._id).slice(-8).toUpperCase() %>
-                                                    </span>
+                                            </span>
                                             <span class="order-date">
                                                 <%= new Date(order.createdAt).toLocaleDateString('en-IN', {
                                                     day: 'numeric' , month: 'short' , year: 'numeric' }) %>
@@ -257,7 +261,7 @@
                                     <td>
                                         <div class="amount-cell">
                                             <span class="total-amount">₹<%= order.totalAmount.toLocaleString('en-IN') %>
-                                                    </span>
+                                            </span>
                                             <span
                                                 class="payment-status-mini <%= order.paymentStatus ? order.paymentStatus.toLowerCase() : 'pending' %>">
                                                 <%= order.paymentStatus || 'Pending' %>
@@ -451,6 +455,8 @@
                         <option value="DELIVERED">Delivered</option>
                         <option value="CANCELLED">Cancelled</option>
                         <option value="Return Requested">Return Requested</option>
+                        <option value="Return Approved">Return Approved</option>
+                        <option value="Picked Up">Picked Up</option>
                         <option value="Returned">Returned</option>
                     </select>
                 </div>

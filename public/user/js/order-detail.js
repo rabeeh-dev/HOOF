@@ -77,11 +77,27 @@ async function confirmCancelAction(orderId) {
     }
 }
 
-// Request Return Action
-async function requestReturnFromDetail(orderId) {
-    if (!confirm("Request a return for this order?")) return;
+// Request Return Action - Opens Modal
+function requestReturnFromDetail(orderId) {
+    const modal = document.getElementById('returnConfirmModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
 
-    const btn = document.querySelector('.action-btn-return');
+// Close Return Modal
+function closeReturnModal() {
+    const modal = document.getElementById('returnConfirmModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Confirm Return - Actual API Call
+async function confirmReturnAction(orderId) {
+    const btn = document.getElementById('confirmReturnBtn');
+    const originalText = btn.innerHTML;
+
     if (btn) {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Requesting...';
@@ -99,17 +115,19 @@ async function requestReturnFromDetail(orderId) {
             setTimeout(() => window.location.reload(), 1000);
         } else {
             showToast(result.message || "Failed to request return", "error");
+            closeReturnModal();
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-undo"></i> Return Order';
+                btn.innerHTML = originalText;
             }
         }
     } catch (err) {
         console.error(err);
         showToast("Something went wrong", "error");
+        closeReturnModal();
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-undo"></i> Return Order';
+            btn.innerHTML = originalText;
         }
     }
 }

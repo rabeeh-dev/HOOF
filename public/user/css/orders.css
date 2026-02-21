@@ -225,6 +225,18 @@
   border: 1px solid rgba(243, 156, 18, 0.3);
 }
 
+.status-return-approved {
+  background: rgba(52, 152, 219, 0.15);
+  color: #2980b9;
+  border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
+.status-picked-up {
+  background: rgba(155, 89, 182, 0.15);
+  color: #8e44ad;
+  border: 1px solid rgba(155, 89, 182, 0.3);
+}
+
 .status-returned {
   background: rgba(149, 165, 166, 0.15);
   color: #7f8c8d;

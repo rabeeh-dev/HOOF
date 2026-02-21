@@ -101,10 +101,18 @@
                         <div class="order-detail-block">
                             <div class="order-detail-block-header">
                                 <div style="display:flex;align-items:center;gap:14px;">
-                                    <div class="order-icon-box">
-                                        <i class="fas fa-map-marked-alt"></i>
-                                    </div>
-                                    <h4 style="font-size:1rem;font-weight:600;margin:0;">Order Tracking</h4>
+                                    <% if (isReturned) { %>
+                                        <div class="order-icon-box"
+                                            style="background:rgba(243,156,18,0.1);color:#d68910;">
+                                            <i class="fas fa-undo"></i>
+                                        </div>
+                                        <h4 style="font-size:1rem;font-weight:600;margin:0;">Return Tracking</h4>
+                                        <% } else { %>
+                                            <div class="order-icon-box">
+                                                <i class="fas fa-map-marked-alt"></i>
+                                            </div>
+                                            <h4 style="font-size:1rem;font-weight:600;margin:0;">Order Tracking</h4>
+                                            <% } %>
                                 </div>
                             </div>
 
@@ -123,21 +131,32 @@
                                             <% } %>
                                     </div>
                                     <% } else if (isReturned) { %>
-                                        <div class="returned-block"
-                                            style="background:rgba(255,145,77,0.05);border-radius:12px;border:1px solid rgba(255,145,77,0.15);padding:1.5rem;text-align:center;">
-                                            <i class="fas fa-undo"
-                                                style="font-size:2.5rem;color:var(--accent);margin-bottom:0.8rem;"></i>
-                                            <h3 style="color:var(--accent);font-size:1.1rem;margin:0;">
-                                                <%= order.status %>
-                                            </h3>
-                                        </div>
-                                        <% } else { %>
-                                            <!-- STEPPER -->
-                                            <div class="order-stepper">
-                                                <% steps.forEach((step, index)=> {
+                                        <% /* Return tracking stepper logic */ const returnSteps=[ {
+                                            label: "Return Requested" , icon: "fa-undo" , value: "Return Requested" }, {
+                                            label: "Return Approved" , icon: "fa-check-circle" ,
+                                            value: "Return Approved" }, { label: "Picked Up" , icon: "fa-box" ,
+                                            value: "Picked Up" }, { label: "Refund Processed" , icon: "fa-wallet" ,
+                                            value: "Returned" } ]; /* Determine current return step from statusHistory
+                                            or status */ const returnStatusMap={ 'return requested' :
+                                            1, 'return approved' : 2, 'picked up' : 3, 'returned' : 4 }; let
+                                            currentReturnStep=returnStatusMap[currentStatus] || 1; /* Also check
+                                            statusHistory for intermediate steps */ if (order.statusHistory &&
+                                            order.statusHistory.length> 0) {
+                                            order.statusHistory.forEach(h => {
+                                            const histStep = returnStatusMap[(h.status || '').toLowerCase()];
+                                            if (histStep && histStep > currentReturnStep) {
+                                            currentReturnStep = histStep;
+                                            }
+                                            });
+                                            }
+                                            %>
+
+                                            <!-- RETURN STEPPER -->
+                                            <div class="order-stepper return-stepper">
+                                                <% returnSteps.forEach((step, index)=> {
                                                     const stepNum = index + 1;
-                                                    const isCompleted = stepNum < currentStepInfo; const
-                                                        isActive=stepNum===currentStepInfo; %>
+                                                    const isCompleted = stepNum < currentReturnStep; const
+                                                        isActive=stepNum===currentReturnStep; %>
                                                         <div class="stepper-step">
                                                             <div
                                                                 class="stepper-circle <%= isCompleted ? 'completed' : (isActive ? 'active' : '') %>">
@@ -154,7 +173,7 @@
                                                                 <%= step.label %>
                                                             </div>
                                                         </div>
-                                                        <% if (index < steps.length - 1) { %>
+                                                        <% if (index < returnSteps.length - 1) { %>
                                                             <div
                                                                 class="stepper-connector <%= isCompleted ? 'completed' : '' %>">
                                                             </div>
@@ -162,19 +181,66 @@
                                                                 <% }) %>
                                             </div>
 
-                                            <% if (order.estimatedDelivery && !isDelivered) { %>
+                                            <% /* Find the date of the latest return-related status */ const
+                                                returnEntry=order.statusHistory && order.statusHistory.filter(h=>
+                                                returnStatusMap[(h.status || '').toLowerCase()]).pop();
+                                                if (returnEntry) { %>
                                                 <div
                                                     style="display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-top:1.5rem;">
-                                                    <i class="fas fa-truck"
+                                                    <i class="fas fa-clock"
                                                         style="color:var(--accent);font-size:0.85rem;"></i>
                                                     <span style="font-size:0.85rem;color:#666;">
-                                                        Estimated delivery: <%= new
-                                                            Date(order.estimatedDelivery).toLocaleDateString('en-IN',
+                                                        Last updated: <%= new
+                                                            Date(returnEntry.changedAt).toLocaleDateString('en-IN',
                                                             {day:'numeric', month:'short', year:'numeric'}) %>
                                                     </span>
                                                 </div>
                                                 <% } %>
-                                                    <% } %>
+                                                    <% } else { %>
+                                                        <!-- STEPPER -->
+                                                        <div class="order-stepper">
+                                                            <% steps.forEach((step, index)=> {
+                                                                const stepNum = index + 1;
+                                                                const isCompleted = stepNum < currentStepInfo; const
+                                                                    isActive=stepNum===currentStepInfo; %>
+                                                                    <div class="stepper-step">
+                                                                        <div
+                                                                            class="stepper-circle <%= isCompleted ? 'completed' : (isActive ? 'active' : '') %>">
+                                                                            <% if (isCompleted) { %>
+                                                                                <i class="fas fa-check"
+                                                                                    style="font-size:0.75rem;"></i>
+                                                                                <% } else { %>
+                                                                                    <i class="fas <%= step.icon %>"
+                                                                                        style="font-size:0.7rem;"></i>
+                                                                                    <% } %>
+                                                                        </div>
+                                                                        <div
+                                                                            class="stepper-label <%= isActive ? 'active' : (isCompleted ? 'completed' : '') %>">
+                                                                            <%= step.label %>
+                                                                        </div>
+                                                                    </div>
+                                                                    <% if (index < steps.length - 1) { %>
+                                                                        <div
+                                                                            class="stepper-connector <%= isCompleted ? 'completed' : '' %>">
+                                                                        </div>
+                                                                        <% } %>
+                                                                            <% }) %>
+                                                        </div>
+
+                                                        <% if (order.estimatedDelivery && !isDelivered) { %>
+                                                            <div
+                                                                style="display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-top:1.5rem;">
+                                                                <i class="fas fa-truck"
+                                                                    style="color:var(--accent);font-size:0.85rem;"></i>
+                                                                <span style="font-size:0.85rem;color:#666;">
+                                                                    Estimated delivery: <%= new
+                                                                        Date(order.estimatedDelivery).toLocaleDateString('en-IN',
+                                                                        {day:'numeric', month:'short', year:'numeric'})
+                                                                        %>
+                                                                </span>
+                                                            </div>
+                                                            <% } %>
+                                                                <% } %>
                             </div>
                         </div>
 
@@ -489,6 +555,43 @@
                 <button id="confirmCancelBtn" class="btn primary" onclick="confirmCancelAction('<%= order._id %>')"
                     style="padding:0.8rem;background:#dc3545;border-color:#dc3545;box-shadow:0 4px 15px rgba(220,53,69,0.25);">
                     Yes, Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RETURN CONFIRMATION MODAL -->
+    <div id="returnConfirmModal" class="custom-modal" style="display:none;z-index:1100;">
+        <div class="modal-overlay" onclick="closeReturnModal()"></div>
+        <div class="modal-container" style="max-width:420px;text-align:center;padding:30px 25px;">
+            <div
+                style="width:60px;height:60px;background:rgba(255,145,77,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+                <i class="fas fa-undo" style="font-size:1.8rem;color:var(--accent);"></i>
+            </div>
+
+            <h3 style="margin-bottom:0.5rem;font-size:1.4rem;color:var(--text-main);">Return Order?</h3>
+            <p style="color:#666;font-size:0.95rem;line-height:1.6;margin-bottom:1.5rem;">
+                Are you sure you want to request a return for this order? Once approved, a pickup will be scheduled.
+            </p>
+
+            <div
+                style="background:#f8f9fa;border-radius:12px;padding:1rem;margin-bottom:1.8rem;text-align:left;border:1px solid rgba(0,0,0,0.04);">
+                <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                    <span style="color:#888;font-size:0.85rem;">Order ID</span>
+                    <span style="font-weight:600;font-family:silver;color:var(--text-main);">#<%= shortId %></span>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                    <span style="color:#888;font-size:0.85rem;">Refund Amount</span>
+                    <span style="font-weight:700;color:var(--accent);">₹<%= order.totalAmount.toLocaleString('en-IN') %>
+                    </span>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <button class="btn outline" onclick="closeReturnModal()" style="padding:0.8rem;">No, Keep It</button>
+                <button id="confirmReturnBtn" class="btn primary" onclick="confirmReturnAction('<%= order._id %>')"
+                    style="padding:0.8rem;background:var(--accent);border-color:var(--accent);box-shadow:0 4px 15px rgba(255,145,77,0.25);">
+                    Yes, Return
                 </button>
             </div>
         </div>

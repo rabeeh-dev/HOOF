@@ -169,6 +169,29 @@
     text-align: center;
 }
 
+/* RETURN STEPPER — warm amber accent */
+.return-stepper .stepper-circle.completed {
+    background: #d68910;
+    border-color: #d68910;
+    color: white;
+}
+
+.return-stepper .stepper-circle.active {
+    border-color: #d68910;
+    color: #d68910;
+    box-shadow: 0 0 0 4px rgba(243, 156, 18, 0.15);
+}
+
+.return-stepper .stepper-connector.completed {
+    background: #d68910;
+}
+
+.return-stepper .stepper-label.active,
+.return-stepper .stepper-label.completed {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
 /* SIDEBAR EXTRAS */
 .sidebar-order-id {
     text-align: center;
