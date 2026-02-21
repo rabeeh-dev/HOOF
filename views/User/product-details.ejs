@@ -165,18 +165,26 @@
                                 <% reviews.forEach(review=> { %>
                                     <div class="review-item">
                                         <div class="review-header">
-                                            <div class="reviewer-info">
-                                                <span class="reviewer-name">
-                                                    <%= review.userId.fullName %>
-                                                </span>
-                                                <span class="review-date">
-                                                    <%= new Date(review.createdAt).toLocaleDateString() %>
-                                                </span>
+                                            <div class="reviewer-info-left">
+                                                <div class="reviewer-avatar">
+                                                    <%= review.userId.fullName.charAt(0).toUpperCase() %>
+                                                </div>
+                                                <div class="reviewer-details">
+                                                    <span class="reviewer-name">
+                                                        <%= review.userId.fullName %>
+                                                    </span>
+                                                    <span class="review-date">
+                                                        <%= new Date(review.createdAt).toLocaleDateString('en-IN', {
+                                                            day: 'numeric' , month: 'short' , year: 'numeric' }) %>
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div class="review-stars">
-                                                <% for(let i=1; i<=5; i++) { %>
-                                                    <i class="fa<%= i <= review.rating ? 's' : 'r' %> fa-star"></i>
-                                                    <% } %>
+                                            <div class="review-stars-ribbon">
+                                                <div class="ribbon-stars">
+                                                    <% for(let i=1; i<=5; i++) { %>
+                                                        <i class="fa<%= i <= review.rating ? 's' : 'r' %> fa-star"></i>
+                                                        <% } %>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="review-body">
@@ -187,21 +195,29 @@
                                     </div>
                                     <% }) %>
                                         <% } else { %>
-                                            <div class="no-reviews">
-                                                <i class="far fa-star"></i>
-                                                <p>No reviews yet. Be the first to review this product!</p>
+                                            <div class="no-reviews-premium">
+                                                <div class="empty-icon-wrap">
+                                                    <i class="far fa-comment-alt"></i>
+                                                </div>
+                                                <h3>No reviews yet</h3>
+                                                <p>Be the first to share your thoughts about this product!</p>
                                             </div>
                                             <% } %>
                         </div>
 
                         <!-- Right: Add Review Form -->
                         <div class="add-review-col">
-                            <div class="review-form-card">
-                                <h3>Write a Review</h3>
+                            <div class="premium-review-form-card">
+                                <div class="form-card-header">
+                                    <div class="form-icon">
+                                        <i class="fas fa-pen-fancy"></i>
+                                    </div>
+                                    <h3>Write a Review</h3>
+                                </div>
                                 <form id="reviewForm" class="review-form">
                                     <input type="hidden" name="productId" value="<%= product._id %>">
 
-                                    <div class="rating-group">
+                                    <div class="rating-group premium-group">
                                         <label>Your Rating</label>
                                         <div class="star-rating">
                                             <input type="radio" id="star5" name="rating" value="5" /><label for="star5"
@@ -217,14 +233,17 @@
                                         </div>
                                     </div>
 
-                                    <div class="form-group">
+                                    <div class="form-group premium-group">
                                         <label for="comment">Your Comment</label>
                                         <textarea id="comment" name="comment" rows="4"
                                             placeholder="What did you like or dislike about this product?"
                                             required></textarea>
                                     </div>
 
-                                    <button type="submit" class="btn btn-submit-review">Submit Review</button>
+                                    <button type="submit" class="btn btn-submit-review">
+                                        <span>Submit Review</span>
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -233,158 +252,7 @@
     </div>
 </section>
 
-<style>
-    /* Reviews Styling */
-    .reviews-section {
-        margin-top: 60px;
-        padding-top: 40px;
-        border-top: 1px solid #eee;
-    }
 
-    .reviews-container {
-        display: grid;
-        grid-template-columns: 1fr 350px;
-        gap: 40px;
-    }
-
-    .review-item {
-        padding: 20px;
-        border-bottom: 1px solid #f5f5f5;
-        margin-bottom: 10px;
-    }
-
-    .review-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-    }
-
-    .reviewer-name {
-        font-weight: 700;
-        display: block;
-    }
-
-    .review-date {
-        font-size: 0.85rem;
-        color: #888;
-    }
-
-    .review-stars i {
-        color: #d4af37;
-        font-size: 0.8rem;
-    }
-
-    .review-body p {
-        line-height: 1.6;
-        color: #555;
-    }
-
-    .no-reviews {
-        text-align: center;
-        padding: 40px;
-        background: #fbfbfb;
-        border-radius: 12px;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .no-reviews i {
-        font-size: 2rem;
-        color: #ddd;
-        margin-bottom: 15px;
-    }
-
-    .review-form-card {
-        background: #fff;
-        padding: 25px;
-        border-radius: 16px;
-        border: 1px solid #eee;
-        position: sticky;
-        top: 100px;
-    }
-
-    .star-rating {
-        display: flex;
-        flex-direction: row-reverse;
-        justify-content: flex-end;
-        gap: 5px;
-        margin-bottom: 15px;
-    }
-
-    .star-rating input {
-        display: none;
-    }
-
-    .star-rating label {
-        font-size: 1.5rem;
-        color: #ddd;
-        cursor: pointer;
-        transition: color 0.2s;
-    }
-
-    .star-rating input:checked~label,
-    .star-rating label:hover,
-    .star-rating label:hover~label {
-        color: #d4af37;
-    }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-
-    .form-group textarea {
-        width: 100%;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 12px;
-        font-family: inherit;
-        font-size: 0.95rem;
-        resize: none;
-        transition: border-color 0.2s;
-    }
-
-    .form-group textarea:focus {
-        outline: none;
-        border-color: #000;
-    }
-
-    .btn-submit-review {
-        width: 100%;
-        background: #000;
-        color: #fff;
-        padding: 12px;
-        border-radius: 8px;
-        font-weight: 700;
-        border: none;
-        cursor: pointer;
-        transition: opacity 0.2s;
-    }
-
-    .btn-submit-review:hover {
-        opacity: 0.9;
-    }
-
-    @media (max-width: 992px) {
-        .reviews-container {
-            grid-template-columns: 1fr;
-        }
-
-        .review-form-card {
-            position: static;
-            margin-top: 30px;
-        }
-    }
-</style>
 
 <script>
     document.getElementById('reviewForm')?.addEventListener('submit', async function (e) {
