@@ -121,11 +121,11 @@
                       data-total="<%= order.totalAmount %>" data-date="<%= orderDate %>"
                       data-estimated-delivery="<%= order.estimatedDelivery ? new Date(order.estimatedDelivery).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : 'TBD' %>"
                       data-address-name="<%= order.shippingAddress ? order.shippingAddress.fullName : '' %>"
-                      data-address-phone="<%= order.shippingAddress ? order.shippingAddress.mobile : '' %>"
-                      data-address-house="<%= order.shippingAddress ? order.shippingAddress.houseName : '' %>"
+                      data-address-phone="<%= order.shippingAddress ? (order.shippingAddress.phone || order.shippingAddress.mobile || '') : '' %>"
+                      data-address-house="<%= order.shippingAddress ? (order.shippingAddress.street || order.shippingAddress.houseName || '') : '' %>"
                       data-address-city="<%= order.shippingAddress ? order.shippingAddress.city : '' %>"
                       data-address-state="<%= order.shippingAddress ? order.shippingAddress.state : '' %>"
-                      data-address-pincode="<%= order.shippingAddress ? order.shippingAddress.pincode : '' %>">
+                      data-address-pincode="<%= order.shippingAddress ? (order.shippingAddress.zip || order.shippingAddress.pincode || '') : '' %>">
 
                       <!-- CARD HEADER -->
                       <div class="order-card-header">

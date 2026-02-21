@@ -904,8 +904,8 @@ exports.downloadInvoice = async (req, res) => {
       userId: req.session.userId
     }).populate('items.productId');
 
-    if (!order || order.status !== "Delivered") {
-      return res.status(404).send("Invoice not available");
+    if (!order || order.status.toLowerCase() !== "delivered") {
+      return res.status(404).json({ error: "Invoice not available" });
     }
 
     const doc = new PDFDocument({ margin: 50 });
@@ -935,9 +935,9 @@ exports.downloadInvoice = async (req, res) => {
     // Shipping Address
     doc.fontSize(14).text('Shipping Address', { underline: true });
     doc.fontSize(10).text(order.shippingAddress.fullName);
-    doc.text(order.shippingAddress.houseName);
-    doc.text(`${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.pincode}`);
-    doc.text(`Phone: ${order.shippingAddress.mobile}`);
+    doc.text(order.shippingAddress.street || order.shippingAddress.houseName || '');
+    doc.text(`${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zip || order.shippingAddress.pincode || ''}`);
+    doc.text(`Phone: ${order.shippingAddress.phone || order.shippingAddress.mobile || ''}`);
     doc.moveDown();
 
     // Table Header

@@ -279,19 +279,26 @@
                                         style="font-size:1rem;font-weight:700;color:var(--text-main);margin-bottom:0.3rem;">
                                         <%= order.shippingAddress.fullName %>
                                     </div>
-                                    <div
-                                        style="font-size:0.85rem;color:#666;display:flex;align-items:center;gap:0.4rem;margin-bottom:0.8rem;">
-                                        <i class="fas fa-phone"></i>
-                                        <%= order.shippingAddress.mobile || order.shippingAddress.phone %>
-                                    </div>
-                                    <div style="font-size:0.9rem;color:#555;line-height:1.7;">
-                                        <%= order.shippingAddress.houseName || order.shippingAddress.street %><br>
-                                            <span style="font-weight:500;margin-top:0.2rem;display:inline-block;">
-                                                <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> —
-                                                        <%= order.shippingAddress.pincode || order.shippingAddress.zip
-                                                            %>
-                                            </span>
-                                    </div>
+                                    <% const addrPhone=order.shippingAddress.phone || order.shippingAddress.mobile || ''
+                                        ; %>
+                                        <% if (addrPhone) { %>
+                                            <div
+                                                style="font-size:0.85rem;color:#666;display:flex;align-items:center;gap:0.4rem;margin-bottom:0.8rem;">
+                                                <i class="fas fa-phone"></i>
+                                                <%= addrPhone %>
+                                            </div>
+                                            <% } %>
+                                                <div style="font-size:0.9rem;color:#555;line-height:1.7;">
+                                                    <%= order.shippingAddress.street || order.shippingAddress.houseName
+                                                        || '' %><br>
+                                                        <span
+                                                            style="font-weight:500;margin-top:0.2rem;display:inline-block;">
+                                                            <%= order.shippingAddress.city %>, <%=
+                                                                    order.shippingAddress.state %> —
+                                                                    <%= order.shippingAddress.zip ||
+                                                                        order.shippingAddress.pincode || '' %>
+                                                        </span>
+                                                </div>
                                 </div>
                             </div>
                         </div>

@@ -96,12 +96,11 @@ exports.createOrder = async (userId, addressId) => {
     items: orderItems,
     shippingAddress: {
       fullName: address.fullName,
-      phone: address.phone,
-      street: address.street,
+      phone: address.mobile,
+      street: address.houseName,
       city: address.city,
       state: address.state,
-      zip: address.zip,
-      country: address.country
+      zip: address.pincode
     },
     subtotal,
     shippingCharge,
