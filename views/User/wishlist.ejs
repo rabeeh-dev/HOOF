@@ -51,17 +51,41 @@
                                 <%= item.productId.category ? item.productId.category.name : 'Uncategorized' %>
                             </p>
                             <div class="product-footer">
-                                <p class="product-price">
-                                    <% if (item.productId.salePrice < item.productId.regularPrice) { %>
-                                        <span class="old-price">₹<%= item.productId.regularPrice %></span>
-                                        <% } %>
-                                            ₹<%= item.productId.salePrice %>
-                                </p>
-                                <button class="add-to-cart-btn btn-icon-circle"
-                                    onclick="addToCartFromWishlist('<%= item.productId._id %>')"
-                                    <%=item.productId.quantity===0 ? 'disabled' : '' %>>
-                                    <i class="fas fa-arrow-right"></i>
-                                </button>
+                                <!-- Variant Selection Dropdown -->
+                                <div class="wishlist-variant-selector" style="margin-bottom: 8px;">
+                                    <select id="variant-select-<%= item.productId._id %>" class="form-select"
+                                        style="width: 100%; padding: 4px; font-size: 0.85rem; border-radius: 4px; border: 1px solid #ddd;">
+                                        <option value="" disabled selected>Select Size</option>
+                                        <% if (item.productId.variants && item.productId.variants.length> 0) { %>
+                                            <% item.productId.variants.forEach(variant=> { %>
+                                                <option value="<%= variant.size %>" <%=variant.quantity===0 ? 'disabled'
+                                                    : '' %>>
+                                                    Size <%= variant.size %>
+                                                        <% if (variant.quantity> 0 && variant.quantity <= 5) { %>
+                                                                (Only <%= variant.quantity %> left)
+                                                                    <% } else if (variant.quantity===0) { %>
+                                                                        (Out of Stock)
+                                                                        <% } %>
+                                                </option>
+                                                <% }) %>
+                                                    <% } else { %>
+                                                        <option value="" disabled>No variants available</option>
+                                                        <% } %>
+                                    </select>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <p class="product-price" style="margin: 0;">
+                                        <% if (item.productId.salePrice < item.productId.regularPrice) { %>
+                                            <span class="old-price">₹<%= item.productId.regularPrice %></span>
+                                            <% } %>
+                                                ₹<%= item.productId.salePrice %>
+                                    </p>
+                                    <button class="add-to-cart-btn btn-icon-circle"
+                                        onclick="addToCartFromWishlist('<%= item.productId._id %>')"
+                                        <%=item.productId.quantity===0 ? 'disabled' : '' %>>
+                                        <i class="fas fa-arrow-right"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

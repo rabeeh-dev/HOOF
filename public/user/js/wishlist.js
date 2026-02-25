@@ -57,11 +57,27 @@ async function removeFromWishlist(productId) {
 
 async function addToCartFromWishlist(productId) {
     try {
+        const variantSelect = document.getElementById(`variant-select-${productId}`);
+        const size = variantSelect ? variantSelect.value : null;
+
+        if (!size) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Select Size',
+                text: 'Please select a size before adding to cart',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+            return;
+        }
+
         // Backend now handles removing from wishlist when added to cart
         const response = await fetch("/user/cart/add", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ productId, quantity: 1 }),
+            body: JSON.stringify({ productId, quantity: 1, size }),
         });
         const result = await response.json();
 

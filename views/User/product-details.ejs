@@ -467,6 +467,24 @@
                     badge.textContent = current + quantity; // Add specific quantity
                     badge.style.display = 'flex'; // Ensure it's visible
                 }
+
+                // --- Sync Wishlist State ---
+                const wlBtn = document.querySelector('.btn-wishlist');
+                if (wlBtn && wlBtn.classList.contains('active')) {
+                    wlBtn.classList.remove('active');
+                    const wlIcon = wlBtn.querySelector('i');
+                    if (wlIcon) {
+                        wlIcon.classList.remove('fas');
+                        wlIcon.classList.add('far');
+                    }
+
+                    // Update Wishlist Count in Navbar
+                    const wishlistBadge = document.querySelector('.nav-icon[title="Wishlist"] .nav-badge');
+                    if (wishlistBadge) {
+                        let currentWl = parseInt(wishlistBadge.textContent) || 0;
+                        wishlistBadge.textContent = Math.max(0, currentWl - 1);
+                    }
+                }
             } else {
                 if (result.message === 'Login required') {
                     window.location.href = '/user/login';
