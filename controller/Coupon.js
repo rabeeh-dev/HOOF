@@ -8,13 +8,19 @@ const Cart = require("../model/Cart");
 exports.getAvailableCoupons = async (req, res) => {
     try {
         const userId = req.session.userId;
-        const cart = await Cart.findOne({ userId });
+        const cart = await Cart.findOne({ userId }).populate('items.productId');
 
         if (!cart) {
             return res.status(404).json({ success: false, message: "Cart not found" });
         }
 
-        const subtotal = cart.items.reduce((acc, item) => acc + (item.priceAtPurchase * item.quantity), 0);
+        // Calculate subtotal using salePrice of populated products
+        let subtotal = 0;
+        cart.items.forEach(item => {
+            if (item.productId && !item.productId.isBlocked) {
+                subtotal += item.productId.salePrice * item.quantity;
+            }
+        });
 
         // Find active and non-blocked coupons that haven't expired
         const coupons = await Coupon.find({
@@ -24,8 +30,10 @@ exports.getAvailableCoupons = async (req, res) => {
             $expr: { $lt: ["$usedCount", "$usageLimit"] }
         });
 
-        // Optionally filter by minPurchaseAmount here or let the frontend show all and handle applying
-        res.status(200).json({ success: true, coupons });
+        // Optionally filter by minPurchaseAmount here (to show only applicable coupons)
+        const applicableCoupons = coupons.filter(c => subtotal >= c.minPurchaseAmount);
+
+        res.status(200).json({ success: true, coupons: applicableCoupons });
     } catch (err) {
         console.error("Get available coupons error:", err);
         res.status(500).json({ success: false, message: "Failed to fetch coupons" });

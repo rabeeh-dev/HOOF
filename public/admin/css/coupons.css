@@ -1,0 +1,108 @@
+/* ==================== COUPON MANAGEMENT STYLES ==================== */
+/* Only coupon-specific styles here. Global layout is inherited from category-management.css */
+
+.coupon-code-cell {
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-weight: 700;
+    color: var(--admin-primary);
+    background: rgba(196, 30, 58, 0.05);
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+}
+
+.discount-badge {
+    font-weight: 700;
+    color: #3498db;
+    background: rgba(52, 152, 219, 0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+/* Status specific mapping for coupons if needed */
+.status-badge.expired {
+    background: rgba(108, 117, 125, 0.15);
+    color: #6c757d;
+}
+
+/* Fix for stats strip in coupons */
+.stats-strip {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stats-strip .stat-card {
+    flex: 1;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 3px solid #7da8a8;
+    /* Standard border from other pages */
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stats-strip .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.stats-strip .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--admin-text);
+}
+
+.stats-strip .stat-label {
+    font-size: 0.85rem;
+    color: var(--admin-text-light);
+}
+
+/* Modal refinements for Coupons */
+#couponModal .modal-content {
+    max-width: 600px;
+}
+
+#couponModal .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+}
+
+#couponModal .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+#couponModal input,
+#couponModal select {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    outline: none;
+}
+
+#couponModal input:focus {
+    border-color: var(--admin-primary);
+}
+
+@media (max-width: 768px) {
+    .stats-strip {
+        flex-direction: column;
+    }
+
+    #couponModal .form-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -43,7 +43,7 @@
                 <i class="fas fa-users"></i>
                 <span>Customers</span>
             </a>
-            <a href="#" class="nav-item">
+            <a href="/admin/coupons" class="nav-item">
                 <i class="fas fa-ticket-alt"></i>
                 <span>Coupons</span>
             </a>
@@ -261,7 +261,7 @@
                                     <td>
                                         <div class="amount-cell">
                                             <span class="total-amount">₹<%= order.totalAmount.toLocaleString('en-IN') %>
-                                                    </span>
+                                            </span>
                                             <% let displayS=order.paymentStatus || 'Pending' ; let sClass=(displayS) ?
                                                 displayS.toLowerCase() : 'pending' ; if (order.status==='DELIVERED' ) {
                                                 displayS=(order.paymentMethod==='COD' ) ? 'SUCCESS' : 'Paid' ;

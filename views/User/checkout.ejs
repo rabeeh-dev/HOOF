@@ -383,4 +383,19 @@
     </div>
 </section>
 
+<div id="couponModal" class="coupon-modal">
+    <div class="modal-content glass">
+        <div class="modal-header">
+            <h3>Available Coupons</h3>
+            <button class="close-btn" onclick="closeCouponModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="availableCouponsList">
+            <!-- Coupons will be loaded here via JS -->
+            <div class="loading-coupons">
+                <i class="fas fa-spinner fa-spin"></i> Loading coupons...
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="/user/js/checkout.js" defer></script>

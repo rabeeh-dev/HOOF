@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controller/Admin');
 const adminProductController = require('../controller/AdminProduct');
+const adminCouponController = require('../controller/AdminCoupon');
 const adminAuth = require('../middleware/adminAuth');
 const upload = require('../middleware/productMulter');
 
@@ -176,6 +177,45 @@ router.patch('/orders/:id/cancel', adminAuth.isLogin, adminController.cancelOrde
  * @access  Private (Admin Only)
  */
 router.get('/orders/export', adminAuth.isLogin, adminController.exportOrders);
+
+// ==========================================
+// COUPON MANAGEMENT SECTION
+// ==========================================
+
+/**
+ * @desc    Load coupon management list.
+ * @route   GET /admin/coupons
+ * @access  Private (Admin Only)
+ */
+router.get('/coupons', adminAuth.isLogin, adminCouponController.loadCoupons);
+
+/**
+ * @desc    Add a new coupon.
+ * @route   POST /admin/coupons/add
+ * @access  Private (Admin Only)
+ */
+router.post('/coupons/add', adminAuth.isLogin, adminCouponController.addCoupon);
+
+/**
+ * @desc    Get single coupon details.
+ * @route   GET /admin/coupons/:id
+ * @access  Private (Admin Only)
+ */
+router.get('/coupons/:id', adminAuth.isLogin, adminCouponController.getCoupon);
+
+/**
+ * @desc    Update coupon details.
+ * @route   PATCH /admin/coupons/edit/:id
+ * @access  Private (Admin Only)
+ */
+router.patch('/coupons/edit/:id', adminAuth.isLogin, adminCouponController.updateCoupon);
+
+/**
+ * @desc    Toggle coupon status.
+ * @route   PATCH /admin/coupons/toggle-status/:id
+ * @access  Private (Admin Only)
+ */
+router.patch('/coupons/toggle-status/:id', adminAuth.isLogin, adminCouponController.toggleCouponStatus);
 
 // ==========================================
 
