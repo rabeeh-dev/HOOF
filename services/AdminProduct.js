@@ -150,6 +150,28 @@ async function getProductById(id) {
  * @throws {Error} If no valid variants are provided.
  */
 async function updateProduct(id, productData, files) {
+    // --- BACKEND VALIDATION ---
+    if (!productData.productName || productData.productName.trim() === '') {
+        throw new Error("Product name cannot be empty.");
+    }
+    if (!productData.category || productData.category.trim() === '') {
+        throw new Error("Category cannot be empty.");
+    }
+
+    const regPrice = parseFloat(productData.regularPrice);
+    const salePrice = parseFloat(productData.salePrice);
+
+    if (isNaN(regPrice) || regPrice <= 0) {
+        throw new Error("Regular price must be a positive number.");
+    }
+    if (isNaN(salePrice) || salePrice <= 0) {
+        throw new Error("Sale price must be a positive number.");
+    }
+    if (salePrice > regPrice) {
+        throw new Error("Sale price cannot be greater than regular price.");
+    }
+    // --------------------------
+
     // 1. Process New Images
     const newImagePaths = [];
     if (files && files.length > 0) {
@@ -191,10 +213,21 @@ async function updateProduct(id, productData, files) {
 
     sizes.forEach((size, i) => {
         if (!size || !stocks[i]) return;
+
+        // Variant Validation
+        if (/[a-zA-Z]/.test(size)) {
+            throw new Error(`Variant size "${size}" must not contain alphabetic characters.`);
+        }
+
+        const qty = parseInt(stocks[i]);
+        if (isNaN(qty) || qty <= 0) {
+            throw new Error(`Variant stock must be a positive number (found: ${stocks[i]}).`);
+        }
+
         variants.push({
             size: size,
-            quantity: parseInt(stocks[i]) || 0,
-            status: parseInt(stocks[i]) > 0 ? "Available" : "Out of Stock"
+            quantity: qty,
+            status: qty > 0 ? "Available" : "Out of Stock"
         });
     });
 

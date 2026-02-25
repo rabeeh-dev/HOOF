@@ -120,6 +120,8 @@
                                 <label for="regularPrice">Regular Price (₹)</label>
                                 <input type="number" id="regularPrice" name="regularPrice"
                                     value="<%= product.regularPrice %>" min="0" required>
+                                <small class="error-msg" id="regularPriceError">Regular price must be greater than
+                                    0</small>
                             </div>
                             <div class="form-group">
                                 <label for="salePrice">Sale Price (₹)</label>
@@ -278,15 +280,73 @@
 
         document.getElementById('productForm').onsubmit = async (e) => {
             e.preventDefault();
-            const id = e.target.getAttribute('data-id');
+
+            // --- FRONTEND VALIDATION ---
+            let isValid = true;
+
+            // Reset previous errors
+            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
+
+            const productName = document.getElementById('productName');
+            if (!productName.value.trim()) {
+                productName.classList.add('is-invalid');
+                isValid = false;
+                Swal.fire('Validation Error', 'Product Name cannot be empty.', 'error');
+                return;
+            }
+
+            const regPriceInput = document.getElementById('regularPrice');
+            const salePriceInput = document.getElementById('salePrice');
+            const priceError = document.getElementById('priceError');
+            const regPriceError = document.getElementById('regularPriceError');
+
+            const regPrice = parseFloat(regPriceInput.value);
+            const salePrice = parseFloat(salePriceInput.value);
+
+            if (regPrice <= 0) {
+                regPriceInput.classList.add('is-invalid');
+                if (regPriceError) regPriceError.style.display = 'block';
+                isValid = false;
+            }
+            if (salePrice <= 0) {
+                salePriceInput.classList.add('is-invalid');
+                isValid = false;
+            }
+            if (salePrice > regPrice) {
+                salePriceInput.classList.add('is-invalid');
+                regPriceInput.classList.add('is-invalid');
+                if (priceError) priceError.style.display = 'block';
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
             const formData = new FormData(e.target);
 
             // Validation for variants
             const sizes = formData.getAll('variantSize[]');
+            const stocks = formData.getAll('variantStock[]');
+
             if (sizes.length === 0 || sizes.every(s => !s.trim())) {
                 Swal.fire('Error', 'At least one variant (Size & Stock) is required.', 'error');
                 return;
             }
+
+            for (let i = 0; i < sizes.length; i++) {
+                if (/[a-zA-Z]/.test(sizes[i])) {
+                    Swal.fire('Validation Error', `Variant size "${sizes[i]}" must not contain alphabetic characters. use Numbers or UK/US standard notations without letters if needed.`, 'error');
+                    return;
+                }
+                const qty = parseInt(stocks[i]);
+                if (isNaN(qty) || qty <= 0) {
+                    Swal.fire('Validation Error', `Variant stock must be a positive number.`, 'error');
+                    return;
+                }
+            }
+            // ---------------------------
+
+            const id = e.target.getAttribute('data-id');
 
             // Remove file input and add cropped blobs
             formData.delete('productImages');
