@@ -58,24 +58,44 @@ window.cancelOrder = function (orderId) {
   window.initiateCancel(orderId);
 }
 
-// Global: Request Return
-window.requestReturn = async function (orderId) {
-  if (!confirm("Request a return for this order?")) return;
-  try {
-    const res = await fetch(`/user/orders/return/${orderId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" }
-    });
-    const result = await res.json();
-    if (result.success) {
-      showToast("Return requested successfully", "success");
-      setTimeout(() => window.location.reload(), 800);
-    } else {
-      showToast(result.message || "Failed to request return", "error");
-    }
-  } catch (err) {
-    showToast("Something went wrong", "error");
+// Global: Request Return (Opens Modal)
+window.requestReturn = function (orderId) {
+  window.orderToReturn = orderId;
+  const modal = document.getElementById('returnConfirmModal');
+  const summaryEl = document.getElementById('returnSummary');
+
+  if (!modal) return;
+
+  const card = document.querySelector(`.order-card[data-id="${orderId}"]`);
+  const total = card ? card.dataset.total : '0';
+  const itemsCount = card ? card.querySelectorAll('.order-item-row').length : 0;
+
+  if (summaryEl) {
+    summaryEl.innerHTML = `
+      <p><strong>Order Total:</strong> ₹${Number(total).toLocaleString('en-IN')}</p>
+      <p><strong>Items:</strong> ${itemsCount}</p>
+    `;
   }
+
+  modal.style.display = 'flex';
+};
+
+// Global: Close Return Modal
+window.closeReturnModal = function () {
+  const modal = document.getElementById('returnConfirmModal');
+  if (modal) modal.style.display = 'none';
+  window.orderToReturn = null;
+
+  // Clear modal inputs
+  const texts = document.getElementById('returnReasonText');
+  const error = document.getElementById('returnReasonError');
+  if (texts) {
+    texts.style.display = 'none';
+    texts.value = '';
+  }
+  if (error) error.style.display = 'none';
+  const radios = document.querySelectorAll('input[name="returnReason"]');
+  radios.forEach(r => r.checked = false);
 };
 
 // Global: Download Invoice
@@ -196,10 +216,81 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Global click for modal overlay (only needed for cancel modal now)
+  // Global click for modal overlays
   window.addEventListener("click", (e) => {
     if (e.target.classList.contains("modal-overlay")) {
       closeCancelModal();
+      closeReturnModal();
     }
   });
+
+  // Return Modal Reason Toggle
+  const returnReasonRadios = document.querySelectorAll('input[name="returnReason"]');
+  const returnReasonText = document.getElementById('returnReasonText');
+  const returnReasonError = document.getElementById('returnReasonError');
+
+  returnReasonRadios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      if (returnReasonError) returnReasonError.style.display = 'none';
+      if (e.target.value === 'Other') {
+        if (returnReasonText) {
+          returnReasonText.style.display = 'block';
+          returnReasonText.focus();
+        }
+      } else {
+        if (returnReasonText) {
+          returnReasonText.style.display = 'none';
+          returnReasonText.value = '';
+        }
+      }
+    });
+  });
+
+  // Return Confirmation Button
+  const confirmReturnBtn = document.getElementById('confirmReturnBtn');
+  if (confirmReturnBtn) {
+    confirmReturnBtn.addEventListener('click', async () => {
+      if (!window.orderToReturn) return;
+
+      const selectedRadio = document.querySelector('input[name="returnReason"]:checked');
+      let reason = "";
+
+      if (selectedRadio) {
+        reason = selectedRadio.value === 'Other' ? (returnReasonText ? returnReasonText.value.trim() : '') : selectedRadio.value;
+      }
+
+      if (!reason) {
+        if (returnReasonError) returnReasonError.style.display = 'block';
+        if (returnReasonText && selectedRadio && selectedRadio.value === 'Other') returnReasonText.focus();
+        return;
+      }
+
+      const originalText = confirmReturnBtn.innerText;
+      confirmReturnBtn.innerText = "Requesting...";
+      confirmReturnBtn.disabled = true;
+
+      try {
+        const res = await fetch(`/user/orders/return/${window.orderToReturn}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          showToast("Return requested successfully", "success");
+          setTimeout(() => window.location.reload(), 800);
+        } else {
+          showToast(result.message || "Failed to request return", "error");
+          confirmReturnBtn.innerText = originalText;
+          confirmReturnBtn.disabled = false;
+        }
+      } catch (err) {
+        showToast("Something went wrong", "error");
+        confirmReturnBtn.innerText = originalText;
+        confirmReturnBtn.disabled = false;
+        closeReturnModal();
+      }
+    });
+  }
 });

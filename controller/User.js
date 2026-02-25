@@ -873,6 +873,12 @@ exports.cancelOrder = async (req, res) => {
 
 exports.returnOrder = async (req, res) => {
   try {
+    const { reason } = req.body;
+
+    if (!reason || reason.trim() === '') {
+      return res.status(400).json({ success: false, message: "Return reason is required" });
+    }
+
     const order = await Order.findOne({
       _id: req.params.id,
       userId: req.session.userId
@@ -882,14 +888,20 @@ exports.returnOrder = async (req, res) => {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    if (order.status.toLowerCase() !== "delivered") {
-      return res.status(400).json({ success: false, message: "Order cannot be returned" });
+    // Prevent duplicate requests
+    if (['Return Requested', 'Return Approved', 'Returned'].includes(order.status)) {
+      return res.status(400).json({ success: false, message: "Return already requested or processed for this order." });
+    }
+
+    // Must be strictly DELIVERED
+    if (order.status !== "DELIVERED") {
+      return res.status(400).json({ success: false, message: "Only delivered orders can be returned." });
     }
 
     order.status = "Return Requested";
     order.statusHistory.push({
       status: "Return Requested",
-      note: "Return requested by user"
+      note: `Return requested by user. Reason: ${reason.trim()}`
     });
 
     await order.save();

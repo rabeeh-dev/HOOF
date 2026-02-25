@@ -258,6 +258,73 @@
   </div>
 </div>
 
+<!-- RETURN CONFIRMATION MODAL -->
+<div id="returnConfirmModal" class="custom-modal" style="display:none;z-index:1100;">
+  <div class="modal-overlay"></div>
+  <div class="modal-container" style="max-width:420px;text-align:center;padding:30px 25px;">
+    <div style="margin-bottom:15px;">
+      <i class="fas fa-undo" style="font-size:3rem;color:var(--accent);"></i>
+    </div>
+    <h3 style="margin-bottom:10px;">Return Order?</h3>
+    <p style="color:#666;margin-bottom:20px;">Are you sure you want to request a return for this order?</p>
 
+    <div id="returnSummary"
+      style="background:#f8f9fa;padding:15px;border-radius:8px;margin-bottom:20px;text-align:left;">
+      <!-- Populated by JS -->
+    </div>
+
+    <div style="text-align: left; margin-bottom: 1.5rem;">
+      <label
+        style="display:block; font-size: 0.9rem; font-weight: 600; color: var(--text-main); margin-bottom: 10px; text-align: left;">Reason
+        for Return <span style="color:#dc3545">*</span></label>
+
+      <div
+        style="display:flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 10px; margin-bottom: 12px; padding-left: 4px; width: 100%; text-align: left;">
+        <label
+          style="display:grid; grid-template-columns: 20px 1fr; gap:10px; align-items:flex-start; cursor:pointer; color:#444; line-height: 1.4; width: 100%; text-align: left; margin:0;">
+          <span style="display:flex; justify-content:center; align-items:center; height:20px;">
+            <input type="radio" name="returnReason" value="Received wrong item"
+              style="accent-color:var(--accent); margin:0;">
+          </span>
+          <span>Received wrong item</span>
+        </label>
+        <label
+          style="display:grid; grid-template-columns: 20px 1fr; gap:10px; align-items:flex-start; cursor:pointer; color:#444; line-height: 1.4; width: 100%; text-align: left; margin:0;">
+          <span style="display:flex; justify-content:center; align-items:center; height:20px;">
+            <input type="radio" name="returnReason" value="Item damaged or defective"
+              style="accent-color:var(--accent); margin:0;">
+          </span>
+          <span>Item damaged or defective</span>
+        </label>
+        <label
+          style="display:grid; grid-template-columns: 20px 1fr; gap:10px; align-items:flex-start; cursor:pointer; color:#444; line-height: 1.4; width: 100%; text-align: left; margin:0;">
+          <span style="display:flex; justify-content:center; align-items:center; height:20px;">
+            <input type="radio" name="returnReason" value="Size doesn't fit"
+              style="accent-color:var(--accent); margin:0;">
+          </span>
+          <span>Size doesn't fit</span>
+        </label>
+        <label
+          style="display:grid; grid-template-columns: 20px 1fr; gap:10px; align-items:flex-start; cursor:pointer; color:#444; line-height: 1.4; width: 100%; text-align: left; margin:0;">
+          <span style="display:flex; justify-content:center; align-items:center; height:20px;">
+            <input type="radio" name="returnReason" value="Other" style="accent-color:var(--accent); margin:0;">
+          </span>
+          <span>Other</span>
+        </label>
+      </div>
+
+      <textarea id="returnReasonText" rows="3" placeholder="Please provide more details..."
+        style="width: 100%; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.85rem; resize: vertical; display:none;"></textarea>
+      <div id="returnReasonError" style="color: #dc3545; font-size: 0.8rem; margin-top: 5px; display: none;">Please
+        select or enter a reason.</div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="btn outline" onclick="closeReturnModal()" style="padding:0.6rem 1.2rem;">Cancel</button>
+      <button id="confirmReturnBtn" class="btn primary"
+        style="padding:0.6rem 1.2rem;background:var(--accent);border-color:var(--accent);">Yes, Request Return</button>
+    </div>
+  </div>
+</div>
 
 <script src="/user/js/orders.js" defer></script>

@@ -93,10 +93,49 @@ function closeReturnModal() {
     }
 }
 
+// Setup Return Modal Reason Toggle
+document.addEventListener('DOMContentLoaded', () => {
+    const reasonRadios = document.querySelectorAll('input[name="returnReason"]');
+    const reasonText = document.getElementById('returnReasonText');
+    const reasonError = document.getElementById('returnReasonError');
+
+    reasonRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (reasonError) reasonError.style.display = 'none';
+            if (e.target.value === 'Other') {
+                if (reasonText) {
+                    reasonText.style.display = 'block';
+                    reasonText.focus();
+                }
+            } else {
+                if (reasonText) {
+                    reasonText.style.display = 'none';
+                    reasonText.value = ''; // clear
+                }
+            }
+        });
+    });
+});
+
 // Confirm Return - Actual API Call
 async function confirmReturnAction(orderId) {
     const btn = document.getElementById('confirmReturnBtn');
-    const originalText = btn.innerHTML;
+    const reasonError = document.getElementById('returnReasonError');
+    const selectedRadio = document.querySelector('input[name="returnReason"]:checked');
+    const reasonText = document.getElementById('returnReasonText');
+
+    let reason = "";
+    if (selectedRadio) {
+        reason = selectedRadio.value === 'Other' ? (reasonText ? reasonText.value.trim() : '') : selectedRadio.value;
+    }
+
+    if (!reason) {
+        if (reasonError) reasonError.style.display = 'block';
+        if (reasonText && selectedRadio && selectedRadio.value === 'Other') reasonText.focus();
+        return;
+    }
+
+    const originalText = btn ? btn.innerHTML : 'Yes, Return';
 
     if (btn) {
         btn.disabled = true;
@@ -106,7 +145,8 @@ async function confirmReturnAction(orderId) {
     try {
         const res = await fetch(`/user/orders/return/${orderId}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reason })
         });
         const result = await res.json();
 
