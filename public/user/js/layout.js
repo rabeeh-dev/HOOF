@@ -77,3 +77,27 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+/**
+ * Global helper to show the loading overlay
+ * @param {string} text - Optional loading text to display
+ */
+function showLoading(text) {
+    const overlay = document.getElementById("global-loading-overlay");
+    if (overlay) {
+        if (text) {
+            const textEl = overlay.querySelector(".loading-text");
+            if (textEl) textEl.textContent = text;
+        }
+        overlay.style.display = "flex";
+    }
+}
+
+/**
+ * Global helper to hide the loading overlay
+ */
+function hideLoading() {
+    const overlay = document.getElementById("global-loading-overlay");
+    if (overlay) {
+        overlay.style.display = "none";
+    }
+}

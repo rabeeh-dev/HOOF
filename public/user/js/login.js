@@ -117,9 +117,19 @@ if (loginForm) {
       }
     });
 
-    if (!isFormValid) {
+    if (isFormValid) {
+      showLoading("Signing in...");
+    } else {
       e.preventDefault();
     }
+  });
+}
+
+// Google Login Loading
+const googleLogin = document.querySelector('.google-signup');
+if (googleLogin) {
+  googleLogin.addEventListener('click', () => {
+    showLoading("Redirecting to Google...");
   });
 }
 

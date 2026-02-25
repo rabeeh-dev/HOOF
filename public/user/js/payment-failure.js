@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const originalText = retryBtn.innerHTML;
         retryBtn.disabled = true;
         retryBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing...';
+        showLoading("Re-initializing payment...");
 
         try {
             const response = await fetch("/user/checkout/retry-payment", {
@@ -49,6 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const result = await response.json();
 
             if (result.success) {
+                hideLoading();
                 const options = {
                     key: result.keyId,
                     amount: result.amount,
@@ -59,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     order_id: result.razorpayOrderId,
                     handler: async function (response) {
                         try {
+                            showLoading("Verifying your payment...");
                             const verifyBody = {
                                 razorpay_order_id: response.razorpay_order_id,
                                 razorpay_payment_id: response.razorpay_payment_id,
@@ -85,6 +88,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             showToast("Verification error", "error");
                             retryBtn.disabled = false;
                             retryBtn.innerHTML = originalText;
+                        } finally {
+                            hideLoading();
                         }
                     },
                     prefill: {
@@ -106,12 +111,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 showToast(result.message || "Failed to start payment", "error");
                 retryBtn.disabled = false;
                 retryBtn.innerHTML = originalText;
+                hideLoading();
             }
         } catch (err) {
             console.error(err);
             showToast("Something went wrong", "error");
             retryBtn.disabled = false;
             retryBtn.innerHTML = originalText;
+            hideLoading();
         }
     });
 });

@@ -113,12 +113,14 @@ updateTimer();
 
 resendBtn?.addEventListener("click", async () => {
   try {
+    showLoading("Resending OTP...");
     const res = await fetch("/user/resend-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" }
     });
 
     const data = await res.json();
+    hideLoading();
 
     if (!res.ok) {
       showMessage(data.message || "Failed to resend OTP", "error");
@@ -168,6 +170,7 @@ if (otpForm) {
     }
 
     // Submit via AJAX
+    showLoading("Verifying code...");
     const btn = otpForm.querySelector("button[type='submit']");
     const originalText = btn.innerHTML;
     btn.disabled = true;
@@ -185,10 +188,12 @@ if (otpForm) {
       if (data.success) {
         showMessage("Verified! Redirecting...", "success");
         setTimeout(() => {
+          hideLoading();
           window.location.href = data.redirectUrl;
         }, 1000);
       } else {
         // Handle invalid OTP
+        hideLoading();
         showMessage(data.message || "Invalid OTP", "error");
         btn.disabled = false;
         btn.innerHTML = originalText;
@@ -202,6 +207,7 @@ if (otpForm) {
       }
 
     } catch (err) {
+      hideLoading();
       showMessage("Something went wrong. Try again.", "error");
       btn.disabled = false;
       btn.innerHTML = originalText;
@@ -275,5 +281,5 @@ document.getElementById("contactSupport")?.addEventListener("click", e => {
 });
 
 document.querySelector(".google-signup")?.addEventListener("click", () => {
-  showMessage("Continue with Google...", "info");
+  showLoading("Redirecting to Google...");
 });

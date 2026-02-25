@@ -14,6 +14,16 @@
 </head>
 
 <body>
+    <!-- Global Loading Overlay -->
+    <div id="global-loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="overlay-content">
+            <div class="spinner-container">
+                <div class="spinner-main"></div>
+                <div class="spinner-ring"></div>
+            </div>
+            <p class="loading-text">Processing your request...</p>
+        </div>
+    </div>
     <%- include('../partials/user/header') %>
 
         <% if (locals.breadcrumbs && locals.breadcrumbs.length> 0) { %>

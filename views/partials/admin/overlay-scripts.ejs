@@ -1,0 +1,105 @@
+<style>
+    /* ==================== ADMIN LOADING OVERLAY ==================== */
+    .admin-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 21, 20, 0.7);
+        /* Darker for admin side */
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        opacity: 0;
+        animation: adminLoadingFadeIn 0.3s ease forwards;
+    }
+
+    .admin-loading-overlay .overlay-content {
+        text-align: center;
+    }
+
+    .admin-loading-overlay .spinner-container {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+    }
+
+    .admin-loading-overlay .spinner-main {
+        width: 100%;
+        height: 100%;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top: 4px solid #c41e3a;
+        /* Admin primary color */
+        border-radius: 50%;
+        animation: adminSpin 1s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+    }
+
+    .admin-loading-overlay .spinner-ring {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 60px;
+        height: 60px;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 3px solid white;
+        border-radius: 50%;
+        animation: adminSpinReverse 1.5s linear infinite;
+    }
+
+    .admin-loading-overlay .loading-text {
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    @keyframes adminSpin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes adminSpinReverse {
+        to {
+            transform: rotate(-360deg);
+        }
+    }
+
+    @keyframes adminLoadingFadeIn {
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+
+<script>
+    /**
+     * Global helper to show the loading overlay on admin side
+     * @param {string} text - Optional loading text to display
+     */
+    function showLoading(text) {
+        const overlay = document.getElementById("global-loading-overlay");
+        if (overlay) {
+            if (text) {
+                const textEl = overlay.querySelector(".loading-text");
+                if (textEl) textEl.textContent = text;
+            }
+            overlay.style.display = "flex";
+        }
+    }
+
+    /**
+     * Global helper to hide the loading overlay on admin side
+     */
+    function hideLoading() {
+        const overlay = document.getElementById("global-loading-overlay");
+        if (overlay) {
+            overlay.style.display = "none";
+        }
+    }
+</script>

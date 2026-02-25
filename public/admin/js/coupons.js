@@ -21,6 +21,7 @@ function openAddCouponModal() {
  * @param {string} id - The ID of the coupon to edit.
  */
 async function openEditCouponModal(id) {
+    showLoading("Fetching coupon details...");
     try {
         const response = await fetch(`/admin/coupons/${id}`);
         const data = await response.json();
@@ -53,9 +54,8 @@ async function openEditCouponModal(id) {
 
         title.innerText = 'Edit Coupon';
         modal.classList.add('show');
-    } catch (err) {
-        console.error("Edit coupon error:", err);
-        Swal.fire('Error', 'Something went wrong', 'error');
+    } finally {
+        hideLoading();
     }
 }
 
@@ -86,6 +86,7 @@ async function submitCouponForm(e) {
 
     const url = id ? `/admin/coupons/edit/${id}` : '/admin/coupons/add';
     const method = id ? 'PATCH' : 'POST';
+    showLoading(id ? "Updating coupon..." : "Creating new coupon...");
 
     try {
         const response = await fetch(url, {
@@ -106,9 +107,8 @@ async function submitCouponForm(e) {
         } else {
             Swal.fire('Error', data.message || 'Operation failed', 'error');
         }
-    } catch (err) {
-        console.error("Submit coupon error:", err);
-        Swal.fire('Error', 'Something went wrong', 'error');
+    } finally {
+        hideLoading();
     }
 }
 
@@ -128,6 +128,7 @@ async function toggleCouponStatus(id) {
     });
 
     if (result.isConfirmed) {
+        showLoading("Updating coupon status...");
         try {
             const response = await fetch(`/admin/coupons/toggle-status/${id}`, { method: 'PATCH' });
             const data = await response.json();
@@ -145,6 +146,8 @@ async function toggleCouponStatus(id) {
         } catch (err) {
             console.error("Toggle status error:", err);
             Swal.fire('Error', 'Something went wrong', 'error');
+        } finally {
+            hideLoading();
         }
     }
 }

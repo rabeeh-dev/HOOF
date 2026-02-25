@@ -115,10 +115,11 @@ if (dateFilter) {
 const downloadBtn = document.querySelector('.btn-download');
 if (downloadBtn) {
   downloadBtn.addEventListener('click', () => {
-    showToast('Generating report...', 'info');
+    showLoading('Generating comprehensive report...');
 
     // Simulate download delay
     setTimeout(() => {
+      hideLoading();
       showToast('Report downloaded successfully!', 'success');
     }, 2000);
   });

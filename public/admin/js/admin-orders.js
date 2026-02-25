@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.viewOrderDetail = async (orderId) => {
         currentDetailOrderId = orderId;
+        showLoading("Fetching order details...");
         try {
             const response = await fetch(`/admin/orders/${orderId}/detail`);
             const data = await response.json();
@@ -158,8 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 showToast(data.message || 'Error fetching details', 'error');
             }
-        } catch (err) {
-            showToast('Connection failed', 'error');
+        } finally {
+            hideLoading();
         }
     };
 
@@ -248,6 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             confirmStatusUpdate.textContent = 'Updating...';
             confirmStatusUpdate.disabled = true;
+            showLoading("Applying status change...");
 
             try {
                 const response = await fetch(`/admin/orders/${currentStatusOrderId}/status`, {
@@ -268,6 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } finally {
                 confirmStatusUpdate.textContent = 'Update Status';
                 confirmStatusUpdate.disabled = false;
+                hideLoading();
             }
         });
     }
@@ -292,6 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'Cancel Order',
             'Are you sure you want to cancel this order? This action cannot be undone.',
             async () => {
+                showLoading("Cancelling order...");
                 try {
                     const response = await fetch(`/admin/orders/${orderId}/cancel`, { method: 'PATCH' });
                     const data = await response.json();
@@ -303,6 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } catch (err) {
                     showToast('Connection failed', 'error');
+                } finally {
+                    hideLoading();
                 }
             }
         );

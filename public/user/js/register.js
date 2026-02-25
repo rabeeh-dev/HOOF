@@ -199,7 +199,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      if (!isFormValid) {
+      if (isFormValid) {
+        showLoading("Creating your account...");
+      } else {
         e.preventDefault();
         const psw = document.getElementById("password")?.value;
         const confirmPsw = document.getElementById("confirmPassword")?.value;
@@ -209,6 +211,14 @@ document.addEventListener("DOMContentLoaded", () => {
           showMessage('Please fix the errors above', 'error');
         }
       }
+    });
+  }
+
+  // Google Signup Loading
+  const googleSignup = document.querySelector('.google-signup');
+  if (googleSignup) {
+    googleSignup.addEventListener('click', () => {
+      showLoading("Redirecting to Google...");
     });
   }
 });

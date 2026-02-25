@@ -381,6 +381,7 @@ async function placeOrder() {
     const originalText = placeOrderBtn.innerHTML;
     placeOrderBtn.disabled = true;
     placeOrderBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    showLoading("Preparing your order...");
 
     try {
         // Prepare payload
@@ -403,6 +404,7 @@ async function placeOrder() {
 
         if (result.success) {
             if (result.paymentMethod === "upi") {
+                hideLoading();
                 // Handle Razorpay Payment
                 const options = {
                     key: result.keyId,
@@ -414,6 +416,7 @@ async function placeOrder() {
                     order_id: result.razorpayOrderId,
                     handler: async function (response) {
                         try {
+                            showLoading("Verifying payment...");
                             const verifyBody = {
                                 razorpay_order_id: response.razorpay_order_id,
                                 razorpay_payment_id: response.razorpay_payment_id,
@@ -439,6 +442,8 @@ async function placeOrder() {
                         } catch (err) {
                             console.error("Verification error:", err);
                             window.location.href = `/user/payment-failure/${result.orderId}`;
+                        } finally {
+                            hideLoading();
                         }
                     },
                     prefill: {
@@ -470,12 +475,14 @@ async function placeOrder() {
             showToast(result.message || "Something went wrong", "error");
             placeOrderBtn.disabled = false;
             placeOrderBtn.innerHTML = originalText;
+            hideLoading();
         }
     } catch (error) {
         console.error("Place order error:", error);
         showToast("Something went wrong. Please try again.", "error");
         placeOrderBtn.disabled = false;
         placeOrderBtn.innerHTML = originalText;
+        hideLoading();
     }
 }
 
