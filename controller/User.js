@@ -14,7 +14,7 @@ const Address = require("../model/Address");
 const authService = require("../services/Auth");
 const passwordService = require("../services/Password");
 const userService = require("../services/User");
-const checkoutService = require('../services/Checkout');
+// checkoutService removed (moved to UserCheckout)
 const Order = require('../model/Order');
 const PDFDocument = require('pdfkit');
 
@@ -750,41 +750,7 @@ exports.loadShop = async (req, res) => {
 };
 
 
-//checkout 
-
-exports.loadCheckout = async (req, res) => {
-  try {
-    const userId = req.session.userId;
-
-    const data = await checkoutService.prepareCheckout(userId);
-
-    // If all items are blocked/unavailable, redirect to cart
-    if (!data.cartItems || data.cartItems.length === 0) {
-      return res.redirect('/user/cart?unavailable=1');
-    }
-
-    res.render('User/checkout', data);
-
-  } catch (err) {
-    console.error(err);
-    res.redirect('/user/cart');
-  }
-};
-
-exports.placeOrder = async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    const { addressId } = req.body;
-
-    const order = await checkoutService.createOrder(userId, addressId);
-
-    res.redirect(`/user/order-success/${order._id}`);
-
-  } catch (err) {
-    console.error(err);
-    res.redirect('/user/checkout');
-  }
-};
+// (Checkout functions moved to controller/UserCheckout.js)
 
 //Order management 
 exports.loadOrders = async (req, res) => {

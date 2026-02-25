@@ -252,6 +252,11 @@ async function submitCheckoutAddressForm(e) {
 // ==========================================
 
 function selectPayment(type) {
+    const selectedCard = document.querySelector(`[data-payment="${type}"]`);
+    if (selectedCard && selectedCard.classList.contains("disabled")) {
+        return;
+    }
+
     selectedPaymentMethod = type;
 
     // Update visual state
@@ -259,62 +264,8 @@ function selectPayment(type) {
         card.classList.remove("selected");
     });
 
-    const selectedCard = document.querySelector(`[data-payment="${type}"]`);
-    if (selectedCard && !selectedCard.classList.contains("disabled")) {
+    if (selectedCard) {
         selectedCard.classList.add("selected");
-    }
-
-    // Show/hide payment fields with smooth animation
-    const upiFields = document.getElementById("upiFields");
-    const cardFields = document.getElementById("cardFields");
-
-    if (type === "upi") {
-        if (cardFields) {
-            cardFields.classList.remove("show");
-            setTimeout(() => {
-                if (!cardFields.classList.contains("show")) {
-                    cardFields.style.display = "none";
-                }
-            }, 300);
-        }
-        if (upiFields) {
-            upiFields.style.display = "block";
-            setTimeout(() => {
-                upiFields.classList.add("show");
-            }, 10);
-        }
-    } else if (type === "card") {
-        if (upiFields) {
-            upiFields.classList.remove("show");
-            setTimeout(() => {
-                if (!upiFields.classList.contains("show")) {
-                    upiFields.style.display = "none";
-                }
-            }, 300);
-        }
-        if (cardFields) {
-            cardFields.style.display = "block";
-            setTimeout(() => {
-                cardFields.classList.add("show");
-            }, 10);
-        }
-    } else {
-        if (upiFields) {
-            upiFields.classList.remove("show");
-            setTimeout(() => {
-                if (!upiFields.classList.contains("show")) {
-                    upiFields.style.display = "none";
-                }
-            }, 300);
-        }
-        if (cardFields) {
-            cardFields.classList.remove("show");
-            setTimeout(() => {
-                if (!cardFields.classList.contains("show")) {
-                    cardFields.style.display = "none";
-                }
-            }, 300);
-        }
     }
 }
 
@@ -336,51 +287,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (pincode) {
         pincode.addEventListener("input", () => setInlineValidation(document.getElementById("coPincodeError"), ""));
     }
-
-    const cardNumberInput = document.getElementById("cardNumber");
-    if (cardNumberInput) {
-        cardNumberInput.addEventListener("input", (e) => {
-            let value = e.target.value.replace(/\s/g, "").replace(/\D/g, "");
-            if (value.length > 16) value = value.slice(0, 16);
-            
-            // Add space every 4 digits (max 19 chars: 16 digits + 3 spaces)
-            let formatted = "";
-            for (let i = 0; i < value.length; i += 4) {
-                formatted += value.slice(i, i + 4);
-                if (i + 4 < value.length) formatted += " ";
-            }
-            
-            // Limit to 19 characters total
-            if (formatted.length > 19) {
-                formatted = formatted.slice(0, 19);
-            }
-            
-            e.target.value = formatted;
-        });
-    }
-
-    // Card expiry formatter (MM/YY)
-    const cardExpiryInput = document.getElementById("cardExpiry");
-    if (cardExpiryInput) {
-        cardExpiryInput.addEventListener("input", (e) => {
-            let value = e.target.value.replace(/\D/g, "");
-            if (value.length > 4) value = value.slice(0, 4);
-            
-            if (value.length >= 2) {
-                value = value.slice(0, 2) + "/" + value.slice(2);
-            }
-            
-            e.target.value = value;
-        });
-    }
-
-    // CVV formatter (only digits, max 3)
-    const cardCvvInput = document.getElementById("cardCvv");
-    if (cardCvvInput) {
-        cardCvvInput.addEventListener("input", (e) => {
-            e.target.value = e.target.value.replace(/\D/g, "").slice(0, 3);
-        });
-    }
 });
 
 // ==========================================
@@ -400,40 +306,6 @@ function validateStep2() {
         showToast("Please select a payment method", "error");
         return false;
     }
-
-    if (selectedPaymentMethod === "upi") {
-        const upiId = document.getElementById("upiId")?.value.trim();
-        if (!upiId || !upiId.includes("@")) {
-            showToast("Please enter a valid UPI ID", "error");
-            return false;
-        }
-    } else if (selectedPaymentMethod === "card") {
-        const cardNumber = document.getElementById("cardNumber")?.value.replace(/\s/g, "");
-        const cardholderName = document.getElementById("cardholderName")?.value.trim();
-        const cardExpiry = document.getElementById("cardExpiry")?.value.trim();
-        const cardCvv = document.getElementById("cardCvv")?.value.trim();
-
-        if (!cardNumber || cardNumber.length !== 16) {
-            showToast("Please enter a valid card number", "error");
-            return false;
-        }
-
-        if (!cardholderName) {
-            showToast("Please enter cardholder name", "error");
-            return false;
-        }
-
-        if (!cardExpiry || !/^\d{2}\/\d{2}$/.test(cardExpiry)) {
-            showToast("Please enter a valid expiry date (MM/YY)", "error");
-            return false;
-        }
-
-        if (!cardCvv || cardCvv.length !== 3) {
-            showToast("Please enter a valid CVV", "error");
-            return false;
-        }
-    }
-
     return true;
 }
 
@@ -482,12 +354,7 @@ function populateReviewStep() {
         let paymentHtml = "";
 
         if (selectedPaymentMethod === "upi") {
-            const upiId = document.getElementById("upiId")?.value.trim() || "";
-            paymentHtml = `UPI: ${upiId}`;
-        } else if (selectedPaymentMethod === "card") {
-            const cardNumber = document.getElementById("cardNumber")?.value.replace(/\s/g, "") || "";
-            const last4 = cardNumber.slice(-4);
-            paymentHtml = `Card: **** **** **** ${last4}`;
+            paymentHtml = `UPI Payment (Redirecting...)`;
         } else if (selectedPaymentMethod === "cod") {
             paymentHtml = "Cash on Delivery - Pay on delivery";
         }
@@ -516,32 +383,11 @@ async function placeOrder() {
     placeOrderBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Order...';
 
     try {
-        // Collect payment details
-        let paymentDetails = {};
-        if (selectedPaymentMethod === "upi") {
-            paymentDetails = {
-                type: "upi",
-                upiId: document.getElementById("upiId")?.value.trim() || ""
-            };
-        } else if (selectedPaymentMethod === "card") {
-            const cardNumber = document.getElementById("cardNumber")?.value.replace(/\s/g, "") || "";
-            paymentDetails = {
-                type: "card",
-                last4: cardNumber.slice(-4),
-                cardholderName: document.getElementById("cardholderName")?.value.trim() || "",
-                expiry: document.getElementById("cardExpiry")?.value.trim() || ""
-            };
-        } else {
-            paymentDetails = {
-                type: "cod"
-            };
-        }
-
         // Prepare payload
         const payload = {
             addressId: selectedAddressId,
             paymentMethod: selectedPaymentMethod,
-            paymentDetails: paymentDetails
+            couponCode: appliedCoupon
         };
 
         // Send order request
@@ -583,3 +429,127 @@ window.addEventListener("pageshow", function (event) {
         window.location.reload();
     }
 });
+
+// ==========================================
+// COUPON SYSTEM
+// ==========================================
+let appliedCoupon = null;
+let discountAmt = 0;
+
+function openCouponModal() {
+    const modal = document.getElementById("couponModal");
+    const list = document.getElementById("availableCouponsList");
+    modal.style.display = "flex";
+
+    // Fetch available coupons
+    fetch("/user/available-coupons")
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (data.coupons.length === 0) {
+                    list.innerHTML = '<div class="no-coupons">No coupons available at the moment.</div>';
+                } else {
+                    list.innerHTML = data.coupons.map(coupon => `
+                        <div class="coupon-list-item">
+                            <div class="coupon-item-header">
+                                <span class="coupon-code-badge">${coupon.couponCode}</span>
+                                <span class="coupon-discount-text">
+                                    ${coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '₹' + coupon.discountValue} OFF
+                                </span>
+                            </div>
+                            <div class="coupon-desc">${coupon.description}</div>
+                            <div class="coupon-item-footer">
+                                <span class="coupon-expiry">Expires: ${new Date(coupon.expiryDate).toLocaleDateString()}</span>
+                                <button class="btn-select-coupon" onclick="selectCoupon('${coupon.couponCode}')">Select</button>
+                            </div>
+                        </div>
+                    `).join("");
+                }
+            } else {
+                list.innerHTML = '<div class="error-msg">Failed to load coupons.</div>';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            list.innerHTML = '<div class="error-msg">Something went wrong.</div>';
+        });
+}
+
+function closeCouponModal() {
+    document.getElementById("couponModal").style.display = "none";
+}
+
+function selectCoupon(code) {
+    document.getElementById("couponCodeInput").value = code;
+    closeCouponModal();
+}
+
+async function applyCoupon() {
+    const code = document.getElementById("couponCodeInput").value.trim();
+    if (!code) {
+        showToast("Please enter a coupon code", "error");
+        return;
+    }
+
+    try {
+        const response = await fetch("/user/apply-coupon", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ couponCode: code })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            appliedCoupon = data.couponCode;
+            discountAmt = data.discountAmount;
+
+            // Update UI
+            document.getElementById("appliedCouponCodeText").innerText = appliedCoupon;
+            document.getElementById("appliedCouponInfo").style.display = "block";
+            document.getElementById("couponCodeInput").value = "";
+            document.querySelector(".coupon-input-group").style.display = "none";
+            document.querySelector(".available-coupons-btn").style.display = "none";
+
+            updateOrderSummary(discountAmt);
+            showToast(data.message, "success");
+        } else {
+            showToast(data.message, "error");
+        }
+    } catch (err) {
+        console.error(err);
+        showToast("Failed to apply coupon", "error");
+    }
+}
+
+function removeCoupon() {
+    appliedCoupon = null;
+    discountAmt = 0;
+
+    // Update UI
+    document.getElementById("appliedCouponInfo").style.display = "none";
+    document.querySelector(".coupon-input-group").style.display = "flex";
+    document.querySelector(".available-coupons-btn").style.display = "flex";
+
+    updateOrderSummary(0);
+    showToast("Coupon removed", "info");
+}
+
+function updateOrderSummary(discount) {
+    const subtotal = parseFloat(document.querySelector(".summary-row span:last-child").innerText.replace("₹", ""));
+    const discountRow = document.getElementById("summaryDiscountRow");
+    const discountVal = document.getElementById("summaryDiscountAmount");
+    const totalVal = document.querySelector(".summary-total span:last-child");
+
+    if (discount > 0) {
+        discountRow.style.display = "flex";
+        discountVal.innerText = "-₹" + discount;
+    } else {
+        discountRow.style.display = "none";
+    }
+
+    // Recalculate total
+    // Note: Shipping logic is handled server-side usually, but we need to match it here
+    const shipping = subtotal >= 999 ? 0 : 99;
+    const finalTotal = subtotal - discount + shipping;
+    totalVal.innerText = "₹" + finalTotal;
+}

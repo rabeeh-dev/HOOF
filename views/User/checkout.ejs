@@ -45,101 +45,118 @@
 
                         <div class="checkout-card-body">
                             <!-- Saved Addresses -->
-                            <% if (addresses && addresses.length > 0) { %>
+                            <% if (addresses && addresses.length> 0) { %>
                                 <div class="saved-addresses" id="savedAddresses">
-                                    <% addresses.forEach((address) => { %>
-                                        <div class="address-card" data-address-id="<%= address._id %>" onclick="selectAddress('<%= address._id %>')">
+                                    <% addresses.forEach((address)=> { %>
+                                        <div class="address-card" data-address-id="<%= address._id %>"
+                                            onclick="selectAddress('<%= address._id %>')">
                                             <div class="address-radio">
                                                 <div class="radio-circle"></div>
                                             </div>
                                             <div class="address-details">
                                                 <div class="address-header">
-                                                    <span class="address-name"><%= address.fullName %></span>
+                                                    <span class="address-name">
+                                                        <%= address.fullName %>
+                                                    </span>
                                                     <% if (address.isDefault) { %>
                                                         <span class="default-badge">DEFAULT</span>
-                                                    <% } %>
+                                                        <% } %>
                                                 </div>
-                                                <div class="address-phone"><%= address.mobile %></div>
+                                                <div class="address-phone">
+                                                    <%= address.mobile %>
+                                                </div>
                                                 <div class="address-lines">
                                                     <%= address.houseName %><br>
-                                                    <%= address.city %>, <%= address.state %> - <%= address.pincode %>
+                                                        <%= address.city %>, <%= address.state %> - <%= address.pincode
+                                                                    %>
                                                 </div>
-                                                <a class="address-edit" href="/user/address" onclick="event.stopPropagation();">Manage</a>
+                                                <a class="address-edit" href="/user/address"
+                                                    onclick="event.stopPropagation();">Manage</a>
                                             </div>
                                         </div>
-                                    <% }) %>
+                                        <% }) %>
                                 </div>
-                            <% } else { %>
-                                <div class="no-addresses" id="noAddressesState">
-                                    <p>No saved addresses found. Please add one to continue checkout.</p>
-                                </div>
-                            <% } %>
+                                <% } else { %>
+                                    <div class="no-addresses" id="noAddressesState">
+                                        <p>No saved addresses found. Please add one to continue checkout.</p>
+                                    </div>
+                                    <% } %>
 
-                            <div class="address-actions">
-                                <button type="button" class="add-address-toggle" onclick="toggleCheckoutAddressForm()">
-                                    <i class="fas fa-plus"></i>
-                                    Add New Address
-                                </button>
-                                <a class="manage-address-btn" href="/user/address">
-                                    <i class="fas fa-address-book"></i>
-                                    Manage Addresses
-                                </a>
-                            </div>
+                                        <div class="address-actions">
+                                            <button type="button" class="add-address-toggle"
+                                                onclick="toggleCheckoutAddressForm()">
+                                                <i class="fas fa-plus"></i>
+                                                Add New Address
+                                            </button>
+                                            <a class="manage-address-btn" href="/user/address">
+                                                <i class="fas fa-address-book"></i>
+                                                Manage Addresses
+                                            </a>
+                                        </div>
 
-                            <div id="checkoutAddressFormWrap" class="new-address-form" style="display: none;">
-                                <div class="form-fields">
-                                    <form id="checkoutAddAddressForm">
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label>Full Name <span class="req">*</span></label>
-                                                <input type="text" name="fullName" id="coFullName" placeholder="Enter full name" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Mobile Number <span class="req">*</span></label>
-                                                <input type="tel" name="mobile" id="coMobile" placeholder="10-digit number" required>
-                                                <small class="validation-message" id="coMobileError"></small>
+                                        <div id="checkoutAddressFormWrap" class="new-address-form"
+                                            style="display: none;">
+                                            <div class="form-fields">
+                                                <form id="checkoutAddAddressForm">
+                                                    <div class="form-row">
+                                                        <div class="form-group">
+                                                            <label>Full Name <span class="req">*</span></label>
+                                                            <input type="text" name="fullName" id="coFullName"
+                                                                placeholder="Enter full name" required>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label>Mobile Number <span class="req">*</span></label>
+                                                            <input type="tel" name="mobile" id="coMobile"
+                                                                placeholder="10-digit number" required>
+                                                            <small class="validation-message"
+                                                                id="coMobileError"></small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>House Name / Flat No <span class="req">*</span></label>
+                                                        <input type="text" name="houseName" id="coHouseName"
+                                                            placeholder="e.g. Flat 12B, Sunrise Apartments" required>
+                                                    </div>
+                                                    <div class="form-row">
+                                                        <div class="form-group">
+                                                            <label>City <span class="req">*</span></label>
+                                                            <input type="text" name="city" id="coCity"
+                                                                placeholder="Enter city" required>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label>State <span class="req">*</span></label>
+                                                            <input type="text" name="state" id="coState"
+                                                                placeholder="Enter state" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-row">
+                                                        <div class="form-group">
+                                                            <label>Pincode <span class="req">*</span></label>
+                                                            <input type="text" name="pincode" id="coPincode"
+                                                                placeholder="6-digit pincode" required>
+                                                            <small class="validation-message"
+                                                                id="coPincodeError"></small>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label>Address Type</label>
+                                                            <select name="addressType" id="coAddressType">
+                                                                <option value="Home">🏠 Home</option>
+                                                                <option value="Work">💼 Work</option>
+                                                                <option value="Other">📍 Other</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <label class="form-checkbox">
+                                                        <input type="checkbox" name="isDefault" id="coIsDefault">
+                                                        Set as default address
+                                                    </label>
+                                                    <button type="submit" class="btn primary" id="coSaveAddressBtn">
+                                                        <i class="fas fa-plus"></i>
+                                                        Save Address
+                                                    </button>
+                                                </form>
                                             </div>
                                         </div>
-                                        <div class="form-group">
-                                            <label>House Name / Flat No <span class="req">*</span></label>
-                                            <input type="text" name="houseName" id="coHouseName" placeholder="e.g. Flat 12B, Sunrise Apartments" required>
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label>City <span class="req">*</span></label>
-                                                <input type="text" name="city" id="coCity" placeholder="Enter city" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>State <span class="req">*</span></label>
-                                                <input type="text" name="state" id="coState" placeholder="Enter state" required>
-                                            </div>
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label>Pincode <span class="req">*</span></label>
-                                                <input type="text" name="pincode" id="coPincode" placeholder="6-digit pincode" required>
-                                                <small class="validation-message" id="coPincodeError"></small>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Address Type</label>
-                                                <select name="addressType" id="coAddressType">
-                                                    <option value="Home">🏠 Home</option>
-                                                    <option value="Work">💼 Work</option>
-                                                    <option value="Other">📍 Other</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <label class="form-checkbox">
-                                            <input type="checkbox" name="isDefault" id="coIsDefault">
-                                            Set as default address
-                                        </label>
-                                        <button type="submit" class="btn primary" id="coSaveAddressBtn">
-                                            <i class="fas fa-plus"></i>
-                                            Save Address
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
                         </div>
 
                         <div class="checkout-card-footer">
@@ -174,12 +191,9 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div id="upiFields" class="payment-fields" style="display: none;">
-                                    <input type="text" id="upiId" placeholder="yourname@upi" class="form-input">
-                                </div>
 
                                 <!-- Card Option -->
-                                <div class="payment-card" data-payment="card" onclick="selectPayment('card')">
+                                <div class="payment-card disabled" data-payment="card" onclick="selectPayment('card')">
                                     <div class="payment-radio">
                                         <div class="radio-circle"></div>
                                     </div>
@@ -187,27 +201,7 @@
                                         <i class="fas fa-credit-card"></i>
                                         <div>
                                             <div class="payment-label">Credit / Debit Card</div>
-                                            <div class="payment-sublabel">Visa, Mastercard, Rupay</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="cardFields" class="payment-fields" style="display: none;">
-                                    <div class="form-group">
-                                        <label>Card Number</label>
-                                        <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" class="form-input">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Cardholder Name</label>
-                                        <input type="text" id="cardholderName" placeholder="John Doe" class="form-input">
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label>Expiry (MM/YY)</label>
-                                            <input type="text" id="cardExpiry" placeholder="12/25" maxlength="5" class="form-input">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>CVV</label>
-                                            <input type="text" id="cardCvv" placeholder="123" maxlength="3" class="form-input">
+                                            <div class="payment-sublabel">Coming Soon (Inactive)</div>
                                         </div>
                                     </div>
                                 </div>
@@ -271,16 +265,19 @@
                             <div class="review-block">
                                 <h3>Order Items</h3>
                                 <div class="order-items-list">
-                                    <% if (typeof cartItems !== 'undefined' && cartItems.length > 0) { %>
-                                        <% cartItems.forEach((item) => { %>
+                                    <% if (typeof cartItems !=='undefined' && cartItems.length> 0) { %>
+                                        <% cartItems.forEach((item)=> { %>
                                             <div class="order-item">
-                                                <img src="<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>">
-                                                <div class="order-item-name"><%= item.productId.productName %></div>
+                                                <img src="<%= item.productId.productImage[0] %>"
+                                                    alt="<%= item.productId.productName %>">
+                                                <div class="order-item-name">
+                                                    <%= item.productId.productName %>
+                                                </div>
                                                 <span class="order-item-qty">Qty: <%= item.quantity %></span>
                                                 <span class="order-item-price">₹<%= item.totalPrice %></span>
                                             </div>
-                                        <% }) %>
-                                    <% } %>
+                                            <% }) %>
+                                                <% } %>
                                 </div>
                             </div>
                         </div>
@@ -297,23 +294,49 @@
                 <div class="order-summary-card">
                     <h2>Order Summary</h2>
                     <div class="summary-items">
-                        <% if (typeof cartItems !== 'undefined' && cartItems.length > 0) { %>
-                            <% const maxItems = 4; %>
-                            <% cartItems.slice(0, maxItems).forEach((item) => { %>
-                                <div class="summary-item">
-                                    <img src="<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>">
-                                    <div class="summary-item-name"><%= item.productId.productName %></div>
-                                    <span class="summary-item-qty"><%= item.quantity %></span>
-                                    <span class="summary-item-price">₹<%= item.totalPrice %></span>
-                                </div>
-                            <% }) %>
-                            <% if (cartItems.length > maxItems) { %>
-                                <div class="more-items">
-                                    <a href="#" onclick="return false;">and <%= cartItems.length - maxItems %> more items</a>
-                                </div>
-                            <% } %>
-                        <% } %>
+                        <% if (typeof cartItems !=='undefined' && cartItems.length> 0) { %>
+                            <% const maxItems=4; %>
+                                <% cartItems.slice(0, maxItems).forEach((item)=> { %>
+                                    <div class="summary-item">
+                                        <img src="<%= item.productId.productImage[0] %>"
+                                            alt="<%= item.productId.productName %>">
+                                        <div class="summary-item-name">
+                                            <%= item.productId.productName %>
+                                        </div>
+                                        <span class="summary-item-qty">
+                                            <%= item.quantity %>
+                                        </span>
+                                        <span class="summary-item-price">₹<%= item.totalPrice %></span>
+                                    </div>
+                                    <% }) %>
+                                        <% if (cartItems.length> maxItems) { %>
+                                            <div class="more-items">
+                                                <a href="#" onclick="return false;">and <%= cartItems.length - maxItems
+                                                        %> more items</a>
+                                            </div>
+                                            <% } %>
+                                                <% } %>
                     </div>
+
+                    <!-- Coupon Section -->
+                    <div class="coupon-section">
+                        <div class="coupon-input-group">
+                            <input type="text" id="couponCodeInput" placeholder="Enter coupon code"
+                                class="coupon-input">
+                            <button class="btn-apply-coupon" onclick="applyCoupon()">Apply</button>
+                        </div>
+                        <button class="available-coupons-btn" onclick="openCouponModal()">
+                            <i class="fas fa-tag"></i> View Available Coupons
+                        </button>
+                        <div id="appliedCouponInfo" class="applied-coupon-info" style="display: none;">
+                            <span class="coupon-tag">
+                                <i class="fas fa-check-circle"></i>
+                                <span id="appliedCouponCodeText"></span>
+                                <button onclick="removeCoupon()" class="remove-coupon-btn">&times;</button>
+                            </span>
+                        </div>
+                    </div>
+
                     <div class="summary-breakdown">
                         <div class="summary-row">
                             <span>Subtotal</span>
@@ -322,13 +345,18 @@
                         <div class="summary-row">
                             <span>Shipping</span>
                             <span class="<%= totalAmount >= 999 ? 'shipping-free' : '' %>">
-                                <%= totalAmount >= 999 ? 'FREE' : '₹99' %>
+                                <%= totalAmount>= 999 ? 'FREE' : '₹99' %>
                             </span>
+                        </div>
+                        <div id="summaryDiscountRow" class="summary-row summary-discount"
+                            style="display: none; color: #2ecc71; font-weight: 600;">
+                            <span>Discount</span>
+                            <span id="summaryDiscountAmount">-₹0</span>
                         </div>
                         <div class="summary-divider"></div>
                         <div class="summary-row summary-total">
                             <span>Total</span>
-                            <span>₹<%= totalAmount >= 999 ? totalAmount : totalAmount + 99 %></span>
+                            <span>₹<%= totalAmount>= 999 ? totalAmount : totalAmount + 99 %></span>
                         </div>
                     </div>
                     <div class="delivery-info">
