@@ -67,6 +67,9 @@ const orderSchema = new mongoose.Schema({
     }
   ],
 
+  razorpayOrderId: String,
+  razorpayPaymentId: String,
+
 
 }, { timestamps: true });
 

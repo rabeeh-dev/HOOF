@@ -55,10 +55,11 @@ const Coupon = require('../model/Coupon');
  * @desc    Creates a new order from the user's cart.
  * @param   {string} userId - ID of the user.
  * @param   {string} addressId - ID of the chosen shipping address.
+ * @param   {string} [paymentMethod] - Method of payment (COD, upi).
  * @param   {string} [couponCode] - Optional coupon code to apply.
  * @returns {Promise<Object>} - The created order document.
  */
-exports.createOrder = async (userId, addressId, couponCode = null) => {
+exports.createOrder = async (userId, addressId, paymentMethod = "COD", couponCode = null) => {
     const cart = await Cart.findOne({ userId })
         .populate('items.productId');
 
@@ -88,7 +89,7 @@ exports.createOrder = async (userId, addressId, couponCode = null) => {
 
         // Validate stock (simple version without variants)
         if (product.quantity < item.quantity) {
-            throw new Error("Insufficient stock");
+            throw new Error(`Insufficient stock for "${product.productName}". Available: ${product.quantity}`);
         }
 
         subtotal += product.salePrice * item.quantity;
@@ -130,7 +131,7 @@ exports.createOrder = async (userId, addressId, couponCode = null) => {
         }
     }
 
-    const shippingCharge = subtotal > 999 ? 0 : 50;
+    const shippingCharge = subtotal > 999 || subtotal === 0 ? 0 : 50;
     const totalAmount = subtotal - discountAmount + shippingCharge;
 
     const newOrder = new Order({
@@ -149,8 +150,9 @@ exports.createOrder = async (userId, addressId, couponCode = null) => {
         couponCode: appliedCouponCode,
         discountAmount,
         totalAmount,
-        paymentMethod: "COD",
-        paymentStatus: "Pending"
+        paymentMethod: paymentMethod || "COD",
+        paymentStatus: paymentMethod === "upi" ? "Pending" : "Pending",
+        status: "Pending"
     });
 
     await newOrder.save();
@@ -160,4 +162,37 @@ exports.createOrder = async (userId, addressId, couponCode = null) => {
     await cart.save();
 
     return newOrder;
+};
+
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
+
+const instance = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
+/**
+ * @desc    Create a Razorpay order.
+ * @param   {number} amount - Amount in INR.
+ * @param   {string} orderId - System Order ID.
+ */
+exports.createRazorpayOrder = async (amount, orderId) => {
+    const options = {
+        amount: Math.round(amount * 100), // amount in the smallest currency unit
+        currency: "INR",
+        receipt: orderId.toString()
+    };
+    return await instance.orders.create(options);
+};
+
+/**
+ * @desc    Verify Razorpay payment signature.
+ */
+exports.verifyRazorpayPayment = (razorpayOrderId, razorpayPaymentId, signature) => {
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(razorpayOrderId + "|" + razorpayPaymentId);
+    const generatedSignature = hmac.digest('hex');
+    return generatedSignature === signature;
 };

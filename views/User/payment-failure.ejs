@@ -1,0 +1,107 @@
+<link rel="stylesheet" href="/user/css/shop.css" />
+<link rel="stylesheet" href="/user/css/order-success.css" />
+<style>
+    .failure-icon-wrap .icon-core {
+        background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    }
+
+    .failure-icon-wrap .ring-outer {
+        border-color: rgba(255, 75, 43, 0.2);
+    }
+
+    .status-badge.failed {
+        background: rgba(255, 75, 43, 0.1);
+        color: #ff4b2b;
+        border: 1px solid rgba(255, 75, 43, 0.2);
+    }
+
+    .retry-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px border;
+    }
+</style>
+
+<section class="order-success-page">
+    <div class="bg-shapes" aria-hidden="true">
+        <div class="bg-circle circle-1" style="background: rgba(255, 75, 43, 0.05);"></div>
+        <div class="bg-circle circle-2" style="background: rgba(255, 65, 108, 0.05);"></div>
+    </div>
+
+    <div class="content-wrap">
+        <div class="success-card">
+            <div class="card-band" aria-hidden="true" style="background: linear-gradient(to right, #ff416c, #ff4b2b);">
+            </div>
+
+            <!-- Failure Icon -->
+            <div class="success-icon-wrap failure-icon-wrap">
+                <div class="ring ring-outer"></div>
+                <div class="ring ring-dashed"></div>
+
+                <div class="icon-core">
+                    <i class="fas fa-times check-icon"></i>
+                </div>
+
+                <div class="mini-icon mini-top"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="mini-icon mini-right"><i class="fas fa-wallet"></i></div>
+                <div class="mini-icon mini-bottom"><i class="fas fa-shield-alt"></i></div>
+                <div class="mini-icon mini-left"><i class="fas fa-redo"></i></div>
+            </div>
+
+            <!-- Headline -->
+            <div class="headline-block">
+                <h1 class="headline" style="color: #ff4b2b;">Payment Failed</h1>
+                <p class="subhead">We couldn't process your payment. Don't worry, your items are still reserved.</p>
+
+                <div class="order-badge status-badge failed">
+                    <i class="fas fa-info-circle"></i>
+                    <span class="badge-label">Status</span>
+                    <span class="badge-id">Action Required</span>
+                </div>
+            </div>
+
+            <!-- Notice box -->
+            <div
+                style="background: rgba(255, 75, 43, 0.05); border: 1px solid rgba(255, 75, 43, 0.1); border-radius: 12px; padding: 20px; margin: 30px 0; text-align: left;">
+                <p style="margin: 0; color: #444; font-size: 0.95rem; line-height: 1.6;">
+                    <strong>Common reasons for failure:</strong><br>
+                    • Payment was cancelled by user<br>
+                    • Network timeout or connection issues<br>
+                    • Insufficient funds or bank rejection
+                </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="action-row" style="flex-direction: column; gap: 15px;">
+                <button class="action-btn primary" id="retryPaymentBtn" data-order-id="<%= orderId %>"
+                    style="width: 100%; background: linear-gradient(to right, #ff416c, #ff4b2b); border: none;">
+                    <i class="fas fa-redo"></i>
+                    Retry Payment (₹<%= totalAmount.toLocaleString('en-IN') %>)
+                </button>
+                <div style="display: flex; gap: 15px; width: 100%;">
+                    <a href="/user/orders" class="action-btn outline" style="flex: 1; padding: 12px 0;">
+                        View My Orders
+                    </a>
+                    <a href="/user/shop" class="action-btn outline" style="flex: 1; padding: 12px 0;">
+                        Continue Shopping
+                    </a>
+                </div>
+            </div>
+
+            <!-- Trust strip -->
+            <div class="trust-strip">
+                <div class="trust-item">
+                    <i class="fas fa-lock"></i>
+                    Secure Payment
+                </div>
+                <div class="trust-item">
+                    <i class="fas fa-shield-alt"></i>
+                    Verified Merchant
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="/user/js/payment-failure.js" defer></script>

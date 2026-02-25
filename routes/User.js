@@ -162,6 +162,10 @@ router.get('/profile', isUser, userController.getProfile);
  * @access  Private (isUser)
  */
 router.post('/profile/update', isUser, userController.updateProfile);
+// Razorpay Payment Verification & Failure
+router.post('/checkout/verify-payment', isUser, checkoutController.verifyPayment);
+router.get('/payment-failure/:id', isUser, checkoutController.loadPaymentFailure);
+router.post('/checkout/retry-payment', isUser, checkoutController.retryPayment);
 
 /**
  * @desc    Upload, crop, and set a new profile image.

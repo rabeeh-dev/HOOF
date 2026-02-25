@@ -380,7 +380,7 @@ async function placeOrder() {
     // Show loading state
     const originalText = placeOrderBtn.innerHTML;
     placeOrderBtn.disabled = true;
-    placeOrderBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Order...';
+    placeOrderBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
     try {
         // Prepare payload
@@ -402,11 +402,70 @@ async function placeOrder() {
         const result = await response.json();
 
         if (result.success) {
-            showToast("Order placed successfully!", "success");
-            // Redirect after a short delay
-            setTimeout(() => {
-                window.location.href = result.redirectUrl || "/user/orders";
-            }, 1500);
+            if (result.paymentMethod === "upi") {
+                // Handle Razorpay Payment
+                const options = {
+                    key: result.keyId,
+                    amount: result.amount,
+                    currency: result.currency,
+                    name: "HOOF SHOES",
+                    description: "Order Payment",
+                    image: "/user/images/home-images/logo.png",
+                    order_id: result.razorpayOrderId,
+                    handler: async function (response) {
+                        try {
+                            const verifyBody = {
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                                orderId: result.orderId
+                            };
+
+                            const verifyRes = await fetch("/user/checkout/verify-payment", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify(verifyBody)
+                            });
+
+                            const verifyResult = await verifyRes.json();
+                            if (verifyResult.success) {
+                                showToast("Payment successful!", "success");
+                                setTimeout(() => {
+                                    window.location.href = verifyResult.redirectUrl;
+                                }, 1000);
+                            } else {
+                                window.location.href = `/user/payment-failure/${result.orderId}`;
+                            }
+                        } catch (err) {
+                            console.error("Verification error:", err);
+                            window.location.href = `/user/payment-failure/${result.orderId}`;
+                        }
+                    },
+                    prefill: {
+                        name: result.user.name,
+                        email: result.user.email
+                    },
+                    theme: {
+                        color: "#c41e3a"
+                    },
+                    modal: {
+                        ondismiss: function () {
+                            window.location.href = `/user/payment-failure/${result.orderId}`;
+                        }
+                    }
+                };
+                const rzp1 = new Razorpay(options);
+                rzp1.on('payment.failed', function (response) {
+                    window.location.href = `/user/payment-failure/${result.orderId}`;
+                });
+                rzp1.open();
+            } else {
+                // COD Flow
+                showToast("Order placed successfully!", "success");
+                setTimeout(() => {
+                    window.location.href = result.redirectUrl || "/user/orders";
+                }, 1500);
+            }
         } else {
             showToast(result.message || "Something went wrong", "error");
             placeOrderBtn.disabled = false;
