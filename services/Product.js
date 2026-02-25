@@ -28,9 +28,8 @@ class ProductService {
         const listedCategories = await Category.find({ isListed: true }).select('_id');
         const listedCategoryIds = listedCategories.map(cat => cat._id);
 
-        // 2. Build Filter Object
+        // 2. Build Filter Object (blocked products included — shown as unavailable in UI)
         let filter = {
-            isBlocked: false,
             status: "Available",
             category: { $in: listedCategoryIds }
         };

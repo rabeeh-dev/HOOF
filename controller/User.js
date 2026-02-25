@@ -757,7 +757,12 @@ exports.loadCheckout = async (req, res) => {
     const userId = req.session.userId;
 
     const data = await checkoutService.prepareCheckout(userId);
-    console.log("Checkout Data:", data);
+
+    // If all items are blocked/unavailable, redirect to cart
+    if (!data.cartItems || data.cartItems.length === 0) {
+      return res.redirect('/user/cart?unavailable=1');
+    }
+
     res.render('User/checkout', data);
 
   } catch (err) {

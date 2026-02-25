@@ -846,6 +846,47 @@ img {
   box-shadow: 0 35px 70px rgba(0, 0, 0, 0.3);
 }
 
+/* ==================== UNAVAILABLE PRODUCT (Blocked) ==================== */
+.product-card.product-unavailable {
+  opacity: 0.65;
+  pointer-events: none;
+  filter: grayscale(40%);
+}
+
+.product-card.product-unavailable:hover {
+  transform: none;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.unavailable-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  border-radius: 0;
+}
+
+.unavailable-text {
+  background: rgba(220, 53, 69, 0.9);
+  color: white;
+  padding: 0.6rem 1.8rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.unavailable-price {
+  color: #dc3545 !important;
+  font-weight: 600 !important;
+  font-style: italic;
+}
+
 .product-image {
   position: relative;
   height: 320px;

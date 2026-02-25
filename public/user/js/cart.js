@@ -178,3 +178,22 @@ window.addEventListener("pageshow", function (event) {
         window.location.reload();
     }
 });
+
+// ==========================================
+// BLOCKED PRODUCT ALERT (on redirect from checkout)
+// ==========================================
+
+document.addEventListener("DOMContentLoaded", function () {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("unavailable") === "1") {
+        Swal.fire({
+            icon: 'error',
+            title: 'Products Unavailable',
+            text: 'Some products in your cart are currently unavailable and cannot be purchased. Please remove them and try again.',
+            confirmButtonColor: '#dc3545'
+        });
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+});
+

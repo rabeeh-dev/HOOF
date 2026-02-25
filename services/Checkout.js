@@ -16,8 +16,14 @@ exports.prepareCheckout = async (userId) => {
 
   let subtotal = 0;
 
-  // Create transformed cartItems with totalPrice
-  const cartItems = cart.items.map(item => {
+  // Filter out blocked or unavailable products
+  const blockedProducts = cart.items
+    .filter(item => item.productId && item.productId.isBlocked)
+    .map(item => item.productId.productName);
+
+  const validItems = cart.items.filter(item => item.productId && !item.productId.isBlocked);
+
+  const cartItems = validItems.map(item => {
 
     const totalPrice = item.productId.salePrice * item.quantity;
 
@@ -37,7 +43,8 @@ exports.prepareCheckout = async (userId) => {
     addresses,
     subtotal,
     shippingCharge,
-    totalAmount
+    totalAmount,
+    blockedProducts
   };
 };
 
@@ -64,8 +71,12 @@ exports.createOrder = async (userId, addressId) => {
 
     const product = item.productId;
 
-    if (!product || product.isBlocked) {
-      throw new Error("Product unavailable");
+    if (!product) {
+      throw new Error("A product in your cart is no longer available.");
+    }
+
+    if (product.isBlocked) {
+      throw new Error(`"${product.productName}" is currently blocked and cannot be purchased.`);
     }
 
     // Validate stock (simple version without variants)
