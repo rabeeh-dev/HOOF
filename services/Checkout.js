@@ -116,7 +116,8 @@ exports.createOrder = async (userId, addressId) => {
     subtotal,
     shippingCharge,
     totalAmount,
-    paymentMethod: "COD"
+    paymentMethod: "COD",
+    paymentStatus: "Pending"
   });
 
   await newOrder.save();

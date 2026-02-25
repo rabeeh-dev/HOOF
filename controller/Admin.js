@@ -477,12 +477,12 @@ exports.updateOrderStatus = async (req, res) => {
             'Processing': ['SHIPPED', 'Out for Delivery', 'DELIVERED', 'CANCELLED'],
             'SHIPPED': ['Out for Delivery', 'DELIVERED', 'CANCELLED'],
             'Out for Delivery': ['DELIVERED', 'CANCELLED'],
-            'DELIVERED': [], // Terminal
-            'CANCELLED': [], // Terminal
+            'DELIVERED': ['DELIVERED'], // Allow self-transition to trigger payment updates
+            'CANCELLED': ['CANCELLED'], // Allow self-transition
             'Return Requested': ['Return Approved', 'Returned', 'CANCELLED'],
             'Return Approved': ['Picked Up', 'Returned', 'CANCELLED'],
             'Picked Up': ['Returned', 'CANCELLED'],
-            'Returned': []   // Terminal
+            'Returned': ['Returned']   // Terminal self-transition
         };
 
         const allowed = allowedTransitions[currentStatus] || [];
@@ -502,7 +502,11 @@ exports.updateOrderStatus = async (req, res) => {
 
         // Auto-update payment status if delivered
         if (status === 'DELIVERED') {
-            order.paymentStatus = 'Paid';
+            if (order.paymentMethod === 'COD') {
+                order.paymentStatus = 'SUCCESS';
+            } else {
+                order.paymentStatus = 'Paid';
+            }
         }
 
         await order.save();

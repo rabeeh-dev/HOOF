@@ -124,10 +124,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
 
-                const paymentStatus = order.paymentStatus || 'Pending';
+                let pStatus = order.paymentStatus || 'Pending';
+                if (order.status === 'DELIVERED') {
+                    pStatus = (order.paymentMethod === 'COD') ? 'SUCCESS' : 'Paid';
+                }
+
                 document.getElementById('modalPayment').innerHTML = `
                     ${order.paymentMethod} 
-                    <span class="payment-status-mini ${paymentStatus.toLowerCase()}">${paymentStatus}</span>
+                    <span class="payment-status-mini ${pStatus.toLowerCase()}">${pStatus}</span>
                 `;
 
                 const addr = order.shippingAddress;
@@ -186,18 +190,18 @@ document.addEventListener('DOMContentLoaded', () => {
         badge.textContent = currentStatus;
         badge.className = 'status-badge ' + currentStatus.toLowerCase().replace(/\s+/g, '-');
 
-        // Define transition map (allowing forward jumps - must match backend)
+        // Define transition map (allowing forward jumps & self-save - must match backend)
         const allowedTransitions = {
             'Pending': ['Processing', 'SHIPPED', 'Out for Delivery', 'DELIVERED', 'CANCELLED'],
             'Processing': ['SHIPPED', 'Out for Delivery', 'DELIVERED', 'CANCELLED'],
             'SHIPPED': ['Out for Delivery', 'DELIVERED', 'CANCELLED'],
             'Out for Delivery': ['DELIVERED', 'CANCELLED'],
-            'DELIVERED': [],
-            'CANCELLED': [],
+            'DELIVERED': ['DELIVERED'],
+            'CANCELLED': ['CANCELLED'],
             'Return Requested': ['Return Approved', 'Returned', 'CANCELLED'],
             'Return Approved': ['Picked Up', 'Returned', 'CANCELLED'],
             'Picked Up': ['Returned', 'CANCELLED'],
-            'Returned': []
+            'Returned': ['Returned']
         };
 
         const allowed = allowedTransitions[currentStatus] || [];

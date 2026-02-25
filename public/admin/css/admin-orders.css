@@ -342,11 +342,30 @@ body {
     flex-shrink: 0;
 }
 
-.customer-avatar.red { background: #fed7d7; color: #c53030; }
-.customer-avatar.blue { background: #bee3f8; color: #2b6cb0; }
-.customer-avatar.green { background: #c6f6d5; color: #2f855a; }
-.customer-avatar.yellow { background: #fefcbf; color: #b7791f; }
-.customer-avatar.purple { background: #e9d8fd; color: #6b46c1; }
+.customer-avatar.red {
+    background: #fed7d7;
+    color: #c53030;
+}
+
+.customer-avatar.blue {
+    background: #bee3f8;
+    color: #2b6cb0;
+}
+
+.customer-avatar.green {
+    background: #c6f6d5;
+    color: #2f855a;
+}
+
+.customer-avatar.yellow {
+    background: #fefcbf;
+    color: #b7791f;
+}
+
+.customer-avatar.purple {
+    background: #e9d8fd;
+    color: #6b46c1;
+}
 
 .customer-info h4 {
     font-size: 0.95rem;
@@ -405,9 +424,18 @@ body {
     margin-top: 3px;
 }
 
-.payment-status-mini.paid { color: #38a169; }
-.payment-status-mini.pending { color: #d69e2e; }
-.payment-status-mini.failed { color: #e53e3e; }
+.payment-status-mini.paid,
+.payment-status-mini.success {
+    color: #38a169;
+}
+
+.payment-status-mini.pending {
+    color: #d69e2e;
+}
+
+.payment-status-mini.failed {
+    color: #e53e3e;
+}
 
 /* STATUS BADGES */
 .status-badge {
@@ -420,16 +448,65 @@ body {
     display: inline-block;
 }
 
-.status-badge.pending { background: #fffaf0; color: #d69e2e; border: 1px solid #fbd38d; }
-.status-badge.processing { background: #ebf8ff; color: #3182ce; border: 1px solid #90cdf4; }
-.status-badge.shipped { background: #f0fff4; color: #38a169; border: 1px solid #9ae6b4; }
-.status-badge.out-for-delivery { background: #e6fffa; color: #319795; border: 1px solid #81e6d9; }
-.status-badge.delivered { background: #f0fff4; color: #276749; border: 1px solid #68d391; }
-.status-badge.cancelled { background: #fff5f5; color: #e53e3e; border: 1px solid #feb2b2; }
-.status-badge.return-requested { background: #fffaf0; color: #dd6b20; border: 1px solid #fbd38d; }
-.status-badge.return-approved { background: #ebf8ff; color: #3182ce; border: 1px solid #90cdf4; }
-.status-badge.picked-up { background: #faf5ff; color: #805ad5; border: 1px solid #d6bcfa; }
-.status-badge.returned { background: #edf2f7; color: #4a5568; border: 1px solid #cbd5e0; }
+.status-badge.pending {
+    background: #fffaf0;
+    color: #d69e2e;
+    border: 1px solid #fbd38d;
+}
+
+.status-badge.processing {
+    background: #ebf8ff;
+    color: #3182ce;
+    border: 1px solid #90cdf4;
+}
+
+.status-badge.shipped {
+    background: #f0fff4;
+    color: #38a169;
+    border: 1px solid #9ae6b4;
+}
+
+.status-badge.out-for-delivery {
+    background: #e6fffa;
+    color: #319795;
+    border: 1px solid #81e6d9;
+}
+
+.status-badge.delivered {
+    background: #f0fff4;
+    color: #276749;
+    border: 1px solid #68d391;
+}
+
+.status-badge.cancelled {
+    background: #fff5f5;
+    color: #e53e3e;
+    border: 1px solid #feb2b2;
+}
+
+.status-badge.return-requested {
+    background: #fffaf0;
+    color: #dd6b20;
+    border: 1px solid #fbd38d;
+}
+
+.status-badge.return-approved {
+    background: #ebf8ff;
+    color: #3182ce;
+    border: 1px solid #90cdf4;
+}
+
+.status-badge.picked-up {
+    background: #faf5ff;
+    color: #805ad5;
+    border: 1px solid #d6bcfa;
+}
+
+.status-badge.returned {
+    background: #edf2f7;
+    color: #4a5568;
+    border: 1px solid #cbd5e0;
+}
 
 /* ACTION BUTTONS */
 .action-buttons {
@@ -463,12 +540,32 @@ body {
     color: #2d3748;
 }
 
-.action-btn.view { color: #3182ce; background: #ebf8ff; }
-.action-btn.view:hover { background: #bee3f8; }
-.action-btn.edit { color: #d69e2e; background: #fffaf0; }
-.action-btn.edit:hover { background: #fbd38d; }
-.action-btn.delete { color: #e53e3e; background: #fff5f5; }
-.action-btn.delete:hover { background: #fed7d7; }
+.action-btn.view {
+    color: #3182ce;
+    background: #ebf8ff;
+}
+
+.action-btn.view:hover {
+    background: #bee3f8;
+}
+
+.action-btn.edit {
+    color: #d69e2e;
+    background: #fffaf0;
+}
+
+.action-btn.edit:hover {
+    background: #fbd38d;
+}
+
+.action-btn.delete {
+    color: #e53e3e;
+    background: #fff5f5;
+}
+
+.action-btn.delete:hover {
+    background: #fed7d7;
+}
 
 /* PAGINATION */
 .pagination-container {
@@ -502,7 +599,10 @@ body {
     border: 1px solid transparent;
 }
 
-.page-link:hover { background: #edf2f7; }
+.page-link:hover {
+    background: #edf2f7;
+}
+
 .page-link.active {
     background: var(--admin-primary);
     color: white;
@@ -548,8 +648,15 @@ body {
 }
 
 @keyframes modalPop {
-    from { transform: scale(0.94) translateY(10px); opacity: 0; }
-    to { transform: scale(1) translateY(0); opacity: 1; }
+    from {
+        transform: scale(0.94) translateY(10px);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
 }
 
 /* ==========================================
@@ -658,7 +765,7 @@ body {
 }
 
 .detail-info-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .detail-info-card .modal-detail-label {
@@ -822,7 +929,7 @@ body {
 
 .modal-total-row .modal-detail-label {
     margin: 0;
-    color: rgba(255,255,255,0.6);
+    color: rgba(255, 255, 255, 0.6);
     font-size: 0.75rem;
     letter-spacing: 0.08em;
 }
@@ -1204,7 +1311,9 @@ body {
     transition: color 0.2s;
 }
 
-.modal-close-btn:hover { color: #e53e3e; }
+.modal-close-btn:hover {
+    color: #e53e3e;
+}
 
 .modal-body-content {
     padding: 2rem;
@@ -1268,7 +1377,9 @@ body {
     color: #4a5568;
 }
 
-.modal-btn.cancel:hover { background: #f7fafc; }
+.modal-btn.cancel:hover {
+    background: #f7fafc;
+}
 
 .modal-btn.confirm {
     background: var(--admin-primary);
@@ -1283,12 +1394,27 @@ body {
 
 /* RESPONSIVE */
 @media (max-width: 1200px) {
-    .stats-strip { grid-template-columns: repeat(3, 1fr); }
+    .stats-strip {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 @media (max-width: 900px) {
-    .stats-strip { grid-template-columns: repeat(2, 1fr); }
-    .filter-grid { grid-template-columns: 1fr; }
-    .main-content { padding: 1.5rem; margin-left: 0; width: 100%; }
-    .detail-modal .modal-info-grid { grid-template-columns: 1fr; }
+    .stats-strip {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .main-content {
+        padding: 1.5rem;
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .detail-modal .modal-info-grid {
+        grid-template-columns: 1fr;
+    }
 }
