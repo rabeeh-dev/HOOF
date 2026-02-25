@@ -469,6 +469,31 @@ exports.updateOrderStatus = async (req, res) => {
         const order = await Order.findById(req.params.id);
         if (!order) return res.status(404).json({ success: false, message: "Order not found" });
 
+        const currentStatus = order.status;
+
+        // Define allowed transitions (allowing forward jumps)
+        const allowedTransitions = {
+            'Pending': ['Processing', 'SHIPPED', 'Out for Delivery', 'DELIVERED', 'CANCELLED'],
+            'Processing': ['SHIPPED', 'Out for Delivery', 'DELIVERED', 'CANCELLED'],
+            'SHIPPED': ['Out for Delivery', 'DELIVERED', 'CANCELLED'],
+            'Out for Delivery': ['DELIVERED', 'CANCELLED'],
+            'DELIVERED': [], // Terminal
+            'CANCELLED': [], // Terminal
+            'Return Requested': ['Return Approved', 'Returned', 'CANCELLED'],
+            'Return Approved': ['Picked Up', 'Returned', 'CANCELLED'],
+            'Picked Up': ['Returned', 'CANCELLED'],
+            'Returned': []   // Terminal
+        };
+
+        const allowed = allowedTransitions[currentStatus] || [];
+
+        if (!allowed.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Invalid transition: cannot change status from "${currentStatus}" to "${status}".`
+            });
+        }
+
         order.status = status;
         order.statusHistory.push({
             status,
@@ -496,6 +521,14 @@ exports.cancelOrderAdmin = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
         if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+        // Cannot cancel a delivered or already cancelled order
+        if (order.status === 'DELIVERED') {
+            return res.status(400).json({ success: false, message: "Delivered orders cannot be cancelled." });
+        }
+        if (order.status === 'CANCELLED') {
+            return res.status(400).json({ success: false, message: "Order is already cancelled." });
+        }
 
         order.status = 'CANCELLED';
         order.statusHistory.push({

@@ -186,7 +186,43 @@ document.addEventListener('DOMContentLoaded', () => {
         badge.textContent = currentStatus;
         badge.className = 'status-badge ' + currentStatus.toLowerCase().replace(/\s+/g, '-');
 
+        // Define transition map (allowing forward jumps - must match backend)
+        const allowedTransitions = {
+            'Pending': ['Processing', 'SHIPPED', 'Out for Delivery', 'DELIVERED', 'CANCELLED'],
+            'Processing': ['SHIPPED', 'Out for Delivery', 'DELIVERED', 'CANCELLED'],
+            'SHIPPED': ['Out for Delivery', 'DELIVERED', 'CANCELLED'],
+            'Out for Delivery': ['DELIVERED', 'CANCELLED'],
+            'DELIVERED': [],
+            'CANCELLED': [],
+            'Return Requested': ['Return Approved', 'Returned', 'CANCELLED'],
+            'Return Approved': ['Picked Up', 'Returned', 'CANCELLED'],
+            'Picked Up': ['Returned', 'CANCELLED'],
+            'Returned': []
+        };
+
+        const allowed = allowedTransitions[currentStatus] || [];
+
+        // Update dropdown options
+        Array.from(newStatusSelect.options).forEach(option => {
+            if (option.value === currentStatus) {
+                option.style.display = 'block'; // Keep current status visible
+                option.disabled = true; // But don't allow selecting it again
+            } else if (allowed.includes(option.value)) {
+                option.style.display = 'block';
+                option.disabled = false;
+            } else {
+                option.style.display = 'none';
+            }
+        });
+
+        // Set default value to current status (it's shown but disabled)
         newStatusSelect.value = currentStatus;
+
+        // If there's an allowed next state, auto-select the first one to prompt change
+        if (allowed.length > 0) {
+            newStatusSelect.value = allowed[0];
+        }
+
         statusNotes.value = '';
 
         // Hide detail modal if it's open
