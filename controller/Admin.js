@@ -398,10 +398,19 @@ exports.loadOrders = async (req, res) => {
         if (status) query.status = status;
         if (payment) query.paymentMethod = payment;
         if (search) {
+            const cleanSearch = search.replace('#', '').trim();
+            const searchRegex = new RegExp(cleanSearch, 'i');
+
+            // Build the base $or array for string fields
             query.$or = [
-                { _id: { $regex: search, $options: 'i' } },
-                { 'shippingAddress.fullName': { $regex: search, $options: 'i' } }
+                { 'shippingAddress.fullName': searchRegex },
+                { $expr: { $regexMatch: { input: { $toString: "$_id" }, regex: searchRegex } } }
             ];
+
+            // If the search string is a valid 24-character hex string, we can search by exact _id
+            if (/^[0-9a-fA-F]{24}$/.test(cleanSearch)) {
+                query.$or.push({ _id: cleanSearch });
+            }
         }
 
         const totalOrders = await Order.countDocuments(query);
