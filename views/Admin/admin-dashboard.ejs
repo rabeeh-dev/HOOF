@@ -47,10 +47,6 @@
           <i class="fas fa-ticket-alt"></i>
           <span>Coupons</span>
         </a>
-        <a href="#" class="nav-item">
-          <i class="fas fa-chart-bar"></i>
-          <span>Reports</span>
-        </a>
       </nav>
 
       <div class="sidebar-footer">
@@ -73,20 +69,39 @@
     <main class="main-content">
       <!-- HEADER -->
       <header class="dashboard-header">
-        <div>
+        <div class="header-main">
           <h1>Dashboard Overview</h1>
+          <p class="header-subtitle">Welcome back — here's what's happening with your store.</p>
         </div>
+
         <div class="header-actions">
-          <select class="date-filter">
-            <option>Last 7 Days</option>
-            <option>Last 30 Days</option>
-            <option>Last 90 Days</option>
-            <option>This Year</option>
-          </select>
-          <button class="btn-download">
-            <i class="fas fa-download"></i>
-            Download Report
-          </button>
+          <div class="filter-controls">
+            <label for="dashboardFilter" class="filter-label">Filter:</label>
+            <div class="custom-dates" id="customDateRange" style="display: none;">
+              <input type="date" id="startDate" class="date-input" value="<%= query.startDate || '' %>">
+              <input type="date" id="endDate" class="date-input" value="<%= query.endDate || '' %>">
+            </div>
+
+            <select id="dashboardFilter" class="filter-select">
+              <option value="daily" <%=activeFilter==='daily' ? 'selected' : '' %>>Today</option>
+              <option value="weekly" <%=activeFilter==='weekly' ? 'selected' : '' %>>Last 7 Days</option>
+              <option value="yearly" <%=activeFilter==='yearly' ? 'selected' : '' %>>Yearly</option>
+              <option value="custom" <%=activeFilter==='custom' ? 'selected' : '' %>>Custom Range</option>
+            </select>
+
+            <button id="applyFilter" class="btn-apply" style="display: none;">Apply</button>
+          </div>
+
+          <div class="report-actions">
+            <button class="btn-report btn-pdf" id="downloadPDF" title="Download PDF Report">
+              <i class="fas fa-file-pdf"></i>
+              <span>PDF</span>
+            </button>
+            <button class="btn-report btn-excel" id="downloadExcel" title="Download Excel Report">
+              <i class="fas fa-file-excel"></i>
+              <span>Excel</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -94,14 +109,13 @@
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon revenue">
-            <i class="fas fa-dollar-sign"></i>
+            <i class="fas fa-indian-rupee-sign"></i>
           </div>
           <div class="stat-content">
             <p class="stat-label">Total Revenue</p>
-            <h3 class="stat-value">$45,231.89</h3>
-            <span class="stat-change positive">
-              <i class="fas fa-arrow-up"></i> +20.1%
-            </span>
+            <h3 class="stat-value" id="statRevenue" data-value="<%= stats.totalRevenue %>">₹<%=
+                stats.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+            </h3>
           </div>
         </div>
 
@@ -111,10 +125,9 @@
           </div>
           <div class="stat-content">
             <p class="stat-label">Total Orders</p>
-            <h3 class="stat-value">2,345</h3>
-            <span class="stat-change positive">
-              <i class="fas fa-arrow-up"></i> +15.2%
-            </span>
+            <h3 class="stat-value" id="statOrders" data-value="<%= stats.totalOrders %>">
+              <%= stats.totalOrders.toLocaleString() %>
+            </h3>
           </div>
         </div>
 
@@ -124,10 +137,9 @@
           </div>
           <div class="stat-content">
             <p class="stat-label">Total Customers</p>
-            <h3 class="stat-value">1,234</h3>
-            <span class="stat-change positive">
-              <i class="fas fa-arrow-up"></i> +10.5%
-            </span>
+            <h3 class="stat-value" id="statCustomers" data-value="<%= stats.totalCustomers %>">
+              <%= stats.totalCustomers.toLocaleString() %>
+            </h3>
           </div>
         </div>
 
@@ -136,27 +148,123 @@
             <i class="fas fa-box-open"></i>
           </div>
           <div class="stat-content">
-            <p class="stat-label">Products</p>
-            <h3 class="stat-value">432</h3>
-            <span class="stat-change positive">
-              <i class="fas fa-arrow-up"></i> +12.5%
-            </span>
+            <p class="stat-label">Active Products</p>
+            <h3 class="stat-value" id="statProducts" data-value="<%= stats.totalProducts %>">
+              <%= stats.totalProducts.toLocaleString() %>
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW -->
+      <div class="charts-grid-full">
+        <!-- SALES OVERVIEW CHART -->
+        <div class="card chart-card sales-chart-card">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-area chart-icon"></i> Sales Overview</h3>
+            <span class="chart-subtitle">Monthly revenue (last 12 months)</span>
+          </div>
+          <div class="card-body">
+            <canvas id="salesChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOP SELLING PRODUCTS & LOW STOCK -->
+      <div class="charts-grid">
+        <!-- TOP SELLING PRODUCTS -->
+        <div class="card chart-card top-products-card">
+          <div class="card-header">
+            <h3><i class="fas fa-fire chart-icon"></i> Top Selling Products</h3>
+          </div>
+          <div class="card-body">
+            <% if (topProducts && topProducts.length> 0) { %>
+              <div class="top-products-list">
+                <% topProducts.forEach((product, index)=> { %>
+                  <div class="top-product-item">
+                    <div class="top-product-rank">
+                      <%= index + 1 %>
+                    </div>
+                    <div class="top-product-image">
+                      <% if (product.image) { %>
+                        <img src="<%= product.image %>" alt="<%= product.name %>" />
+                        <% } else { %>
+                          <div class="product-image-placeholder"><i class="fas fa-shoe-prints"></i></div>
+                          <% } %>
+                    </div>
+                    <div class="top-product-info">
+                      <h4>
+                        <%= product.name || 'Unknown Product' %>
+                      </h4>
+                      <p>
+                        <%= product.totalSold %> sold · ₹<%= product.totalRevenue.toLocaleString('en-IN') %>
+                      </p>
+                    </div>
+                  </div>
+                  <% }); %>
+              </div>
+              <% } else { %>
+                <div class="empty-state">
+                  <i class="fas fa-box-open"></i>
+                  <p>No sales data available yet</p>
+                </div>
+                <% } %>
           </div>
         </div>
       </div>
 
       <!-- CONTENT GRID -->
       <div class="content-grid">
-        <!-- SALES OVERVIEW -->
-        <div class="card sales-overview">
+        <!-- RECENT ORDERS -->
+        <div class="card recent-orders">
           <div class="card-header">
-            <h3>Sales Overview</h3>
+            <h3><i class="fas fa-clock chart-icon"></i> Recent Orders</h3>
+            <a href="/admin/orders" class="view-all">
+              View All Orders
+              <i class="fas fa-arrow-right"></i>
+            </a>
           </div>
           <div class="card-body">
-            <div class="chart-placeholder">
-              <i class="fas fa-chart-area"></i>
-              <p>Sales chart visualization would go here</p>
-              <small>(In the real app, use Chart.js or similar)</small>
+            <div class="table-responsive">
+              <table class="orders-table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Product</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (recentOrders && recentOrders.length> 0) { %>
+                    <% recentOrders.forEach(order=> { %>
+                      <tr>
+                        <td><span class="order-id">#<%= order._id.toString().slice(-6).toUpperCase() %></span></td>
+                        <td>
+                          <%= order.userId ? order.userId.fullName : 'N/A' %>
+                        </td>
+                        <td>
+                          <%= order.items && order.items[0] ? order.items[0].productName : 'N/A' %>
+                            <% if (order.items && order.items.length> 1) { %> <span class="more-items">+<%=
+                                  order.items.length - 1 %></span>
+                              <% } %>
+                        </td>
+                        <td>₹<%= order.totalAmount ? order.totalAmount.toLocaleString('en-IN') : '0' %>
+                        </td>
+                        <td><span
+                            class="status-badge <%= order.status ? order.status.toLowerCase().replace(/\s+/g, '-') : '' %>">
+                            <%= order.status %>
+                          </span></td>
+                      </tr>
+                      <% }); %>
+                        <% } else { %>
+                          <tr>
+                            <td colspan="5" class="empty-table">No orders yet</td>
+                          </tr>
+                          <% } %>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -164,101 +272,52 @@
         <!-- LOW STOCK ALERTS -->
         <div class="card low-stock">
           <div class="card-header">
-            <h3>Low Stock Alerts</h3>
-            <a href="#" class="view-all">View All</a>
+            <h3><i class="fas fa-exclamation-triangle chart-icon warning-icon"></i> Low Stock Alerts</h3>
+            <a href="/admin/products" class="view-all">View All</a>
           </div>
           <div class="card-body">
-            <div class="stock-item">
-              <div class="stock-info">
-                <h4>Nike Air Force 1</h4>
-                <p>Size: US 9</p>
-              </div>
-              <span class="stock-badge critical">2 left</span>
-            </div>
-            <div class="stock-item">
-              <div class="stock-info">
-                <h4>Adidas Stan Smith</h4>
-                <p>Size: US 10</p>
-              </div>
-              <span class="stock-badge warning">5 left</span>
-            </div>
-            <div class="stock-item">
-              <div class="stock-info">
-                <h4>Vans Old Skool</h4>
-                <p>Size: US 8</p>
-              </div>
-              <span class="stock-badge warning">3 left</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RECENT ORDERS -->
-      <div class="card recent-orders">
-        <div class="card-header">
-          <h3>Recent Orders</h3>
-          <a href="#" class="view-all">
-            View All Orders
-            <i class="fas fa-arrow-right"></i>
-          </a>
-        </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="orders-table">
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Customer</th>
-                  <th>Product</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><span class="order-id">#ORD-7352</span></td>
-                  <td>Alex Johnson</td>
-                  <td>Nike Air Max 90</td>
-                  <td>$129.00</td>
-                  <td><span class="status-badge delivered">Delivered</span></td>
-                </tr>
-                <tr>
-                  <td><span class="order-id">#ORD-7351</span></td>
-                  <td>Sarah Smith</td>
-                  <td>Adidas Ultraboost</td>
-                  <td>$180.00</td>
-                  <td><span class="status-badge processing">Processing</span></td>
-                </tr>
-                <tr>
-                  <td><span class="order-id">#ORD-7350</span></td>
-                  <td>Michael Brown</td>
-                  <td>Puma RS-X</td>
-                  <td>$110.00</td>
-                  <td><span class="status-badge shipped">Shipped</span></td>
-                </tr>
-                <tr>
-                  <td><span class="order-id">#ORD-7349</span></td>
-                  <td>Emily Davis</td>
-                  <td>New Balance 574</td>
-                  <td>$85.00</td>
-                  <td><span class="status-badge pending">Pending</span></td>
-                </tr>
-                <tr>
-                  <td><span class="order-id">#ORD-7348</span></td>
-                  <td>James Wilson</td>
-                  <td>Converse Chuck 70</td>
-                  <td>$90.00</td>
-                  <td><span class="status-badge delivered">Delivered</span></td>
-                </tr>
-              </tbody>
-            </table>
+            <% if (lowStockProducts && lowStockProducts.length> 0) { %>
+              <% lowStockProducts.forEach(item=> { %>
+                <div class="stock-item">
+                  <div class="stock-info">
+                    <h4>
+                      <%= item.productName %>
+                    </h4>
+                    <p>Size: <%= item.variantSize %>
+                    </p>
+                  </div>
+                  <span class="stock-badge <%= item.variantQty <= 2 ? 'critical' : 'warning' %>">
+                    <%= item.variantQty %> left
+                  </span>
+                </div>
+                <% }); %>
+                  <% } else { %>
+                    <div class="empty-state">
+                      <i class="fas fa-check-circle"></i>
+                      <p>All products are well stocked</p>
+                    </div>
+                    <% } %>
           </div>
         </div>
       </div>
     </main>
 
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Pass server data to JS -->
+    <script>
+      console.log("Initializing Dashboard Data...");
+      window.__dashboardData = {
+        monthlySales: <% - JSON.stringify(monthlySales || []) %>,
+        statusBreakdown: <% - JSON.stringify(statusBreakdown || {}) %>,
+        categorySales: <% - JSON.stringify(categorySales || []) %>
+      };
+      console.log("Dashboard Data Initialized:", window.__dashboardData);
+    </script>
+
     <%- include('../partials/admin/overlay-scripts') %>
-      <script src="/admin/js/admin-dashboard.js" defer></script>
+      <script src="/admin/js/admin-dashboard.js?v=<%= Date.now() %>" defer></script>
       <script>
         window.addEventListener("pageshow", function (event) {
           const navEntries = performance.getEntriesByType('navigation');
@@ -269,6 +328,7 @@
           }
         });
       </script>
+
 </body>
 
 </html>

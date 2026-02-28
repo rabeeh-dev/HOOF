@@ -1,21 +1,17 @@
 /**
  * @file public/admin/js/admin-dashboard.js
- * @description Logic for the admin dashboard, including sidebar toggles, stat animations, and UI interactions.
+ * @description Logic for the admin dashboard: Chart.js charts, sidebar toggles, stat animations, and UI interactions.
  */
 
 // ==========================================
 // MOBILE SIDEBAR TOGGLE
 // ==========================================
 
-/**
- * Creates and manages the mobile sidebar toggle button.
- */
 const createMobileToggle = () => {
   if (window.innerWidth <= 768) {
     const sidebar = document.querySelector('.sidebar');
     const mainContent = document.querySelector('.main-content');
 
-    // Create toggle button if it doesn't exist
     if (!document.querySelector('.sidebar-toggle')) {
       const toggleBtn = document.createElement('button');
       toggleBtn.className = 'sidebar-toggle';
@@ -26,7 +22,6 @@ const createMobileToggle = () => {
         sidebar.classList.toggle('open');
       });
 
-      // Close sidebar when clicking outside
       mainContent.addEventListener('click', (e) => {
         if (!e.target.closest('.sidebar-toggle') && sidebar.classList.contains('open')) {
           sidebar.classList.remove('open');
@@ -36,11 +31,9 @@ const createMobileToggle = () => {
   }
 };
 
-// Initialize mobile toggle
 createMobileToggle();
 window.addEventListener('resize', createMobileToggle);
 
-// Add mobile toggle styles
 const mobileStyles = document.createElement('style');
 mobileStyles.textContent = `
   .sidebar-toggle {
@@ -88,8 +81,6 @@ if (logoutBtn) {
   logoutBtn.addEventListener('click', () => {
     if (confirm('Are you sure you want to logout?')) {
       showToast('Logging out...', 'info');
-
-      // Redirect to the backend logout route
       setTimeout(() => {
         window.location.href = '/admin/logout';
       }, 500);
@@ -98,136 +89,296 @@ if (logoutBtn) {
 }
 
 // ==========================================
-// DASHBOARD UI INTERACTIONS
+// CHART.JS INITIALIZATION
 // ==========================================
 
-// Date Filter Change
-const dateFilter = document.querySelector('.date-filter');
-if (dateFilter) {
-  dateFilter.addEventListener('change', (e) => {
-    showToast(`Showing data for: ${e.target.value}`, 'info');
-    // Trigger data refresh/re-animation
-    animateStats();
-  });
-}
+// -- Color palette --
+const chartColors = {
+  primary: '#c41e3a',
+  primaryLight: 'rgba(196, 30, 58, 0.15)',
+  green: '#27ae60',
+  blue: '#3498db',
+  orange: '#e67e22',
+  purple: '#9b59b6',
+  yellow: '#f1c40f',
+  cyan: '#1abc9c',
+  grey: '#95a5a6',
+  red: '#e74c3c'
+};
 
-// Download Report Button
-const downloadBtn = document.querySelector('.btn-download');
-if (downloadBtn) {
-  downloadBtn.addEventListener('click', () => {
-    showLoading('Generating comprehensive report...');
+let salesChart;
 
-    // Simulate download delay
-    setTimeout(() => {
-      hideLoading();
-      showToast('Report downloaded successfully!', 'success');
-    }, 2000);
-  });
-}
+// --- Sales Overview Line Chart Initialization ---
+const initSalesChart = (chartData) => {
+  const salesCtx = document.getElementById('salesChart');
+  if (!salesCtx) return;
 
-/**
- * Animates stat values on dashboard load.
- */
-const animateStats = () => {
-  const statValues = document.querySelectorAll('.stat-value');
+  if (salesChart) {
+    salesChart.data.labels = chartData.map(m => m.label);
+    salesChart.data.datasets[0].data = chartData.map(m => m.revenue);
+    salesChart.data.datasets[1].data = chartData.map(m => m.count);
+    salesChart.update();
+    return;
+  }
 
-  statValues.forEach(stat => {
-    const finalValue = stat.textContent;
-    stat.textContent = '0';
-
-    // Simple counter animation
-    if (finalValue.includes('$')) {
-      const numValue = parseFloat(finalValue.replace(/[$,]/g, ''));
-      let current = 0;
-      const increment = numValue / 50;
-
-      const counter = setInterval(() => {
-        current += increment;
-        if (current >= numValue) {
-          stat.textContent = finalValue;
-          clearInterval(counter);
-        } else {
-          stat.textContent = '$' + current.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  salesChart = new Chart(salesCtx, {
+    type: 'line',
+    data: {
+      labels: chartData.map(m => m.label),
+      datasets: [{
+        label: 'Revenue (₹)',
+        data: chartData.map(m => m.revenue),
+        borderColor: chartColors.primary,
+        backgroundColor: chartColors.primaryLight,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: chartColors.primary,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2.5
+      },
+      {
+        label: 'Orders',
+        data: chartData.map(m => m.count),
+        borderColor: chartColors.blue,
+        backgroundColor: 'rgba(52, 152, 219, 0.08)',
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: chartColors.blue,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        borderWidth: 2,
+        yAxisID: 'y1'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            usePointStyle: true,
+            padding: 20,
+            font: { family: 'Poppins', size: 12 }
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(44, 62, 80, 0.9)',
+          titleFont: { family: 'Poppins', weight: '600' },
+          bodyFont: { family: 'Poppins' },
+          padding: 12,
+          cornerRadius: 8,
+          callbacks: {
+            label: function (context) {
+              if (context.datasetIndex === 0) {
+                return `Revenue: ₹${context.parsed.y.toLocaleString('en-IN')}`;
+              }
+              return `Orders: ${context.parsed.y}`;
+            }
+          }
         }
-      }, 20);
-    } else {
-      const numValue = parseInt(finalValue.replace(/,/g, ''));
-      let current = 0;
-      const increment = Math.ceil(numValue / 50);
-
-      const counter = setInterval(() => {
-        current += increment;
-        if (current >= numValue) {
-          stat.textContent = finalValue;
-          clearInterval(counter);
-        } else {
-          stat.textContent = current.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          position: 'left',
+          grid: { color: 'rgba(0,0,0,0.04)' },
+          ticks: {
+            font: { family: 'Poppins', size: 11 },
+            callback: function (value) {
+              if (value >= 1000) return '₹' + (value / 1000).toFixed(0) + 'k';
+              return '₹' + value;
+            }
+          }
+        },
+        y1: {
+          beginAtZero: true,
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: {
+            font: { family: 'Poppins', size: 11 },
+            stepSize: 1
+          }
+        },
+        x: {
+          grid: { display: false },
+          ticks: {
+            font: { family: 'Poppins', size: 11 },
+            maxRotation: 45
+          }
         }
-      }, 20);
+      }
     }
   });
 };
 
-// Run animation on page load
+// Initial Render - Only if window.__dashboardData is available
+window.addEventListener('load', () => {
+  const data = window.__dashboardData || {};
+  console.log("Dashboard JS data at load:", data);
+  if (data.monthlySales && data.monthlySales.length > 0) {
+    initSalesChart(data.monthlySales);
+  } else {
+    console.log("No monthly sales data to initialize chart, waiting for filter change/ajax...");
+  }
+});
+
+// ==========================================
+// FILTERING & REPORTS INTERACTION
+// ==========================================
+
+const dashboardFilter = document.getElementById('dashboardFilter');
+const customDateRange = document.getElementById('customDateRange');
+const applyFilter = document.getElementById('applyFilter');
+const startDateInput = document.getElementById('startDate');
+const endDateInput = document.getElementById('endDate');
+
+const handleFilterChange = () => {
+  const filter = dashboardFilter.value;
+  if (filter === 'custom') {
+    customDateRange.style.display = 'flex';
+    applyFilter.style.display = 'block';
+  } else {
+    customDateRange.style.display = 'none';
+    applyFilter.style.display = 'none';
+    fetchDashboardData(filter);
+  }
+};
+
+const fetchDashboardData = async (filter, start = null, end = null) => {
+  try {
+    showToast('Updating charts...', 'info');
+    let url = `/admin/dashboard?ajax=true&filter=${filter}`;
+    if (start && end) url += `&startDate=${start}&endDate=${end}`;
+
+    const response = await fetch(url);
+    const result = await response.json();
+
+    // 1. Update stats cards
+    if (result.stats) {
+      const revenueEl = document.getElementById('statRevenue');
+      const ordersEl = document.getElementById('statOrders');
+
+      if (revenueEl) {
+        revenueEl.textContent = `₹${result.stats.totalRevenue.toLocaleString('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}`;
+        revenueEl.setAttribute('data-value', result.stats.totalRevenue);
+      }
+
+      if (ordersEl) {
+        ordersEl.textContent = result.stats.totalOrders.toLocaleString();
+        ordersEl.setAttribute('data-value', result.stats.totalOrders);
+      }
+    }
+
+    // 2. Update Sales Chart
+    if (result.monthlySales) {
+      initSalesChart(result.monthlySales);
+      showToast('Dashboard updated', 'success');
+    }
+  } catch (error) {
+    console.error('Fetch error:', error);
+    showToast('Failed to update dashboard', 'error');
+  }
+};
+
+if (dashboardFilter) {
+  dashboardFilter.addEventListener('change', handleFilterChange);
+}
+
+if (applyFilter) {
+  applyFilter.addEventListener('click', () => {
+    const start = startDateInput.value;
+    const end = endDateInput.value;
+    if (!start || !end) {
+      return showToast('Please select both dates', 'warning');
+    }
+    fetchDashboardData('custom', start, end);
+  });
+}
+
+// Report Downloads
+const downloadReport = (type) => {
+  const filter = dashboardFilter.value;
+  const start = startDateInput.value;
+  const end = endDateInput.value;
+
+  let url = `/admin/dashboard/export?type=${type}&filter=${filter}`;
+  if (filter === 'custom' && start && end) {
+    url += `&startDate=${start}&endDate=${end}`;
+  }
+
+  window.location.href = url;
+};
+
+document.getElementById('downloadPDF')?.addEventListener('click', () => downloadReport('pdf'));
+document.getElementById('downloadExcel')?.addEventListener('click', () => downloadReport('excel'));
+
+// ==========================================
+// STAT COUNTER ANIMATION
+// ==========================================
+
+const animateStats = () => {
+  const statValues = document.querySelectorAll('.stat-value');
+
+  statValues.forEach(stat => {
+    const finalText = stat.textContent;
+    const rawValue = parseFloat(stat.getAttribute('data-value')) || 0;
+
+    if (rawValue === 0) return;
+
+    stat.textContent = finalText.includes('₹') ? '₹0' : '0';
+    let current = 0;
+    const duration = 1200;
+    const startTime = performance.now();
+
+    const step = (timestamp) => {
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      current = rawValue * eased;
+
+      if (finalText.includes('₹')) {
+        stat.textContent = '₹' + current.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      } else {
+        stat.textContent = Math.round(current).toLocaleString();
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        stat.textContent = finalText;
+      }
+    };
+
+    requestAnimationFrame(step);
+  });
+};
+
 window.addEventListener('load', () => {
   setTimeout(animateStats, 300);
-});
-
-// Table Row Hover/Click
-const tableRows = document.querySelectorAll('.orders-table tbody tr');
-tableRows.forEach(row => {
-  row.style.cursor = 'pointer';
-  row.addEventListener('click', () => {
-    const orderId = row.querySelector('.order-id').textContent;
-    showToast(`Opening order ${orderId}`, 'info');
-    // Implementation for opening order details
-  });
-
-  row.addEventListener('mouseenter', () => {
-    row.style.backgroundColor = 'rgba(196, 30, 58, 0.05)';
-  });
-
-  row.addEventListener('mouseleave', () => {
-    row.style.backgroundColor = '';
-  });
-});
-
-// Stock Item Hover/Click
-const stockItems = document.querySelectorAll('.stock-item');
-stockItems.forEach(item => {
-  item.style.cursor = 'pointer';
-  item.addEventListener('click', () => {
-    const productName = item.querySelector('h4').textContent;
-    showToast(`Opening ${productName} details`, 'info');
-  });
-
-  item.addEventListener('mouseenter', () => {
-    item.style.transform = 'translateX(5px)';
-    item.style.transition = 'transform 0.3s ease';
-  });
-
-  item.addEventListener('mouseleave', () => {
-    item.style.transform = 'translateX(0)';
-  });
 });
 
 // ==========================================
 // TOAST NOTIFICATION SYSTEM
 // ==========================================
 
-/**
- * Displays a toast notification on the screen.
- * @param {string} message - Message to display.
- * @param {string} [type='info'] - Type of toast: success, error, info, warning.
- */
 function showToast(message, type = 'info') {
-  // Remove existing toast
   const existingToast = document.querySelector('.toast');
-  if (existingToast) {
-    existingToast.remove();
-  }
+  if (existingToast) existingToast.remove();
 
-  // Create toast
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
 
@@ -245,21 +396,13 @@ function showToast(message, type = 'info') {
 
   document.body.appendChild(toast);
 
-  // Show toast
-  setTimeout(() => {
-    toast.classList.add('show');
-  }, 100);
-
-  // Auto remove
+  setTimeout(() => toast.classList.add('show'), 100);
   setTimeout(() => {
     toast.classList.remove('show');
-    setTimeout(() => {
-      toast.remove();
-    }, 300);
+    setTimeout(() => toast.remove(), 300);
   }, 3000);
 }
 
-// Toast styles
 const toastStyles = document.createElement('style');
 toastStyles.textContent = `
   .toast {
@@ -285,41 +428,19 @@ toastStyles.textContent = `
     transform: translateX(0);
   }
   
-  .toast i {
-    font-size: 1.3rem;
-  }
+  .toast i { font-size: 1.3rem; }
   
-  .toast-success {
-    border-left: 4px solid #27ae60;
-  }
+  .toast-success { border-left: 4px solid #27ae60; }
+  .toast-success i { color: #27ae60; }
   
-  .toast-success i {
-    color: #27ae60;
-  }
+  .toast-error { border-left: 4px solid #e74c3c; }
+  .toast-error i { color: #e74c3c; }
   
-  .toast-error {
-    border-left: 4px solid #e74c3c;
-  }
+  .toast-info { border-left: 4px solid #3498db; }
+  .toast-info i { color: #3498db; }
   
-  .toast-error i {
-    color: #e74c3c;
-  }
-  
-  .toast-info {
-    border-left: 4px solid #3498db;
-  }
-  
-  .toast-info i {
-    color: #3498db;
-  }
-  
-  .toast-warning {
-    border-left: 4px solid #f39c12;
-  }
-  
-  .toast-warning i {
-    color: #f39c12;
-  }
+  .toast-warning { border-left: 4px solid #f39c12; }
+  .toast-warning i { color: #f39c12; }
   
   .toast span {
     color: var(--admin-text);
@@ -337,62 +458,19 @@ toastStyles.textContent = `
 document.head.appendChild(toastStyles);
 
 // ==========================================
-// BACKGROUND PROCESSES & SHORTCUTS
+// KEYBOARD SHORTCUTS
 // ==========================================
 
-// Refresh data periodically (demo)
-let refreshInterval;
-
-const startAutoRefresh = () => {
-  refreshInterval = setInterval(() => {
-    console.log('Auto-refreshing dashboard data...');
-  }, 60000); // Every 60 seconds
-};
-
-const stopAutoRefresh = () => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval);
-  }
-};
-
-// Start auto-refresh
-startAutoRefresh();
-
-// Stop auto-refresh when page is hidden
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    stopAutoRefresh();
-  } else {
-    startAutoRefresh();
-  }
-});
-
-// View All Links
-const viewAllLinks = document.querySelectorAll('.view-all');
-viewAllLinks.forEach(link => {
-  link.addEventListener('click', (e) => {
-    e.preventDefault();
-    const section = link.textContent.trim();
-    showToast(`Opening ${section}...`, 'info');
-  });
-});
-
-// Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
-  // Alt + D for Dashboard
   if (e.altKey && e.key === 'd') {
     e.preventDefault();
     document.querySelector('.nav-item.active')?.click();
   }
-
-  // Alt + R for Refresh
   if (e.altKey && e.key === 'r') {
     e.preventDefault();
     showToast('Refreshing data...', 'info');
     animateStats();
   }
-
-  // Alt + L for Logout
   if (e.altKey && e.key === 'l') {
     e.preventDefault();
     logoutBtn?.click();
@@ -400,7 +478,3 @@ document.addEventListener('keydown', (e) => {
 });
 
 console.log('%c📊 HOOF Admin Dashboard', 'color: #c41e3a; font-size: 20px; font-weight: bold;');
-console.log('%cKeyboard Shortcuts:', 'color: #3498db; font-size: 14px; font-weight: bold;');
-console.log('%cAlt + D: Dashboard', 'color: #7f8c8d; font-size: 12px;');
-console.log('%cAlt + R: Refresh Data', 'color: #7f8c8d; font-size: 12px;');
-console.log('%cAlt + L: Logout', 'color: #7f8c8d; font-size: 12px;');

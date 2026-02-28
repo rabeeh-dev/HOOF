@@ -33,12 +33,14 @@ router.post('/login', adminController.verifyAdmin);
 // ADMIN DASHBOARD & MANAGEMENT
 // ==========================================
 
+router.get('/dashboard', adminAuth.isLogin, adminController.loadDashboard);
+
 /**
- * @desc    Load the admin analytics dashboard.
- * @route   GET /admin/dashboard
+ * @desc    Export Sales Report as PDF or Excel.
+ * @route   GET /admin/dashboard/export
  * @access  Private (Admin Only)
  */
-router.get('/dashboard', adminAuth.isLogin, adminController.loadDashboard);
+router.get('/dashboard/export', adminAuth.isLogin, adminController.exportSalesReport);
 
 /**
  * @desc    Load user management list with pagination.
