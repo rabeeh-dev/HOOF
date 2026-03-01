@@ -716,6 +716,9 @@ router.get('/order-success/:id', isUser, checkoutController.loadOrderSuccess);
 router.get('/available-coupons', isUser, couponController.getAvailableCoupons);
 router.post('/apply-coupon', isUser, couponController.applyCoupon);
 
+// Wallet
+router.get('/wallet', isUser, userController.loadWalletPage);
+router.get('/wallet/data', isUser, userController.getWalletData);
 
 router.get('/orders', isUser, userController.loadOrders);
 router.get('/orders/:id', isUser, userController.loadOrderDetails);

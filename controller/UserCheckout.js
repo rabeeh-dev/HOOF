@@ -1,6 +1,7 @@
 const User = require("../model/User");
 const Order = require("../model/Order");
 const checkoutService = require("../services/UserCheckout");
+const walletService = require("../services/Wallet");
 
 /**
  * @desc    Render the checkout page.
@@ -15,6 +16,10 @@ exports.loadCheckout = async (req, res) => {
         if (!data.cartItems || data.cartItems.length === 0) {
             return res.redirect('/user/cart?unavailable=1');
         }
+
+        // Fetch wallet balance for payment option
+        const wallet = await walletService.getWallet(userId);
+        data.walletBalance = wallet.balance;
 
         res.render('User/checkout', data);
     } catch (err) {
@@ -53,6 +58,14 @@ exports.placeOrderApi = async (req, res) => {
         }
 
         const order = await checkoutService.createOrder(userId, addressId, paymentMethod, couponCode);
+
+        // If wallet payment, go straight to success
+        if (paymentMethod === 'wallet') {
+            return res.status(200).json({
+                success: true,
+                redirectUrl: `/user/order-success/${order._id}`
+            });
+        }
 
         // If UPI, create Razorpay order
         if (paymentMethod === "upi") {

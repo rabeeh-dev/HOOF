@@ -76,13 +76,14 @@
                         efficiently</p>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-filter-toggle" id="filterToggleBtn">
-                        <i class="fas fa-filter"></i>
+                    <button class="btn-filter-toggle <%= (selectedStatus || selectedPayment) ? 'active' : '' %>"
+                        id="filterToggleBtn">
+                        <i class="fas <%= (selectedStatus || selectedPayment) ? 'fa-times' : 'fa-filter' %>"></i>
                         Filters
                     </button>
-                    <button class="btn-export" onclick="window.location.href='/admin/orders/export'">
+                    <button class="btn-export" onclick="exportOrders()">
                         <i class="fas fa-download"></i>
-                        Export
+                        Export PDF
                     </button>
                 </div>
             </header>
@@ -146,7 +147,8 @@
             </div>
 
             <!-- FILTER PANEL -->
-            <div class="filter-panel" id="filterPanel">
+            <div class="filter-panel" id="filterPanel"
+                style="<%= (selectedStatus || selectedPayment) ? 'display:block;' : '' %>">
                 <div class="filter-grid">
                     <div class="filter-item">
                         <label class="filter-label">Order Status</label>
@@ -285,21 +287,10 @@
                                         </td>
                                         <td>
                                             <div class="action-buttons">
-                                                <button class="action-btn view" title="View Details"
-                                                    onclick="viewOrderDetail('<%= order._id %>')">
+                                                <a href="/admin/orders/<%= order._id %>" class="action-btn view"
+                                                    title="View Details">
                                                     <i class="fas fa-eye"></i>
-                                                </button>
-                                                <button class="action-btn edit" title="Update Status"
-                                                    onclick="openStatusModal('<%= order._id %>', '<%= order.status %>')">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <% if(!['DELIVERED', 'CANCELLED' , 'Returned' ].includes(order.status))
-                                                    { %>
-                                                    <button class="action-btn delete cancel-btn" title="Cancel Order"
-                                                        onclick="cancelOrder('<%= order._id %>')">
-                                                        <i class="fas fa-ban"></i>
-                                                    </button>
-                                                    <% } %>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>

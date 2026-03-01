@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="/admin/css/user-management.css" />
+    <link rel="stylesheet" href="/admin/css/admin-orders.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
+    <style>
+        /* ORDER DETAIL PAGE SPECIFIC */
+        .detail-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--admin-text-light);
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-breadcrumb a {
+            color: var(--admin-text-light);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .detail-breadcrumb a:hover {
+            color: var(--admin-primary);
+        }
+
+        .detail-breadcrumb .current {
+            color: var(--admin-text);
+            font-weight: 600;
+        }
+
+        .order-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+
+        .order-detail-header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--admin-text);
+        }
+
+        .order-detail-header h1 span {
+            color: var(--admin-primary);
+        }
+
+        .order-meta-line {
+            font-size: 0.85rem;
+            color: var(--admin-text-light);
+            margin-top: 0.3rem;
+        }
+
+        .header-action-btns {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .btn-action {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.3rem;
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            color: var(--admin-text);
+        }
+
+        .btn-action:hover {
+            border-color: var(--admin-primary);
+            color: var(--admin-primary);
+        }
+
+        .btn-action.primary {
+            background: var(--admin-primary);
+            color: white;
+            border-color: var(--admin-primary);
+        }
+
+        .btn-action.primary:hover {
+            background: var(--admin-primary-light);
+        }
+
+        .btn-action.danger {
+            border-color: var(--admin-danger);
+            color: var(--admin-danger);
+        }
+
+        .btn-action.danger:hover {
+            background: var(--admin-danger);
+            color: white;
+        }
+
+        /* STATUS BANNER */
+        .status-banner {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            border-radius: 16px;
+            border: 3px solid #7da8a8;
+            background: white;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .status-icon-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .status-banner-info h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--admin-text);
+        }
+
+        .status-banner-info p {
+            font-size: 0.82rem;
+            color: var(--admin-text-light);
+            margin-top: 0.15rem;
+        }
+
+        .status-banner .status-badge {
+            margin-left: auto;
+            font-size: 0.85rem;
+            padding: 0.5rem 1.2rem;
+        }
+
+        /* DETAIL GRID */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        /* SECTION CARD */
+        .section-card {
+            background: white;
+            border-radius: 16px;
+            border: 3px solid #7da8a8;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .section-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 1.2rem 1.5rem;
+            background: var(--admin-card-bg);
+            border-bottom: 1px solid var(--admin-border);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--admin-text);
+        }
+
+        .section-card-header i {
+            color: var(--admin-primary);
+            font-size: 1rem;
+        }
+
+        .section-card-body {
+            padding: 1.5rem;
+        }
+
+        /* ORDER ITEMS TABLE */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .items-table th {
+            padding: 0.9rem 1rem;
+            text-align: left;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--admin-text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--admin-border);
+        }
+
+        .items-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+            vertical-align: middle;
+        }
+
+        .items-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .items-table tbody tr:hover {
+            background: rgba(196, 30, 58, 0.015);
+        }
+
+        .item-product-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .item-product-img {
+            width: 52px;
+            height: 52px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid var(--admin-border);
+            flex-shrink: 0;
+        }
+
+        .item-product-info h4 {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--admin-text);
+            margin: 0;
+        }
+
+        .item-product-info p {
+            font-size: 0.78rem;
+            color: var(--admin-text-light);
+            margin: 3px 0 0;
+        }
+
+        .item-variant-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--admin-text-light);
+            background: var(--admin-card-bg);
+            padding: 2px 8px;
+            border-radius: 5px;
+            margin-top: 3px;
+        }
+
+        /* INFO ROW */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: 0.82rem;
+            color: var(--admin-text-light);
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: 0.9rem;
+            color: var(--admin-text);
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .info-value.highlight {
+            color: var(--admin-primary);
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+
+        /* ADDRESS BLOCK */
+        .address-block {
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: var(--admin-text);
+        }
+
+        .address-name {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .address-phone {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            color: var(--admin-text-light);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        /* TIMELINE */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 6px;
+            bottom: 6px;
+            width: 2px;
+            background: var(--admin-border);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1.2rem;
+        }
+
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -2rem;
+            top: 4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid var(--admin-border);
+            z-index: 1;
+        }
+
+        .timeline-item:first-child .timeline-dot {
+            border-color: var(--admin-primary);
+            background: var(--admin-primary);
+        }
+
+        .timeline-status {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--admin-text);
+        }
+
+        .timeline-date {
+            font-size: 0.77rem;
+            color: var(--admin-text-light);
+            margin-top: 0.15rem;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 992px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .order-detail-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .header-action-btns {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../partials/admin/overlay') %>
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">HOOF</div>
+                <p class="admin-label">Admin</p>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="/admin/dashboard" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/admin/products" class="nav-item">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="/admin/categories" class="nav-item">
+                    <i class="fas fa-tags"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="/admin/orders" class="nav-item active">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="/admin/customers" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Customers</span>
+                </a>
+                <a href="/admin/coupons" class="nav-item">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Coupons</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="admin-profile">
+                    <div class="admin-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="admin-info">
+                        <h4>Admin User</h4>
+                        <p>View Profile</p>
+                    </div>
+                    <button class="logout-btn" onclick="window.location.href='/admin/logout'" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- Breadcrumb -->
+            <div class="detail-breadcrumb">
+                <a href="/admin/orders"><i class="fas fa-arrow-left"></i> Orders</a>
+                <span>/</span>
+                <span class="current">#<%= String(order._id).slice(-8).toUpperCase() %></span>
+            </div>
+
+            <!-- Header -->
+            <div class="order-detail-header">
+                <div>
+                    <h1>Order <span>#<%= String(order._id).slice(-8).toUpperCase() %></span></h1>
+                    <p class="order-meta-line">
+                        Placed on <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric' ,
+                            month: 'long' , year: 'numeric' }) %>
+                            at <%= new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit' ,
+                                minute: '2-digit' }) %>
+                    </p>
+                </div>
+                <div class="header-action-btns">
+                    <a href="/admin/orders" class="btn-action">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                    <% if (!['DELIVERED', 'CANCELLED' , 'Returned' ].includes(order.status)) { %>
+                        <button class="btn-action danger" onclick="cancelThisOrder()">
+                            <i class="fas fa-ban"></i> Cancel
+                        </button>
+                        <% } %>
+                </div>
+            </div>
+
+            <!-- Status Banner -->
+            <% const statusConfig={ 'Pending' : { icon: 'fa-clock' , bg: 'rgba(230,126,34,0.1)' , color: '#e67e22'
+                }, 'Processing' : { icon: 'fa-cog' , bg: 'rgba(52,152,219,0.1)' , color: '#3498db' }, 'SHIPPED' : {
+                icon: 'fa-truck' , bg: 'rgba(46,204,113,0.1)' , color: '#2ecc71' }, 'Out for Delivery' : {
+                icon: 'fa-shipping-fast' , bg: 'rgba(26,188,156,0.1)' , color: '#1abc9c' }, 'DELIVERED' : {
+                icon: 'fa-check-circle' , bg: 'rgba(39,174,96,0.15)' , color: '#27ae60' }, 'CANCELLED' : {
+                icon: 'fa-times-circle' , bg: 'rgba(231,76,60,0.1)' , color: '#e74c3c' }, 'Return Requested' : {
+                icon: 'fa-undo' , bg: 'rgba(243,156,18,0.1)' , color: '#f39c12' }, 'Return Approved' : {
+                icon: 'fa-check-double' , bg: 'rgba(52,152,219,0.1)' , color: '#3498db' }, 'Picked Up' : {
+                icon: 'fa-box' , bg: 'rgba(155,89,182,0.1)' , color: '#9b59b6' }, 'Returned' : { icon: 'fa-reply' ,
+                bg: 'rgba(127,140,141,0.1)' , color: '#7f8c8d' } }; const sc=statusConfig[order.status] ||
+                statusConfig['Pending']; %>
+                <div class="status-banner">
+                    <div class="status-icon-box" style="background: <%= sc.bg %>; color: <%= sc.color %>;">
+                        <i class="fas <%= sc.icon %>"></i>
+                    </div>
+                    <div class="status-banner-info">
+                        <h3>Order Status</h3>
+                        <p>Last updated on <%= new Date(order.updatedAt || order.createdAt).toLocaleDateString('en-IN',
+                                { day: 'numeric' , month: 'short' , year: 'numeric' }) %>
+                        </p>
+                    </div>
+                    <span class="status-badge <%= order.status.toLowerCase().replace(/\s+/g, '-') %>">
+                        <%= order.status %>
+                    </span>
+                </div>
+
+                <!-- TWO COLUMN LAYOUT -->
+                <div class="detail-grid">
+                    <!-- LEFT COLUMN -->
+                    <div>
+                        <!-- Order Items -->
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <i class="fas fa-shopping-bag"></i> Order Items (<%= order.items.length %>)
+                            </div>
+                            <div class="table-container">
+                                <table class="items-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Price</th>
+                                            <th>Qty</th>
+                                            <th style="text-align:right;">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% order.items.forEach(item=> { %>
+                                            <tr>
+                                                <td>
+                                                    <div class="item-product-cell">
+                                                        <img src="<%= item.productImage %>"
+                                                            alt="<%= item.productName %>" class="item-product-img">
+                                                        <div class="item-product-info">
+                                                            <h4>
+                                                                <%= item.productName %>
+                                                            </h4>
+                                                            <% if (item.displaySize) { %>
+                                                                <span class="item-variant-badge"><i
+                                                                        class="fas fa-ruler"></i> Size: <%=
+                                                                        item.displaySize %></span>
+                                                                <% } %>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>₹<%= item.priceAtPurchase.toLocaleString('en-IN') %>
+                                                </td>
+                                                <td>× <%= item.quantity %>
+                                                </td>
+                                                <td style="text-align:right; font-weight:600;">₹<%=
+                                                        (item.priceAtPurchase * item.quantity).toLocaleString('en-IN')
+                                                        %>
+                                                </td>
+                                            </tr>
+                                            <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Status Update Section -->
+                        <% if (!['DELIVERED', 'CANCELLED' , 'Returned' ].includes(order.status)) { %>
+                            <div class="section-card">
+                                <div class="section-card-header">
+                                    <i class="fas fa-edit"></i> Update Status
+                                </div>
+                                <div class="section-card-body">
+                                    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+                                        <div style="flex:1; min-width:200px;">
+                                            <label class="filter-label">New Status</label>
+                                            <select id="newStatus" class="filter-select">
+                                                <% const transitions={ 'Pending' : ['Processing', 'SHIPPED'
+                                                    , 'Out for Delivery' , 'DELIVERED' , 'CANCELLED' ], 'Processing' :
+                                                    ['SHIPPED', 'Out for Delivery' , 'DELIVERED' , 'CANCELLED'
+                                                    ], 'SHIPPED' : ['Out for Delivery', 'DELIVERED' , 'CANCELLED'
+                                                    ], 'Out for Delivery' : ['DELIVERED', 'CANCELLED'
+                                                    ], 'Return Requested' : ['Return Approved', 'Returned' , 'CANCELLED'
+                                                    ], 'Return Approved' : ['Picked Up', 'Returned' , 'CANCELLED'
+                                                    ], 'Picked Up' : ['Returned', 'CANCELLED' ] }; const
+                                                    allowed=transitions[order.status] || []; %>
+                                                    <% allowed.forEach(s=> { %>
+                                                        <option value="<%= s %>">
+                                                            <%= s %>
+                                                        </option>
+                                                        <% }) %>
+                                            </select>
+                                        </div>
+                                        <button class="btn-action primary" style="margin-top:1.5rem;"
+                                            onclick="updateStatus()">
+                                            <i class="fas fa-check"></i> Update
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <% } %>
+                    </div>
+
+                    <!-- RIGHT COLUMN -->
+                    <div>
+                        <!-- Order Summary -->
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <i class="fas fa-receipt"></i> Summary
+                            </div>
+                            <div class="section-card-body">
+                                <% let itemSubtotal=0; order.items.forEach(i=> { itemSubtotal += i.priceAtPurchase *
+                                    i.quantity; });
+                                    const shipping = order.shippingCharge || 0;
+                                    const discount = order.discountAmount || 0;
+                                    %>
+                                    <div class="info-row">
+                                        <span class="info-label">Subtotal</span>
+                                        <span class="info-value">₹<%= itemSubtotal.toLocaleString('en-IN') %></span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Shipping</span>
+                                        <span class="info-value" style="color: <%= shipping === 0 ? '#27ae60' : '' %>;">
+                                            <%= shipping===0 ? 'Free' : '₹' + shipping.toLocaleString('en-IN') %>
+                                        </span>
+                                    </div>
+                                    <% if (discount> 0) { %>
+                                        <div class="info-row">
+                                            <span class="info-label">Coupon Discount</span>
+                                            <span class="info-value" style="color:#27ae60;">-₹<%=
+                                                    discount.toLocaleString('en-IN') %></span>
+                                        </div>
+                                        <% } %>
+                                            <div style="height:1px; background:var(--admin-border); margin:0.5rem 0;">
+                                            </div>
+                                            <div class="info-row">
+                                                <span class="info-label"
+                                                    style="font-weight:700; color:var(--admin-text);">Total</span>
+                                                <span class="info-value highlight">₹<%=
+                                                        order.totalAmount.toLocaleString('en-IN') %></span>
+                                            </div>
+                            </div>
+                        </div>
+
+                        <!-- Customer Info -->
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <i class="fas fa-user"></i> Customer
+                            </div>
+                            <div class="section-card-body">
+                                <div class="info-row">
+                                    <span class="info-label">Name</span>
+                                    <span class="info-value">
+                                        <%= order.userId ? order.userId.fullName : order.shippingAddress.fullName %>
+                                    </span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Email</span>
+                                    <span class="info-value">
+                                        <%= order.userId ? order.userId.email : '--' %>
+                                    </span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Payment</span>
+                                    <span class="info-value">
+                                        <%= order.paymentMethod %>
+                                    </span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Payment Status</span>
+                                    <span class="info-value">
+                                        <% let pStat=order.paymentStatus || 'Pending' ; if (order.status==='DELIVERED' )
+                                            pStat=(order.paymentMethod==='COD' ) ? 'SUCCESS' : 'Paid' ; %>
+                                            <span class="payment-status-mini <%= pStat.toLowerCase() %>">
+                                                <%= pStat %>
+                                            </span>
+                                    </span>
+                                </div>
+                                <% if (order.couponCode) { %>
+                                    <div class="info-row">
+                                        <span class="info-label">Coupon</span>
+                                        <span class="info-value">
+                                            <%= order.couponCode %>
+                                        </span>
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+
+                        <!-- Shipping Address -->
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <i class="fas fa-map-marker-alt"></i> Shipping Address
+                            </div>
+                            <div class="section-card-body">
+                                <div class="address-block">
+                                    <div class="address-name">
+                                        <%= order.shippingAddress.fullName %>
+                                    </div>
+                                    <div>
+                                        <%= order.shippingAddress.street %>
+                                    </div>
+                                    <div>
+                                        <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> - <%=
+                                                    order.shippingAddress.zip %>
+                                    </div>
+                                    <div>
+                                        <%= order.shippingAddress.country %>
+                                    </div>
+                                    <div class="address-phone">
+                                        <i class="fas fa-phone"></i>
+                                        <%= order.shippingAddress.phone %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Order Timeline -->
+                        <% if (order.statusHistory && order.statusHistory.length> 0) { %>
+                            <div class="section-card">
+                                <div class="section-card-header">
+                                    <i class="fas fa-history"></i> Timeline
+                                </div>
+                                <div class="section-card-body">
+                                    <div class="timeline">
+                                        <% order.statusHistory.slice().reverse().forEach(h=> { %>
+                                            <div class="timeline-item">
+                                                <div class="timeline-dot"></div>
+                                                <div class="timeline-status">
+                                                    <%= h.status %>
+                                                </div>
+                                                <div class="timeline-date">
+                                                    <%= new Date(h.changedAt || h.date).toLocaleDateString('en-IN', {
+                                                        day: 'numeric' , month: 'short' , year: 'numeric' }) %>
+                                                        at <%= new Date(h.changedAt ||
+                                                            h.date).toLocaleTimeString('en-IN', { hour: '2-digit' ,
+                                                            minute: '2-digit' }) %>
+                                                </div>
+                                            </div>
+                                            <% }) %>
+                                    </div>
+                                </div>
+                            </div>
+                            <% } %>
+                    </div>
+                </div>
+        </main>
+
+        <%- include('../partials/admin/overlay-scripts') %>
+
+            <!-- CUSTOM CONFIRM MODAL -->
+            <div id="confirmModal"
+                style="display:none; position:fixed; inset:0; z-index:99999; align-items:center; justify-content:center; padding:20px;">
+                <div style="position:absolute; inset:0; background:rgba(15,21,20,0.6); backdrop-filter:blur(6px);"
+                    onclick="closeConfirmModal()"></div>
+                <div id="confirmModalContent"
+                    style="position:relative; background:white; width:90%; max-width:440px; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.25); z-index:10001; overflow:hidden; animation:modalPop 0.3s cubic-bezier(0.175,0.885,0.32,1.275); text-align:center;">
+                    <!-- Icon area -->
+                    <div style="padding:2rem 2rem 0;">
+                        <div id="confirmIconBox"
+                            style="width:80px; height:80px; border-radius:50%; margin:0 auto 1rem; display:flex; align-items:center; justify-content:center;">
+                            <i id="confirmIcon" style="font-size:2.2rem;"></i>
+                        </div>
+                        <h3 id="confirmTitle"
+                            style="font-size:1.2rem; font-weight:700; color:var(--admin-text); margin-bottom:0.5rem;">
+                        </h3>
+                        <p id="confirmMessage"
+                            style="color:var(--admin-text-light); font-size:0.9rem; line-height:1.6; margin-bottom:1.5rem;">
+                        </p>
+                    </div>
+                    <!-- Buttons -->
+                    <div style="display:flex; gap:0.8rem; padding:0 2rem 2rem;">
+                        <button onclick="closeConfirmModal()"
+                            style="flex:1; padding:0.8rem; border-radius:10px; border:1px solid var(--admin-border); background:transparent; font-family:inherit; font-size:0.9rem; font-weight:500; cursor:pointer; color:var(--admin-text); transition:all 0.3s;">Cancel</button>
+                        <button id="confirmActionBtn"
+                            style="flex:1; padding:0.8rem; border-radius:10px; border:none; font-family:inherit; font-size:0.9rem; font-weight:600; cursor:pointer; color:white; transition:all 0.3s;"></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CUSTOM ALERT MODAL -->
+            <div id="alertModal"
+                style="display:none; position:fixed; inset:0; z-index:99999; align-items:center; justify-content:center; padding:20px;">
+                <div style="position:absolute; inset:0; background:rgba(15,21,20,0.6); backdrop-filter:blur(6px);"
+                    onclick="closeAlertModal()"></div>
+                <div
+                    style="position:relative; background:white; width:90%; max-width:400px; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.25); z-index:10001; overflow:hidden; animation:modalPop 0.3s cubic-bezier(0.175,0.885,0.32,1.275); text-align:center;">
+                    <div style="padding:2rem;">
+                        <div id="alertIconBox"
+                            style="width:70px; height:70px; border-radius:50%; margin:0 auto 1rem; display:flex; align-items:center; justify-content:center;">
+                            <i id="alertIcon" style="font-size:2rem;"></i>
+                        </div>
+                        <h3 id="alertTitle"
+                            style="font-size:1.1rem; font-weight:700; color:var(--admin-text); margin-bottom:0.4rem;">
+                        </h3>
+                        <p id="alertMessage"
+                            style="color:var(--admin-text-light); font-size:0.88rem; line-height:1.5; margin-bottom:1.5rem;">
+                        </p>
+                        <button onclick="closeAlertModal()"
+                            style="width:100%; padding:0.8rem; border-radius:10px; border:none; font-family:inherit; font-size:0.9rem; font-weight:600; cursor:pointer; color:white; background:var(--admin-primary); transition:all 0.3s;">OK</button>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                /* ---- Custom Modal Helpers ---- */
+                let _confirmCallback = null;
+
+                function showConfirmModal(title, message, btnText, btnColor, onConfirm) {
+                    _confirmCallback = onConfirm;
+                    document.getElementById('confirmTitle').textContent = title;
+                    document.getElementById('confirmMessage').textContent = message;
+                    document.getElementById('confirmActionBtn').textContent = btnText;
+                    document.getElementById('confirmActionBtn').style.background = btnColor;
+                    document.getElementById('confirmIconBox').style.background = btnColor === '#e74c3c' ? 'rgba(231,76,60,0.1)' : 'rgba(196,30,58,0.1)';
+                    document.getElementById('confirmIcon').style.color = btnColor;
+                    document.getElementById('confirmIcon').className = 'fas fa-exclamation-triangle';
+                    document.getElementById('confirmActionBtn').onclick = () => { closeConfirmModal(); onConfirm(); };
+                    document.getElementById('confirmModal').style.display = 'flex';
+                }
+
+                function closeConfirmModal() {
+                    document.getElementById('confirmModal').style.display = 'none';
+                }
+
+                function showAlertModal(title, message, type) {
+                    const colors = { error: '#e74c3c', success: '#27ae60', info: '#3498db' };
+                    const icons = { error: 'fa-times-circle', success: 'fa-check-circle', info: 'fa-info-circle' };
+                    const c = colors[type] || colors.info;
+                    document.getElementById('alertTitle').textContent = title;
+                    document.getElementById('alertMessage').textContent = message;
+                    document.getElementById('alertIconBox').style.background = c.replace(')', ',0.1)').replace('rgb', 'rgba');
+                    document.getElementById('alertIcon').style.color = c;
+                    document.getElementById('alertIcon').className = 'fas ' + (icons[type] || icons.info);
+                    document.getElementById('alertModal').style.display = 'flex';
+                }
+
+                function closeAlertModal() {
+                    document.getElementById('alertModal').style.display = 'none';
+                }
+
+                /* ---- Page Actions ---- */
+                async function updateStatus() {
+                    const newStatus = document.getElementById('newStatus').value;
+                    if (!newStatus) return;
+
+                    showLoading("Updating status...");
+                    try {
+                        const res = await fetch('/admin/orders/<%= order._id %>/status', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ status: newStatus })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            hideLoading();
+                            showAlertModal('Update Failed', data.message || 'Could not update the order status.', 'error');
+                        }
+                    } catch (err) {
+                        hideLoading();
+                        showAlertModal('Connection Error', 'Unable to reach the server. Please try again.', 'error');
+                    }
+                }
+
+                function cancelThisOrder() {
+                    showConfirmModal(
+                        'Cancel This Order?',
+                        'This action cannot be undone. The order will be permanently cancelled and the customer will be notified.',
+                        'Yes, Cancel Order',
+                        '#e74c3c',
+                        () => {
+                            showLoading("Cancelling order...");
+                            fetch('/admin/orders/<%= order._id %>/cancel', { method: 'PATCH' })
+                                .then(r => r.json())
+                                .then(data => {
+                                    if (data.success) window.location.reload();
+                                    else { hideLoading(); showAlertModal('Cancellation Failed', data.message || 'Could not cancel this order.', 'error'); }
+                                })
+                                .catch(() => { hideLoading(); showAlertModal('Connection Error', 'Unable to reach the server. Please try again.', 'error'); });
+                        }
+                    );
+                }
+
+                // Close modals on Escape
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') { closeConfirmModal(); closeAlertModal(); }
+                });
+            </script>
+</body>
+
+</html>

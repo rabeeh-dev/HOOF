@@ -355,6 +355,8 @@ function populateReviewStep() {
 
         if (selectedPaymentMethod === "upi") {
             paymentHtml = `UPI Payment (Redirecting...)`;
+        } else if (selectedPaymentMethod === "wallet") {
+            paymentHtml = `Wallet — Pay from your wallet balance`;
         } else if (selectedPaymentMethod === "cod") {
             paymentHtml = "Cash on Delivery - Pay on delivery";
         }
@@ -465,7 +467,7 @@ async function placeOrder() {
                 });
                 rzp1.open();
             } else {
-                // COD Flow
+                // COD or Wallet Flow
                 showToast("Order placed successfully!", "success");
                 setTimeout(() => {
                     window.location.href = result.redirectUrl || "/user/orders";

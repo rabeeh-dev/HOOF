@@ -98,6 +98,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Export Orders PDF (with current filters)
+    window.exportOrders = () => {
+        const url = new URL('/admin/orders/export', window.location.origin);
+        const status = statusFilter ? statusFilter.value : '';
+        const payment = paymentFilter ? paymentFilter.value : '';
+        const search = searchInput ? searchInput.value.trim() : '';
+        if (status) url.searchParams.set('status', status);
+        if (payment) url.searchParams.set('payment', payment);
+        if (search) url.searchParams.set('search', search);
+        window.location.href = url.toString();
+    };
+
     // ==========================================
     // ORDER DETAILS MODAL
     // ==========================================

@@ -192,6 +192,28 @@
                                     </div>
                                 </div>
 
+                                <!-- Wallet Option -->
+                                <div class="payment-card <%= (typeof walletBalance !== 'undefined' && walletBalance > 0) ? '' : 'disabled' %>"
+                                    data-payment="wallet" onclick="selectPayment('wallet')" id="walletPaymentCard">
+                                    <div class="payment-radio">
+                                        <div class="radio-circle"></div>
+                                    </div>
+                                    <div class="payment-details">
+                                        <i class="fas fa-wallet"></i>
+                                        <div>
+                                            <div class="payment-label">Wallet</div>
+                                            <div class="payment-sublabel">
+                                                Balance: ₹<%= typeof walletBalance !=='undefined' ?
+                                                    walletBalance.toLocaleString('en-IN') : '0' %>
+                                                    <% if (typeof walletBalance !=='undefined' && walletBalance <=0) {
+                                                        %>
+                                                        <span style="color:#dc3545;"> (Insufficient)</span>
+                                                        <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Card Option -->
                                 <div class="payment-card disabled" data-payment="card" onclick="selectPayment('card')">
                                     <div class="payment-radio">
@@ -272,6 +294,12 @@
                                                     alt="<%= item.productId.productName %>">
                                                 <div class="order-item-name">
                                                     <%= item.productId.productName %>
+                                                        <% if (item.size) { %>
+                                                            <small
+                                                                style="display:block;color:#888;font-size:0.8rem;font-weight:400;margin-top:2px;"><i
+                                                                    class="fas fa-ruler" style="font-size:0.7rem;"></i>
+                                                                Size: <%= item.size %></small>
+                                                            <% } %>
                                                 </div>
                                                 <span class="order-item-qty">Qty: <%= item.quantity %></span>
                                                 <span class="order-item-price">₹<%= item.totalPrice %></span>
@@ -302,6 +330,11 @@
                                             alt="<%= item.productId.productName %>">
                                         <div class="summary-item-name">
                                             <%= item.productId.productName %>
+                                                <% if (item.size) { %>
+                                                    <small
+                                                        style="display:block;color:#999;font-size:0.75rem;margin-top:2px;">Size:
+                                                        <%= item.size %></small>
+                                                    <% } %>
                                         </div>
                                         <span class="summary-item-qty">
                                             <%= item.quantity %>

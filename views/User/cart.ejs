@@ -42,6 +42,17 @@
                                     <span class="cart-item-category">
                                         <%= item.productId.category ? item.productId.category.name : 'Uncategorized' %>
                                     </span>
+                                    <div class="cart-item-variant-row">
+                                        <% if (item.size) { %>
+                                            <span class="cart-variant-badge"><i class="fas fa-ruler"></i> Size: <%=
+                                                    item.size %></span>
+                                            <% } %>
+                                                <% if (item.productId.brand) { %>
+                                                    <span class="cart-variant-badge"><i class="fas fa-tag"></i>
+                                                        <%= item.productId.brand %>
+                                                    </span>
+                                                    <% } %>
+                                    </div>
                                     <div class="cart-item-price-row">
                                         <span class="cart-item-sale-price">₹<%= item.productId.salePrice %></span>
                                         <% if (item.productId.salePrice < item.productId.regularPrice) { %>

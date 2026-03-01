@@ -1,0 +1,151 @@
+<link rel="stylesheet" href="/user/css/user-profile.css" />
+<link rel="stylesheet" href="/user/css/wallet.css" />
+
+<section class="profile-section">
+    <div class="container">
+        <div class="profile-header-title">
+            <h1>My Wallet</h1>
+            <p>Manage your wallet balance and transactions</p>
+        </div>
+
+        <div class="profile-layout">
+
+            <!-- SIDEBAR -->
+            <div class="profile-sidebar">
+                <div class="profile-card">
+                    <div class="profile-avatar-wrapper">
+                        <div class="profile-avatar">
+                            <% if (user.profileImage) { %>
+                                <img src="<%= user.profileImage %>" alt="Profile">
+                                <% } else { %>
+                                    <span>
+                                        <%= user.fullName.charAt(0) %>
+                                    </span>
+                                    <% } %>
+                        </div>
+                    </div>
+                    <h3 class="profile-name">
+                        <%= user.fullName %>
+                    </h3>
+                    <a href="/user/profile" class="btn-edit-profile"
+                        style="text-decoration:none;display:flex;justify-content:center;align-items:center;gap:8px;">
+                        <i class="fas fa-arrow-left"></i>Back to Profile
+                    </a>
+
+                    <!-- WALLET STATS -->
+                    <div class="order-stats-strip">
+                        <div class="stat-item">
+                            <div class="stat-value wallet-stat-balance">₹<%= wallet.balance.toLocaleString('en-IN') %>
+                            </div>
+                            <div class="stat-label">Balance</div>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="color:#27ae60;">₹<%=
+                                    wallet.totalCredits.toLocaleString('en-IN') %>
+                            </div>
+                            <div class="stat-label">Credited</div>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="color:#e74c3c;">₹<%=
+                                    wallet.totalDebits.toLocaleString('en-IN') %>
+                            </div>
+                            <div class="stat-label">Debited</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAIN CONTENT -->
+            <div class="profile-main">
+                <div class="tab-content-wrapper">
+
+                    <!-- BALANCE HERO CARD -->
+                    <div class="wallet-balance-card">
+                        <div class="wallet-balance-bg">
+                            <div class="wallet-balance-icon">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div class="wallet-balance-info">
+                                <span class="wallet-balance-label">Available Balance</span>
+                                <span class="wallet-balance-amount">₹<%= wallet.balance.toLocaleString('en-IN') %>
+                                        </span>
+                            </div>
+                        </div>
+                        <div class="wallet-balance-subtext">
+                            <i class="fas fa-info-circle"></i>
+                            Wallet balance is auto-credited on order cancellations and approved returns.
+                        </div>
+                    </div>
+
+                    <!-- TRANSACTION HISTORY -->
+                    <div class="content-header"
+                        style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;margin-top:28px;flex-wrap:wrap;gap:1rem;">
+                        <h2 style="margin:0;">Transaction History</h2>
+                        <div class="wallet-filter-row">
+                            <select id="txnTypeFilter" class="wallet-filter-select">
+                                <option value="">All Types</option>
+                                <option value="credit">Credits Only</option>
+                                <option value="debit">Debits Only</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="wallet-transactions-list" id="transactionsList">
+                        <% if (!wallet.transactions || wallet.transactions.length===0) { %>
+                            <div class="wallet-empty-state">
+                                <i class="fas fa-receipt"></i>
+                                <p>No transactions yet</p>
+                                <span>Your wallet transactions will appear here once you get refunds or make
+                                    payments.</span>
+                            </div>
+                            <% } else { %>
+                                <% wallet.transactions.forEach((txn, index)=> { %>
+                                    <div class="wallet-txn-card" data-type="<%= txn.type %>"
+                                        style="animation-delay: <%= index * 0.05 %>s">
+                                        <div class="wallet-txn-left">
+                                            <div class="wallet-txn-icon <%= txn.type %>">
+                                                <i
+                                                    class="fas <%= txn.type === 'credit' ? 'fa-arrow-down' : 'fa-arrow-up' %>"></i>
+                                            </div>
+                                            <div class="wallet-txn-details">
+                                                <span class="wallet-txn-desc">
+                                                    <%= txn.description %>
+                                                </span>
+                                                <div class="wallet-txn-meta">
+                                                    <span class="wallet-txn-date">
+                                                        <i class="far fa-calendar-alt"></i>
+                                                        <%= new Date(txn.date).toLocaleDateString('en-IN',
+                                                            {day:'numeric', month:'short', year:'numeric'}) %>
+                                                    </span>
+                                                    <span class="wallet-txn-time">
+                                                        <i class="far fa-clock"></i>
+                                                        <%= new Date(txn.date).toLocaleTimeString('en-IN',
+                                                            {hour:'2-digit', minute:'2-digit'}) %>
+                                                    </span>
+                                                    <% if (txn.orderId) { %>
+                                                        <a href="/user/orders/<%= txn.orderId %>"
+                                                            class="wallet-txn-order-link">
+                                                            <i class="fas fa-external-link-alt"></i> View Order
+                                                        </a>
+                                                        <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="wallet-txn-amount <%= txn.type %>">
+                                            <%= txn.type==='credit' ? '+' : '-' %>₹<%=
+                                                    txn.amount.toLocaleString('en-IN') %>
+                                        </div>
+                                    </div>
+                                    <% }) %>
+                                        <% } %>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="/user/js/wallet.js" defer></script>

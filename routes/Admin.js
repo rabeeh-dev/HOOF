@@ -153,6 +153,20 @@ router.post('/products/edit/:id', adminAuth.isLogin, upload.array('productImages
 router.get('/orders', adminAuth.isLogin, adminController.loadOrders);
 
 /**
+ * @desc    Export orders.
+ * @route   GET /admin/orders/export
+ * @access  Private (Admin Only)
+ */
+router.get('/orders/export', adminAuth.isLogin, adminController.exportOrders);
+
+/**
+ * @desc    Render dedicated order detail page.
+ * @route   GET /admin/orders/:id
+ * @access  Private (Admin Only)
+ */
+router.get('/orders/:id', adminAuth.isLogin, adminController.loadOrderDetailPage);
+
+/**
  * @desc    Get order details as JSON.
  * @route   GET /admin/orders/:id/detail
  * @access  Private (Admin Only)
@@ -172,13 +186,6 @@ router.patch('/orders/:id/status', adminAuth.isLogin, adminController.updateOrde
  * @access  Private (Admin Only)
  */
 router.patch('/orders/:id/cancel', adminAuth.isLogin, adminController.cancelOrderAdmin);
-
-/**
- * @desc    Export orders.
- * @route   GET /admin/orders/export
- * @access  Private (Admin Only)
- */
-router.get('/orders/export', adminAuth.isLogin, adminController.exportOrders);
 
 // ==========================================
 // COUPON MANAGEMENT SECTION

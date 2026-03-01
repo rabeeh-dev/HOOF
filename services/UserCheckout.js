@@ -2,6 +2,7 @@ const Cart = require('../model/Cart');
 const Address = require('../model/Address');
 const Order = require('../model/Order');
 const Product = require('../model/Product');
+const walletService = require('./Wallet');
 
 /**
  * @desc    Prepares data for the checkout page.
@@ -99,7 +100,8 @@ exports.createOrder = async (userId, addressId, paymentMethod = "COD", couponCod
             productName: product.productName,
             productImage: product.productImage[0],
             priceAtPurchase: product.salePrice,
-            quantity: item.quantity
+            quantity: item.quantity,
+            variantSize: item.size || null
         });
 
         // Deduct stock
@@ -134,6 +136,16 @@ exports.createOrder = async (userId, addressId, paymentMethod = "COD", couponCod
     const shippingCharge = subtotal > 999 || subtotal === 0 ? 0 : 50;
     const totalAmount = subtotal - discountAmount + shippingCharge;
 
+    // Handle wallet payment — debit before creating order
+    if (paymentMethod === 'wallet') {
+        await walletService.debitWallet(
+            userId,
+            totalAmount,
+            `Payment for order`,
+            null // orderId not yet available; will be updated after save
+        );
+    }
+
     const newOrder = new Order({
         userId,
         items: orderItems,
@@ -151,11 +163,26 @@ exports.createOrder = async (userId, addressId, paymentMethod = "COD", couponCod
         discountAmount,
         totalAmount,
         paymentMethod: paymentMethod || "COD",
-        paymentStatus: paymentMethod === "upi" ? "Pending" : "Pending",
-        status: "Pending"
+        paymentStatus: paymentMethod === 'wallet' ? 'SUCCESS' : 'Pending',
+        status: paymentMethod === 'wallet' ? 'Processing' : 'Pending'
     });
 
     await newOrder.save();
+
+    // Update the wallet transaction with the actual orderId
+    if (paymentMethod === 'wallet') {
+        const Wallet = require('../model/Wallet');
+        const wallet = await Wallet.findOne({ userId });
+        if (wallet && wallet.transactions.length > 0) {
+            const lastTx = wallet.transactions[wallet.transactions.length - 1];
+            if (!lastTx.orderId) {
+                const shortId = String(newOrder._id).slice(-8).toUpperCase();
+                lastTx.orderId = newOrder._id;
+                lastTx.description = `Payment for order #${shortId}`;
+                await wallet.save();
+            }
+        }
+    }
 
     // Clear cart
     cart.items = [];

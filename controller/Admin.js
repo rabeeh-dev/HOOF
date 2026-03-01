@@ -12,6 +12,7 @@ const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit-table');
 const bcrypt = require("bcrypt");
 const adminProductService = require("../services/AdminProduct");
+const walletService = require("../services/Wallet");
 
 // ==========================================
 // ADMIN AUTHENTICATION SECTION
@@ -699,6 +700,50 @@ exports.loadOrders = async (req, res) => {
 };
 
 /**
+ * @desc    Render a dedicated order detail page.
+ * @route   GET /admin/orders/:id
+ * @access  Private (Admin Only)
+ */
+exports.loadOrderDetailPage = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id)
+            .populate('userId', 'fullName email phone')
+            .populate('items.productId');
+        if (!order) return res.redirect('/admin/orders');
+
+        // Enrich items with variant info
+        const enrichedItems = order.items.map(item => {
+            const obj = item.toObject();
+            let displaySize = obj.variantSize || '';
+            // Fallback for older orders that didn't save variant size
+            if (!displaySize && obj.productId && obj.productId.variants) {
+                if (obj.productId.variants.length === 1) {
+                    displaySize = obj.productId.variants[0].size;
+                }
+            }
+            obj.displaySize = displaySize;
+            return obj;
+        });
+
+        // Convert order to plain object and attach enriched items
+        const orderObj = order.toObject();
+        orderObj.items = enrichedItems;
+        // Keep the _id as proper ObjectId string for template usage
+        orderObj._id = order._id;
+        orderObj.userId = order.userId;
+
+        res.render('Admin/admin-order-detail', {
+            order: orderObj,
+            title: `Order #${String(order._id).slice(-8).toUpperCase()} | HOOF Admin`,
+            layout: false
+        });
+    } catch (error) {
+        console.error("Load Order Detail Error:", error.message);
+        res.redirect('/admin/orders');
+    }
+};
+
+/**
  * @desc    Fetch single order details for modal.
  * @route   GET /admin/orders/:id/detail
  * @access  Private (Admin Only)
@@ -766,6 +811,18 @@ exports.updateOrderStatus = async (req, res) => {
             }
         }
 
+        // Credit wallet when order is returned (refund)
+        if (status === 'Returned') {
+            const shortId = String(order._id).slice(-8).toUpperCase();
+            await walletService.creditWallet(
+                order.userId,
+                order.totalAmount,
+                `Refund for returned order #${shortId}`,
+                order._id
+            );
+            order.paymentStatus = 'Refunded';
+        }
+
         await order.save();
         res.json({ success: true, message: "Status updated successfully" });
     } catch (error) {
@@ -796,6 +853,18 @@ exports.cancelOrderAdmin = async (req, res) => {
             status: 'CANCELLED',
             note: 'Cancelled by administrator'
         });
+
+        // Refund to wallet if payment was already made
+        if (order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'Paid') {
+            const shortId = String(order._id).slice(-8).toUpperCase();
+            await walletService.creditWallet(
+                order.userId,
+                order.totalAmount,
+                `Refund for cancelled order #${shortId} (by admin)`,
+                order._id
+            );
+            order.paymentStatus = 'Refunded';
+        }
 
         await order.save();
         res.json({ success: true, message: "Order cancelled successfully" });
@@ -918,9 +987,111 @@ exports.exportSalesReport = async (req, res) => {
 };
 
 /**
- * @desc    Export orders (Placeholder).
+ * @desc    Export orders as PDF.
  * @route   GET /admin/orders/export
+ * @access  Private (Admin Only)
  */
-exports.exportOrders = (req, res) => {
-    res.status(501).send("Export feature not implemented yet");
+exports.exportOrders = async (req, res) => {
+    try {
+        const { status, payment, search } = req.query;
+        let query = {};
+
+        if (status) query.status = status;
+        if (payment) query.paymentMethod = payment;
+        if (search) {
+            const cleanSearch = search.replace('#', '').trim();
+            const searchRegex = new RegExp(cleanSearch, 'i');
+            query.$or = [
+                { 'shippingAddress.fullName': searchRegex },
+                { $expr: { $regexMatch: { input: { $toString: "$_id" }, regex: searchRegex } } }
+            ];
+        }
+
+        const orders = await Order.find(query)
+            .populate('userId', 'fullName email')
+            .sort({ createdAt: -1 });
+
+        const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=orders-report-${Date.now()}.pdf`);
+        doc.pipe(res);
+
+        // Title
+        doc.fontSize(22).font("Helvetica-Bold").text('HOOF — Orders Report', { align: 'center' });
+        doc.moveDown(0.3);
+        doc.fontSize(10).font("Helvetica").fillColor('#666')
+            .text(`Generated on: ${new Date().toLocaleString('en-IN')}`, { align: 'center' });
+
+        // Filter info
+        const filters = [];
+        if (status) filters.push(`Status: ${status}`);
+        if (payment) filters.push(`Payment: ${payment}`);
+        if (search) filters.push(`Search: "${search}"`);
+        if (filters.length > 0) {
+            doc.text(`Filters: ${filters.join(' | ')}`, { align: 'center' });
+        }
+        doc.moveDown(0.5);
+
+        // Summary
+        const totalRevenue = orders.reduce((acc, o) => acc + (o.totalAmount || 0), 0);
+        const deliveredCount = orders.filter(o => o.status === 'DELIVERED').length;
+        const cancelledCount = orders.filter(o => o.status === 'CANCELLED').length;
+
+        doc.fontSize(10).font("Helvetica-Bold").fillColor('#333');
+        doc.text(`Total Orders: ${orders.length}   |   Delivered: ${deliveredCount}   |   Cancelled: ${cancelledCount}   |   Total Amount: INR ${totalRevenue.toLocaleString('en-IN')}`);
+        doc.moveDown(0.5);
+
+        // Table
+        const table = {
+            headers: [
+                { label: "Order ID", width: 70, align: 'center' },
+                { label: "Date", width: 85 },
+                { label: "Customer", width: 130 },
+                { label: "Items", width: 90, align: 'center' },
+                { label: "Amount", width: 80, align: 'right' },
+                { label: "Payment", width: 70, align: 'center' },
+                { label: "Pay Status", width: 70, align: 'center' },
+                { label: "Status", width: 90, align: 'center' }
+            ],
+            rows: orders.map(order => {
+                let pStatus = order.paymentStatus || 'Pending';
+                if (order.status === 'DELIVERED') pStatus = order.paymentMethod === 'COD' ? 'SUCCESS' : 'Paid';
+
+                const itemCount = order.items ? order.items.length : 0;
+                let itemLabel;
+                if (itemCount === 1) {
+                    const name = (order.items[0].productName || 'Item').substring(0, 14);
+                    const size = order.items[0].variantSize ? ` (${order.items[0].variantSize})` : '';
+                    itemLabel = name + size;
+                } else if (itemCount > 1) {
+                    itemLabel = `${itemCount} items`;
+                } else {
+                    itemLabel = 'N/A';
+                }
+
+                return [
+                    '#' + String(order._id).slice(-8).toUpperCase(),
+                    new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+                    order.userId ? order.userId.fullName : (order.shippingAddress?.fullName || 'Guest'),
+                    itemLabel,
+                    `INR ${order.totalAmount.toLocaleString('en-IN')}`,
+                    order.paymentMethod,
+                    pStatus,
+                    order.status
+                ];
+            })
+        };
+
+        await doc.table(table, {
+            prepareHeader: () => doc.font("Helvetica-Bold").fontSize(8),
+            prepareRow: (row, indexColumn, indexRow) => {
+                doc.font("Helvetica").fontSize(8);
+            },
+        });
+
+        doc.end();
+    } catch (error) {
+        console.error("Export Orders Error:", error);
+        res.status(500).send("Error generating orders report");
+    }
 };

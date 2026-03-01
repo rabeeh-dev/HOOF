@@ -17,6 +17,7 @@ const userService = require("../services/User");
 // checkoutService removed (moved to UserCheckout)
 const Order = require('../model/Order');
 const PDFDocument = require('pdfkit');
+const walletService = require('../services/Wallet');
 
 
 // ==========================================
@@ -815,8 +816,6 @@ exports.cancelOrder = async (req, res) => {
     }
 
     // Check if order is eligible for cancellation
-    // Model Enum: ["PLACED", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"]
-    // Including legacy 'Pending'/'Processing' just in case, but prioritizing Model Enums
     if (!["PLACED", "CONFIRMED", "Pending", "Processing"].includes(order.status)) {
       return res.status(400).json({ success: false, message: "Order cannot be cancelled" });
     }
@@ -826,6 +825,18 @@ exports.cancelOrder = async (req, res) => {
       status: "CANCELLED",
       note: "Cancelled by user"
     });
+
+    // Refund to wallet if payment was already made (UPI or Wallet)
+    if (order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'Paid') {
+      const shortId = String(order._id).slice(-8).toUpperCase();
+      await walletService.creditWallet(
+        req.session.userId,
+        order.totalAmount,
+        `Refund for cancelled order #${shortId}`,
+        order._id
+      );
+      order.paymentStatus = 'Refunded';
+    }
 
     await order.save();
 
@@ -958,3 +969,65 @@ exports.downloadInvoice = async (req, res) => {
   }
 };
 
+// ==========================================
+// WALLET SECTION
+// ==========================================
+
+/**
+ * @desc    Render the wallet page with balance and transaction history.
+ * @route   GET /user/wallet
+ * @access  Private
+ */
+exports.loadWalletPage = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const user = await User.findById(userId);
+    const wallet = await walletService.getWallet(userId);
+
+    // Sort transactions newest first
+    const transactions = wallet.transactions
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const totalCredits = transactions
+      .filter(t => t.type === 'credit')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const totalDebits = transactions
+      .filter(t => t.type === 'debit')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    res.render('User/wallet', {
+      user,
+      wallet: {
+        balance: wallet.balance,
+        transactions,
+        totalCredits,
+        totalDebits
+      },
+      title: 'My Wallet | HOOF',
+      layout: 'layouts/user'
+    });
+  } catch (err) {
+    console.error("Wallet Page Error:", err);
+    res.redirect('/user/profile');
+  }
+};
+
+/**
+ * @desc    API endpoint for wallet data (JSON).
+ * @route   GET /user/wallet/data
+ * @access  Private
+ */
+exports.getWalletData = async (req, res) => {
+  try {
+    const wallet = await walletService.getWallet(req.session.userId);
+    res.json({
+      success: true,
+      balance: wallet.balance,
+      transactions: wallet.transactions.sort((a, b) => new Date(b.date) - new Date(a.date))
+    });
+  } catch (err) {
+    console.error("Wallet Data Error:", err);
+    res.status(500).json({ success: false, message: "Failed to load wallet" });
+  }
+};
