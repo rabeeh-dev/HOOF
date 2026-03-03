@@ -6,6 +6,7 @@
 
 require("dotenv").config();
 
+const compression = require('compression');
 const express = require("express");
 const session = require("express-session");
 const expressLayouts = require("express-ejs-layouts");
@@ -20,6 +21,7 @@ const morgan = require('morgan');
 
 
 const app = express();
+app.use(compression());
 
 // Establish Database Connection
 connectDB();
