@@ -4,6 +4,7 @@
  */
 
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 
 const userSchema = new mongoose.Schema({
   fullName: {
@@ -57,6 +58,22 @@ const userSchema = new mongoose.Schema({
   dob: {
     type: Date
   },
+  // Referral system fields
+  referralCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+    index: true,
+  },
+  referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+  referralPoints: {
+    type: Number,
+    default: 0,
+  },
 }, { timestamps: true });
 
 /**
@@ -71,6 +88,22 @@ userSchema.pre("validate", async function () {
   // Google users never store a password
   if (this.authProvider === "google") {
     this.password = undefined;
+  }
+});
+
+/**
+ * Pre-save hook to auto-generate a unique referral code for new users.
+ */
+userSchema.pre("save", async function () {
+  if (this.isNew && !this.referralCode) {
+    let code;
+    let isUnique = false;
+    while (!isUnique) {
+      code = crypto.randomBytes(4).toString("hex").toUpperCase(); // 8-char hex
+      const existing = await mongoose.model("User").findOne({ referralCode: code });
+      if (!existing) isUnique = true;
+    }
+    this.referralCode = code;
   }
 });
 

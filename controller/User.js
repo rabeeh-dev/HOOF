@@ -49,7 +49,7 @@ exports.signupPage = (req, res) => {
  * @returns {void}
  */
 exports.signup = async (req, res) => {
-  const { fullName, email, password, confirmPassword } = req.body;
+  const { fullName, email, password, confirmPassword, referralCode } = req.body;
 
   try {
     // Basic validation
@@ -57,7 +57,7 @@ exports.signup = async (req, res) => {
       return res.render("User/auth/register", {
         layout: "layouts/user",
         message: { type: "error", text: "All fields are required" },
-        formData: { fullName, email },
+        formData: { fullName, email, referralCode },
       });
     }
 
@@ -65,7 +65,7 @@ exports.signup = async (req, res) => {
       return res.render("User/auth/register", {
         layout: "layouts/user",
         message: { type: "error", text: "Password must be at least 8 characters" },
-        formData: { fullName, email },
+        formData: { fullName, email, referralCode },
       });
     }
 
@@ -73,12 +73,12 @@ exports.signup = async (req, res) => {
       return res.render("User/auth/register", {
         layout: "layouts/user",
         message: { type: "error", text: "Passwords do not match" },
-        formData: { fullName, email },
+        formData: { fullName, email, referralCode },
       });
     }
 
-    // Initiate signup process via service
-    const result = await authService.initiateSignup(fullName, email, password);
+    // Initiate signup process via service (with optional referral code)
+    const result = await authService.initiateSignup(fullName, email, password, referralCode || null);
 
     req.session.pendingUser = result.pendingUser;
     req.session.otpEmail = email;
@@ -91,7 +91,7 @@ exports.signup = async (req, res) => {
     res.render("User/auth/register", {
       layout: "layouts/user",
       message: { type: "error", text: err.message || "Something went wrong. Try again." },
-      formData: { fullName, email },
+      formData: { fullName, email, referralCode },
     });
   }
 };
@@ -1029,5 +1029,83 @@ exports.getWalletData = async (req, res) => {
   } catch (err) {
     console.error("Wallet Data Error:", err);
     res.status(500).json({ success: false, message: "Failed to load wallet" });
+  }
+};
+
+// ==========================================
+// REFERRAL SECTION
+// ==========================================
+
+/**
+ * @desc    Render the referral page with user's code, points, and stats.
+ * @route   GET /user/referral
+ * @access  Private
+ */
+exports.loadReferralPage = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const user = await User.findById(userId);
+
+    // Count how many users this person has referred
+    const referredCount = await User.countDocuments({ referredBy: userId });
+
+    res.render('User/referral', {
+      user,
+      referredCount,
+      title: 'Referral Program | HOOF',
+      layout: 'layouts/user'
+    });
+  } catch (err) {
+    console.error("Referral Page Error:", err);
+    res.redirect('/user/profile');
+  }
+};
+
+/**
+ * @desc    Withdraw referral points to wallet (100 points = ₹1).
+ * @route   POST /user/referral/withdraw
+ * @access  Private
+ */
+exports.withdrawReferralPoints = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const points = user.referralPoints || 0;
+    if (points < 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Minimum 100 points required to withdraw"
+      });
+    }
+
+    // Convert all eligible points (multiples of 100) to rupees
+    const withdrawablePoints = Math.floor(points / 100) * 100;
+    const amountInRupees = withdrawablePoints / 100;
+
+    // Credit wallet
+    await walletService.creditWallet(
+      userId,
+      amountInRupees,
+      `Referral reward withdrawal (${withdrawablePoints} points)`
+    );
+
+    // Deduct points from user
+    user.referralPoints = points - withdrawablePoints;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: `₹${amountInRupees.toFixed(2)} credited to your wallet!`,
+      amountCredited: amountInRupees,
+      remainingPoints: user.referralPoints
+    });
+  } catch (err) {
+    console.error("Referral Withdraw Error:", err);
+    res.status(500).json({ success: false, message: "Failed to withdraw" });
   }
 };

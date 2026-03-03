@@ -1,0 +1,433 @@
+/* ===========================
+   REFERRAL PAGE - Premium Styles
+   =========================== */
+
+/* REFERRAL CODE CARD */
+.referral-code-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    animation: fadeInUp 0.5s ease;
+}
+
+.referral-code-bg {
+    background: linear-gradient(135deg, #ff914d 0%, #ff6b2b 50%, #e85d26 100%);
+    padding: 2rem 2rem 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.referral-code-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.referral-code-icon i {
+    font-size: 1.5rem;
+    color: white;
+}
+
+.referral-code-info {
+    flex: 1;
+}
+
+.referral-code-label {
+    display: block;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.referral-code-display {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.referral-code-text {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.15em;
+    font-family: 'Courier New', monospace;
+}
+
+.referral-copy-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    padding: 0.5rem 1.2rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.referral-copy-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateY(-1px);
+}
+
+.referral-copy-btn.copied {
+    background: rgba(39, 174, 96, 0.3);
+    border-color: rgba(39, 174, 96, 0.5);
+}
+
+.referral-code-subtext {
+    padding: 1rem 2rem;
+    font-size: 0.88rem;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 145, 77, 0.04);
+}
+
+.referral-code-subtext i {
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+/* REWARDS CARD */
+.referral-rewards-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    margin-top: 1.5rem;
+    animation: fadeInUp 0.6s ease;
+}
+
+.rewards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.reward-stat-card {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 16px;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.reward-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.reward-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.reward-stat-icon.points {
+    background: rgba(255, 145, 77, 0.12);
+    color: #ff914d;
+}
+
+.reward-stat-icon.value {
+    background: rgba(39, 174, 96, 0.12);
+    color: #27ae60;
+}
+
+.reward-stat-icon.friends {
+    background: rgba(52, 152, 219, 0.12);
+    color: #3498db;
+}
+
+.reward-stat-info {
+    text-align: center;
+}
+
+.reward-stat-value {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.reward-stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+/* CONVERSION INFO */
+.conversion-info {
+    background: linear-gradient(135deg, rgba(255, 145, 77, 0.06), rgba(52, 152, 219, 0.06));
+    border-radius: 16px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 145, 77, 0.1);
+}
+
+.conversion-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.conversion-row i {
+    color: var(--accent);
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* WITHDRAW SECTION */
+.withdraw-section {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.withdraw-info {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 1rem;
+}
+
+.withdraw-available {
+    color: var(--text-main);
+}
+
+.withdraw-value {
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.withdraw-btn {
+    background: linear-gradient(135deg, #27ae60 0%, #219a52 100%);
+    color: white;
+    border: none;
+    padding: 0.9rem 2.5rem;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+}
+
+.withdraw-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+}
+
+.withdraw-btn:disabled {
+    background: #ccc;
+    box-shadow: none;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.withdraw-hint {
+    color: #999;
+    font-size: 0.82rem;
+}
+
+/* HOW IT WORKS */
+.referral-how-it-works {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    margin-top: 1.5rem;
+    animation: fadeInUp 0.7s ease;
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.step-card {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    border-radius: 16px;
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.step-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    background: rgba(255, 145, 77, 0.04);
+}
+
+.step-number {
+    position: absolute;
+    top: -10px;
+    right: -6px;
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    box-shadow: 0 3px 10px rgba(255, 145, 77, 0.3);
+}
+
+.step-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, rgba(255, 145, 77, 0.12), rgba(255, 107, 43, 0.12));
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.3rem;
+    color: var(--accent);
+}
+
+.step-card h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.4rem;
+}
+
+.step-card p {
+    font-size: 0.8rem;
+    color: #888;
+    line-height: 1.4;
+}
+
+/* TOAST */
+.referral-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 0.9rem 1.8rem;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    z-index: 10000;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.referral-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.referral-toast i {
+    color: #27ae60;
+}
+
+.referral-toast.error i {
+    color: #e74c3c;
+}
+
+/* ANIMATIONS */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .rewards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .steps-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .referral-code-bg {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .referral-code-display {
+        justify-content: center;
+    }
+
+    .referral-code-subtext {
+        text-align: center;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .steps-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .referral-code-text {
+        font-size: 1.4rem;
+    }
+}

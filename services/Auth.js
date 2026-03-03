@@ -8,6 +8,7 @@ const Otp = require("../model/Otp");
 const bcrypt = require("bcrypt");
 const { generateOtp } = require("../utils/generateOtp");
 const { sendOtpEmail } = require("../utils/sendEmail");
+const walletService = require('./Wallet');
 
 class AuthService {
     /**
@@ -18,11 +19,19 @@ class AuthService {
      * @returns {Promise<Object>} Object containing pending user data and the raw OTP.
      * @throws {Error} If the user already exists.
      */
-    async initiateSignup(fullName, email, password) {
+    async initiateSignup(fullName, email, password, referralCode = null) {
         // 1. Business Logic: Check if user exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             throw new Error("User already exists");
+        }
+
+        // 1b. Validate referral code if provided
+        if (referralCode) {
+            const referrer = await User.findOne({ referralCode: referralCode.toUpperCase() });
+            if (!referrer) {
+                throw new Error("Invalid referral code");
+            }
         }
 
         // 2. Security: Hash password
@@ -50,6 +59,7 @@ class AuthService {
                 fullName,
                 email,
                 password: hashedPassword,
+                referralCode: referralCode ? referralCode.toUpperCase() : null,
             },
             otp // Raw OTP for dev console
         };
@@ -91,11 +101,27 @@ class AuthService {
             redirectUrl = "/user/profile/change-email-form";
         }
         else { // Default: NEW_SIGNUP
-            await User.create({
+            const newUserData = {
                 ...pendingUserData,
                 authProvider: "local",
                 isEmailVerified: true
-            });
+            };
+
+            // Handle referral: link the new user to the referrer
+            if (pendingUserData.referralCode) {
+                const referrer = await User.findOne({ referralCode: pendingUserData.referralCode });
+                if (referrer) {
+                    newUserData.referredBy = referrer._id;
+                    // Credit 10 referral points to the referrer
+                    referrer.referralPoints = (referrer.referralPoints || 0) + 10;
+                    await referrer.save();
+                }
+            }
+
+            // Remove the referralCode from newUserData so it doesn't conflict
+            delete newUserData.referralCode;
+
+            await User.create(newUserData);
             redirectUrl = "/user/login?signupSuccess=true";
         }
 

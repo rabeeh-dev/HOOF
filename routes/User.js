@@ -720,6 +720,10 @@ router.post('/apply-coupon', isUser, couponController.applyCoupon);
 router.get('/wallet', isUser, userController.loadWalletPage);
 router.get('/wallet/data', isUser, userController.getWalletData);
 
+// Referral
+router.get('/referral', isUser, userController.loadReferralPage);
+router.post('/referral/withdraw', isUser, userController.withdrawReferralPoints);
+
 router.get('/orders', isUser, userController.loadOrders);
 router.get('/orders/:id', isUser, userController.loadOrderDetails);
 router.put('/orders/cancel/:id', isUser, userController.cancelOrder);
