@@ -10,21 +10,32 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * Fetches all products with pagination and category details for admin.
+ * Fetches all products with pagination, search, and category details for admin.
  * @param {number} [page=1] - Current page number.
- * @param {number} [limit=10] - Number of products per page.
+ * @param {number} [limit=5] - Number of products per page.
+ * @param {string} [search=''] - Search term for product name or brand.
  * @returns {Promise<Object>} Object containing products, totalPages, and currentPage.
  */
-async function getAllProductsAdmin(page = 1, limit = 10) {
+async function getAllProductsAdmin(page = 1, limit = 5, search = '') {
     const skip = (page - 1) * limit;
 
-    const products = await Product.find({})
+    let query = {};
+    if (search) {
+        query = {
+            $or: [
+                { productName: { $regex: search, $options: 'i' } },
+                { brand: { $regex: search, $options: 'i' } }
+            ]
+        };
+    }
+
+    const products = await Product.find(query)
         .populate('category', 'name')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
 
-    const totalProducts = await Product.countDocuments({});
+    const totalProducts = await Product.countDocuments(query);
 
     return {
         products,

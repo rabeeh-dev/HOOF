@@ -18,12 +18,14 @@ const adminProductService = require("../services/AdminProduct");
 exports.listProductsAdmin = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const { products, totalPages, currentPage } = await adminProductService.getAllProductsAdmin(page);
+        const search = req.query.search || '';
+        const { products, totalPages, currentPage } = await adminProductService.getAllProductsAdmin(page, 5, search);
 
         res.render("Admin/product-management", {
             products,
             totalPages,
             currentPage,
+            search,
             title: "Product Management | HOOF Admin",
             layout: false
         });

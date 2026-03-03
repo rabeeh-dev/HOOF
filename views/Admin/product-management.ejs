@@ -86,8 +86,9 @@
                 <!-- SEARCH BAR -->
                 <div class="search-bar">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search products by name or brand..." id="productSearch"
-                        onkeyup="searchProducts()" />
+                    <input type="text" placeholder="Search products by name or brand and press Enter..."
+                        id="productSearch" value="<%= typeof search !== 'undefined' ? search : '' %>"
+                        onkeypress="handleSearch(event)" />
                 </div>
 
                 <div class="table-container">
@@ -172,7 +173,7 @@
                 <div class="pagination-container"
                     style="padding: 1rem; display: flex; justify-content: center; gap: 0.5rem;">
                     <% for(let i=1; i <=totalPages; i++) { %>
-                        <a href="/admin/products?page=<%= i %>"
+                        <a href="/admin/products?page=<%= i %>&search=<%= typeof search !== 'undefined' ? search : '' %>"
                             class="pagination-link <%= currentPage == i ? 'active' : '' %>"
                             style="padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; <%= currentPage == i ? 'background: var(--admin-primary); color: white;' : 'background: #f1f5f9; color: var(--admin-text);' %>">
                             <%= i %>
@@ -207,24 +208,11 @@
                 }
             }
 
-            function searchProducts() {
-                const input = document.getElementById('productSearch');
-                const filter = input.value.toLowerCase();
-                const tbody = document.getElementById('productTableBody');
-                const rows = tbody.getElementsByTagName('tr');
-
-                for (let i = 0; i < rows.length; i++) {
-                    const nameCol = rows[i].getElementsByTagName('td')[1];
-                    const brandCol = rows[i].getElementsByTagName('td')[3];
-                    if (nameCol || brandCol) {
-                        const nameText = nameCol.textContent || nameCol.innerText;
-                        const brandText = brandCol.textContent || brandCol.innerText;
-                        if (nameText.toLowerCase().indexOf(filter) > -1 || brandText.toLowerCase().indexOf(filter) > -1) {
-                            rows[i].style.display = "";
-                        } else {
-                            rows[i].style.display = "none";
-                        }
-                    }
+            // Server-side search handler
+            function handleSearch(event) {
+                if (event.key === 'Enter') {
+                    const searchValue = document.getElementById('productSearch').value;
+                    window.location.href = `/admin/products?page=1&search=${encodeURIComponent(searchValue)}`;
                 }
             }
         </script>
