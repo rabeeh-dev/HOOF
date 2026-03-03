@@ -92,10 +92,10 @@ userSchema.pre("validate", async function () {
 });
 
 /**
- * Pre-save hook to auto-generate a unique referral code for new users.
+ * Pre-save hook to auto-generate a unique referral code for any user missing one.
  */
 userSchema.pre("save", async function () {
-  if (this.isNew && !this.referralCode) {
+  if (!this.referralCode) {
     let code;
     let isUnique = false;
     while (!isUnique) {
