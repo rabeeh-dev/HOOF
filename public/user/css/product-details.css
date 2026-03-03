@@ -625,8 +625,11 @@
    ========================================= */
 
 .reviews-section {
-    margin-top: 2rem;
-    padding: 3rem 0;
+    margin-top: 4rem;
+    padding: 4rem 3rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
 .reviews-container {

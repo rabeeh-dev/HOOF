@@ -207,45 +207,77 @@
 
                         <!-- Right: Add Review Form -->
                         <div class="add-review-col">
-                            <div class="premium-review-form-card">
-                                <div class="form-card-header">
-                                    <div class="form-icon">
-                                        <i class="fas fa-pen-fancy"></i>
+                            <% if (typeof hasPurchased !=='undefined' && hasPurchased && !hasReviewed) { %>
+                                <div class="premium-review-form-card">
+                                    <div class="form-card-header">
+                                        <div class="form-icon">
+                                            <i class="fas fa-pen-fancy"></i>
+                                        </div>
+                                        <h3>Write a Review</h3>
                                     </div>
-                                    <h3>Write a Review</h3>
-                                </div>
-                                <form id="reviewForm" class="review-form">
-                                    <input type="hidden" name="productId" value="<%= product._id %>">
+                                    <form id="reviewForm" class="review-form">
+                                        <input type="hidden" name="productId" value="<%= product._id %>">
 
-                                    <div class="rating-group premium-group">
-                                        <label>Your Rating</label>
-                                        <div class="star-rating">
-                                            <input type="radio" id="star5" name="rating" value="5" /><label for="star5"
-                                                class="fas fa-star"></label>
-                                            <input type="radio" id="star4" name="rating" value="4" /><label for="star4"
-                                                class="fas fa-star"></label>
-                                            <input type="radio" id="star3" name="rating" value="3" /><label for="star3"
-                                                class="fas fa-star"></label>
-                                            <input type="radio" id="star2" name="rating" value="2" /><label for="star2"
-                                                class="fas fa-star"></label>
-                                            <input type="radio" id="star1" name="rating" value="1" /><label for="star1"
-                                                class="fas fa-star"></label>
+                                        <div class="rating-group premium-group">
+                                            <label>Your Rating</label>
+                                            <div class="star-rating">
+                                                <input type="radio" id="star5" name="rating" value="5" /><label
+                                                    for="star5" class="fas fa-star"></label>
+                                                <input type="radio" id="star4" name="rating" value="4" /><label
+                                                    for="star4" class="fas fa-star"></label>
+                                                <input type="radio" id="star3" name="rating" value="3" /><label
+                                                    for="star3" class="fas fa-star"></label>
+                                                <input type="radio" id="star2" name="rating" value="2" /><label
+                                                    for="star2" class="fas fa-star"></label>
+                                                <input type="radio" id="star1" name="rating" value="1" /><label
+                                                    for="star1" class="fas fa-star"></label>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group premium-group">
+                                            <label for="comment">Your Comment</label>
+                                            <textarea id="comment" name="comment" rows="4"
+                                                placeholder="What did you like or dislike about this product?"
+                                                required></textarea>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-submit-review">
+                                            <span>Submit Review</span>
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                <% } else if (typeof hasReviewed !=='undefined' && hasReviewed) { %>
+                                    <div class="premium-review-form-card" style="padding: 3rem 2rem;">
+                                        <div class="form-card-header"
+                                            style="text-align: center; flex-direction: column; align-items: center; gap: 1.2rem;">
+                                            <div class="form-icon"
+                                                style="margin: 0 auto; width: 60px; height: 60px; font-size: 1.5rem; background: rgba(46, 204, 113, 0.1); color: #2ecc71; border-radius: 50%;">
+                                                <i class="fas fa-check-circle"></i>
+                                            </div>
+                                            <h3 style="color: var(--text-main); margin: 0;">Thanks for your review!</h3>
+                                            <p style="color: #718096; margin: 0; font-size: 0.95rem; line-height: 1.6;">
+                                                You've already submitted a review for this product.
+                                            </p>
                                         </div>
                                     </div>
-
-                                    <div class="form-group premium-group">
-                                        <label for="comment">Your Comment</label>
-                                        <textarea id="comment" name="comment" rows="4"
-                                            placeholder="What did you like or dislike about this product?"
-                                            required></textarea>
-                                    </div>
-
-                                    <button type="submit" class="btn btn-submit-review">
-                                        <span>Submit Review</span>
-                                        <i class="fas fa-paper-plane"></i>
-                                    </button>
-                                </form>
-                            </div>
+                                    <% } else { %>
+                                        <div class="premium-review-form-card" style="padding: 3rem 2rem;">
+                                            <div class="form-card-header"
+                                                style="text-align: center; flex-direction: column; align-items: center; gap: 1.2rem;">
+                                                <div class="form-icon"
+                                                    style="margin: 0 auto; width: 60px; height: 60px; font-size: 1.5rem; background: rgba(255, 145, 77, 0.1); color: var(--accent); border-radius: 50%;">
+                                                    <i class="fas fa-shopping-bag"></i>
+                                                </div>
+                                                <h3 style="color: var(--text-main); margin: 0;">Purchase to Review</h3>
+                                                <p
+                                                    style="color: #718096; margin: 0; font-size: 0.95rem; line-height: 1.6;">
+                                                    Only customers who have purchased and received this product can
+                                                    write a review.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <% } %>
                         </div>
                     </div>
                 </div>

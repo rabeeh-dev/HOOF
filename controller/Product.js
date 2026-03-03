@@ -3,6 +3,7 @@ const Category = require("../model/Category");
 const Product = require("../model/Product");
 const Wishlist = require("../model/Wishlist");
 const Review = require("../model/Review");
+const Order = require("../model/Order");
 
 /**
  * @desc    Renders the shop/listing page with filters, sorting, and pagination.
@@ -63,6 +64,23 @@ exports.addReview = async (req, res) => {
             return res.status(401).json({ success: false, message: "Please login to write a review" });
         }
 
+        // Check if user has purchased and received this product
+        const hasPurchased = await Order.exists({
+            userId,
+            'items.productId': productId,
+            status: 'DELIVERED'
+        });
+
+        if (!hasPurchased) {
+            return res.status(403).json({ success: false, message: "You can only review products you have purchased" });
+        }
+
+        // Check if user has already reviewed this product
+        const existingReview = await Review.findOne({ userId, productId });
+        if (existingReview) {
+            return res.status(400).json({ success: false, message: "You have already reviewed this product" });
+        }
+
         const newReview = new Review({
             userId,
             productId,
@@ -104,10 +122,24 @@ exports.loadProductDetails = async (req, res) => {
         const reviews = await Review.find({ productId }).populate('userId', 'fullName').sort({ createdAt: -1 });
 
         let wishlistProductIds = [];
+        let hasPurchased = false;
+        let hasReviewed = false;
         if (req.session.userId) {
             const wishlist = await Wishlist.findOne({ userId: req.session.userId }).select('products');
             if (wishlist && wishlist.products) {
                 wishlistProductIds = wishlist.products.map(id => id.toString());
+            }
+
+            // Check if user bought and received this product
+            hasPurchased = !!(await Order.exists({
+                userId: req.session.userId,
+                'items.productId': productId,
+                status: 'DELIVERED'
+            }));
+
+            // Check if user already reviewed this product
+            if (hasPurchased) {
+                hasReviewed = !!(await Review.findOne({ userId: req.session.userId, productId }));
             }
         }
 
@@ -116,6 +148,8 @@ exports.loadProductDetails = async (req, res) => {
             relatedProducts,
             reviews,
             wishlistProductIds,
+            hasPurchased,
+            hasReviewed,
             title: `${product.productName} | HOOF`,
             breadcrumbs: [
                 { name: 'Home', url: '/' },
