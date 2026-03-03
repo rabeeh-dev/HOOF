@@ -63,7 +63,7 @@
 
                 <div class="referral-toggle-wrapper" style="grid-column: span 2;">
                   <button type="button" class="referral-toggle-btn" id="referralToggle"
-                    onclick="document.getElementById('referralField').classList.toggle('hidden'); this.querySelector('i').classList.toggle('fa-chevron-down'); this.querySelector('i').classList.toggle('fa-chevron-up');">
+                    onclick="document.getElementById('referralField').classList.toggle('hidden'); var chevron = this.querySelector('.fa-chevron-down, .fa-chevron-up'); chevron.classList.toggle('fa-chevron-down'); chevron.classList.toggle('fa-chevron-up');">
                     <i class="fas fa-gift" style="color: var(--accent); margin-right: 6px;"></i> Have a referral code?
                     <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 0.8rem; color: #999;"></i>
                   </button>
