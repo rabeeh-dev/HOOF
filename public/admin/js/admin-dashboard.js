@@ -323,7 +323,6 @@ const downloadReport = (type) => {
 };
 
 document.getElementById('downloadPDF')?.addEventListener('click', () => downloadReport('pdf'));
-document.getElementById('downloadExcel')?.addEventListener('click', () => downloadReport('excel'));
 
 // ==========================================
 // STAT COUNTER ANIMATION

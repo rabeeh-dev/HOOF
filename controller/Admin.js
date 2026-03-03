@@ -8,7 +8,7 @@ const User = require("../model/User");
 const Category = require("../model/Category");
 const Order = require("../model/Order");
 const Product = require("../model/Product");
-const ExcelJS = require('exceljs');
+
 const PDFDocument = require('pdfkit-table');
 const bcrypt = require("bcrypt");
 const adminProductService = require("../services/AdminProduct");
@@ -874,13 +874,13 @@ exports.cancelOrderAdmin = async (req, res) => {
 };
 
 /**
- * @desc    Export Sales Report as PDF or Excel.
+ * @desc    Export Sales Report as PDF.
  * @route   GET /admin/dashboard/export
  * @access  Private (Admin Only)
  */
 exports.exportSalesReport = async (req, res) => {
     try {
-        const { type, filter, startDate, endDate } = req.query;
+        const { filter, startDate, endDate } = req.query;
         let matchStage = {
             status: { $in: ['DELIVERED', 'SHIPPED', 'Processing'] }
         };
@@ -910,75 +910,40 @@ exports.exportSalesReport = async (req, res) => {
         const totalRevenue = orders.reduce((acc, order) => acc + (order.status === 'DELIVERED' ? order.totalAmount : 0), 0);
         const totalSalesCount = orders.length;
 
-        if (type === 'excel') {
-            const workbook = new ExcelJS.Workbook();
-            const worksheet = workbook.addWorksheet('Sales Report');
+        const doc = new PDFDocument({ margin: 30, size: 'A4' });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=sales-report-${Date.now()}.pdf`);
 
-            worksheet.columns = [
-                { header: 'Order ID', key: 'id', width: 25 },
-                { header: 'Date', key: 'date', width: 20 },
-                { header: 'Customer', key: 'customer', width: 25 },
-                { header: 'Amount (₹)', key: 'amount', width: 15 },
-                { header: 'Status', key: 'status', width: 15 }
-            ];
+        doc.pipe(res);
 
-            orders.forEach(order => {
-                worksheet.addRow({
-                    id: order._id.toString(),
-                    date: order.createdAt.toLocaleDateString(),
-                    customer: order.userId ? order.userId.fullName : 'Guest',
-                    amount: order.totalAmount,
-                    status: order.status
-                });
-            });
+        doc.fontSize(20).text('HOOF Sales Report', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(12).text(`Generated on: ${new Date().toLocaleString()}`);
+        doc.text(`Filter: ${filter || 'All'}`);
+        doc.moveDown();
 
-            worksheet.addRow([]);
-            worksheet.addRow({ id: 'Total Orders', date: totalSalesCount });
-            worksheet.addRow({ id: 'Total Revenue', date: `₹${totalRevenue}` });
+        const table = {
+            title: "Orders Summary",
+            headers: ["Order ID", "Date", "Customer", "Amount", "Status"],
+            rows: orders.map(order => [
+                order._id.toString().slice(-8).toUpperCase(),
+                order.createdAt.toLocaleDateString(),
+                order.userId ? order.userId.fullName : 'Guest',
+                `INR ${order.totalAmount}`,
+                order.status
+            ])
+        };
 
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', `attachment; filename=sales-report-${Date.now()}.xlsx`);
-            await workbook.xlsx.write(res);
-            res.end();
+        await doc.table(table, {
+            prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10),
+            prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => doc.font("Helvetica").fontSize(9),
+        });
 
-        } else if (type === 'pdf') {
-            const doc = new PDFDocument({ margin: 30, size: 'A4' });
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `attachment; filename=sales-report-${Date.now()}.pdf`);
+        doc.moveDown();
+        doc.fontSize(12).font("Helvetica-Bold").text(`Total Orders: ${totalSalesCount}`);
+        doc.text(`Total Revenue (Delivered): INR ${totalRevenue}`);
 
-            doc.pipe(res);
-
-            doc.fontSize(20).text('HOOF Sales Report', { align: 'center' });
-            doc.moveDown();
-            doc.fontSize(12).text(`Generated on: ${new Date().toLocaleString()}`);
-            doc.text(`Filter: ${filter || 'All'}`);
-            doc.moveDown();
-
-            const table = {
-                title: "Orders Summary",
-                headers: ["Order ID", "Date", "Customer", "Amount", "Status"],
-                rows: orders.map(order => [
-                    order._id.toString().slice(-8).toUpperCase(),
-                    order.createdAt.toLocaleDateString(),
-                    order.userId ? order.userId.fullName : 'Guest',
-                    `INR ${order.totalAmount}`,
-                    order.status
-                ])
-            };
-
-            await doc.table(table, {
-                prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10),
-                prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => doc.font("Helvetica").fontSize(9),
-            });
-
-            doc.moveDown();
-            doc.fontSize(12).font("Helvetica-Bold").text(`Total Orders: ${totalSalesCount}`);
-            doc.text(`Total Revenue (Delivered): INR ${totalRevenue}`);
-
-            doc.end();
-        } else {
-            res.status(400).send("Invalid export type");
-        }
+        doc.end();
 
     } catch (error) {
         console.error("Export Report Error:", error);
