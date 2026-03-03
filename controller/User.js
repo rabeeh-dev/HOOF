@@ -760,8 +760,11 @@ exports.loadOrders = async (req, res) => {
 
     const user = await User.findById(userId);
 
-    const orders = await Order.find({ userId })
-      .sort({ createdAt: -1 });
+    const orders = await Order.find({
+      userId,
+      // Exclude UPI orders where payment was never completed
+      $nor: [{ paymentMethod: 'upi', paymentStatus: 'Pending' }]
+    }).sort({ createdAt: -1 });
 
     res.render('User/orders', { orders, user });
 

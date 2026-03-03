@@ -37,9 +37,23 @@ window.addEventListener('resize', createMobileToggle);
 
 const exportBtn = document.querySelector('.btn-export');
 if (exportBtn) {
-    exportBtn.addEventListener('click', (e) => {
+    exportBtn.addEventListener('click', async (e) => {
         e.preventDefault();
-        window.location.href = '/admin/users/export-pdf';
+        showLoading('Exporting customers...');
+        try {
+            const res = await fetch('/admin/users/export-pdf');
+            const blob = await res.blob();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            const filename = res.headers.get('Content-Disposition')?.match(/filename="?(.+?)"?$/)?.[1] || 'customers-export.pdf';
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        } catch (err) {
+            console.error('Export failed:', err);
+        } finally {
+            hideLoading();
+        }
     });
 }
 

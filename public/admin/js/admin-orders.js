@@ -79,12 +79,14 @@ document.addEventListener('DOMContentLoaded', () => {
         else url.searchParams.delete('search');
 
         url.searchParams.set('page', '1'); // Reset to page 1 on filter
+        showLoading('Applying filters...');
         window.location.href = url.toString();
     };
 
     if (applyFiltersBtn) applyFiltersBtn.addEventListener('click', applyFilters);
     if (clearFiltersBtn) {
         clearFiltersBtn.addEventListener('click', () => {
+            showLoading('Clearing filters...');
             window.location.href = '/admin/orders';
         });
     }
@@ -99,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Export Orders PDF (with current filters)
-    window.exportOrders = () => {
+    window.exportOrders = async () => {
         const url = new URL('/admin/orders/export', window.location.origin);
         const status = statusFilter ? statusFilter.value : '';
         const payment = paymentFilter ? paymentFilter.value : '';
@@ -107,7 +109,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (status) url.searchParams.set('status', status);
         if (payment) url.searchParams.set('payment', payment);
         if (search) url.searchParams.set('search', search);
-        window.location.href = url.toString();
+        showLoading('Exporting orders...');
+        try {
+            const res = await fetch(url.toString());
+            const blob = await res.blob();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            const filename = res.headers.get('Content-Disposition')?.match(/filename="?(.+?)"?$/)?.[1] || 'orders-export.pdf';
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        } catch (err) {
+            console.error('Export failed:', err);
+        } finally {
+            hideLoading();
+        }
     };
 
     // ==========================================
@@ -273,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (data.success) {
                     showSuccessAlert('Status Updated', `Order status changed to ${status} successfully.`);
-                    setTimeout(() => window.location.reload(), 1000);
+                    setTimeout(() => { showLoading('Refreshing...'); window.location.reload(); }, 1000);
                 } else {
                     showToast(data.message || 'Update failed', 'error');
                 }
@@ -313,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const data = await response.json();
                     if (data.success) {
                         showSuccessAlert('Cancelled', 'The order has been successfully cancelled.');
-                        setTimeout(() => window.location.reload(), 1000);
+                        setTimeout(() => { showLoading('Refreshing...'); window.location.reload(); }, 1000);
                     } else {
                         showToast(data.message || 'Cancellation failed', 'error');
                     }
@@ -425,5 +441,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.persisted || isBackForward) {
             window.location.reload();
         }
+    });
+    // ==========================================
+    // PAGINATION LOADING INTERCEPTOR
+    // ==========================================
+    document.querySelectorAll('.pagination a').forEach(link => {
+        link.addEventListener('click', () => showLoading('Loading page...'));
     });
 });

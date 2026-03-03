@@ -80,14 +80,12 @@ document.addEventListener("DOMContentLoaded", () => {
                                 window.location.href = verifyResult.redirectUrl;
                             } else {
                                 showToast(verifyResult.message || "Verification failed", "error");
-                                retryBtn.disabled = false;
-                                retryBtn.innerHTML = originalText;
+                                retryBtn.style.display = 'none';
                             }
                         } catch (err) {
                             console.error(err);
                             showToast("Verification error", "error");
-                            retryBtn.disabled = false;
-                            retryBtn.innerHTML = originalText;
+                            retryBtn.style.display = 'none';
                         } finally {
                             hideLoading();
                         }
@@ -99,9 +97,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     theme: { color: "#c41e3a" },
                     modal: {
                         ondismiss: function () {
-                            showToast("Payment cancelled again", "info");
-                            retryBtn.disabled = false;
-                            retryBtn.innerHTML = originalText;
+                            showToast("Payment cancelled", "info");
+                            retryBtn.style.display = 'none';
                         }
                     }
                 };
@@ -109,15 +106,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 rzp.open();
             } else {
                 showToast(result.message || "Failed to start payment", "error");
-                retryBtn.disabled = false;
-                retryBtn.innerHTML = originalText;
+                retryBtn.style.display = 'none';
                 hideLoading();
             }
         } catch (err) {
             console.error(err);
             showToast("Something went wrong", "error");
-            retryBtn.disabled = false;
-            retryBtn.innerHTML = originalText;
+            retryBtn.style.display = 'none';
             hideLoading();
         }
     });

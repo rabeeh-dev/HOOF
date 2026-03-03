@@ -102,4 +102,27 @@
             overlay.style.display = "none";
         }
     }
+
+    /**
+     * Global interceptors: show loading on sidebar nav, pagination clicks, and page reloads
+     */
+    document.addEventListener("DOMContentLoaded", () => {
+        // Sidebar navigation links
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(link => {
+            link.addEventListener('click', (e) => {
+                if (link.classList.contains('active')) return; // Don't show for current page
+                showLoading('Loading...');
+            });
+        });
+
+        // Pagination links (works across all admin pages)
+        document.querySelectorAll('.pagination a, .pagination-link').forEach(link => {
+            link.addEventListener('click', () => showLoading('Loading page...'));
+        });
+    });
+
+    // Hide loading overlay if user navigated back (bfcache)
+    window.addEventListener("pageshow", (event) => {
+        if (event.persisted) hideLoading();
+    });
 </script>

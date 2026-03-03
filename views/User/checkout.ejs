@@ -193,54 +193,59 @@
                                 </div>
 
                                 <!-- Wallet Option -->
-                                <div class="payment-card <%= (typeof walletBalance !== 'undefined' && walletBalance > 0) ? '' : 'disabled' %>"
-                                    data-payment="wallet" onclick="selectPayment('wallet')" id="walletPaymentCard">
-                                    <div class="payment-radio">
-                                        <div class="radio-circle"></div>
-                                    </div>
-                                    <div class="payment-details">
-                                        <i class="fas fa-wallet"></i>
-                                        <div>
-                                            <div class="payment-label">Wallet</div>
-                                            <div class="payment-sublabel">
-                                                Balance: ₹<%= typeof walletBalance !=='undefined' ?
-                                                    walletBalance.toLocaleString('en-IN') : '0' %>
-                                                    <% if (typeof walletBalance !=='undefined' && walletBalance <=0) {
-                                                        %>
-                                                        <span style="color:#dc3545;"> (Insufficient)</span>
-                                                        <% } %>
+                                <% const checkoutTotal=totalAmount>= 999 ? totalAmount : totalAmount + 99; %>
+                                    <% const walletSufficient=typeof walletBalance !=='undefined' && walletBalance>=
+                                        checkoutTotal; %>
+                                        <div class="payment-card <%= walletSufficient ? '' : 'disabled' %>"
+                                            data-payment="wallet" onclick="selectPayment('wallet')"
+                                            id="walletPaymentCard">
+                                            <div class="payment-radio">
+                                                <div class="radio-circle"></div>
+                                            </div>
+                                            <div class="payment-details">
+                                                <i class="fas fa-wallet"></i>
+                                                <div>
+                                                    <div class="payment-label">Wallet</div>
+                                                    <div class="payment-sublabel">
+                                                        Balance: ₹<%= typeof walletBalance !=='undefined' ?
+                                                            walletBalance.toLocaleString('en-IN') : '0' %>
+                                                            <% if (!walletSufficient) { %>
+                                                                <span style="color:#dc3545;"> (Insufficient
+                                                                    Balance)</span>
+                                                                <% } %>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <!-- Card Option -->
-                                <div class="payment-card disabled" data-payment="card" onclick="selectPayment('card')">
-                                    <div class="payment-radio">
-                                        <div class="radio-circle"></div>
-                                    </div>
-                                    <div class="payment-details">
-                                        <i class="fas fa-credit-card"></i>
-                                        <div>
-                                            <div class="payment-label">Credit / Debit Card</div>
-                                            <div class="payment-sublabel">Coming Soon (Inactive)</div>
+                                        <!-- Card Option -->
+                                        <div class="payment-card disabled" data-payment="card"
+                                            onclick="selectPayment('card')">
+                                            <div class="payment-radio">
+                                                <div class="radio-circle"></div>
+                                            </div>
+                                            <div class="payment-details">
+                                                <i class="fas fa-credit-card"></i>
+                                                <div>
+                                                    <div class="payment-label">Credit / Debit Card</div>
+                                                    <div class="payment-sublabel">Coming Soon (Inactive)</div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <!-- COD Option -->
-                                <div class="payment-card" data-payment="cod" onclick="selectPayment('cod')">
-                                    <div class="payment-radio">
-                                        <div class="radio-circle"></div>
-                                    </div>
-                                    <div class="payment-details">
-                                        <i class="fas fa-money-bill-wave"></i>
-                                        <div>
-                                            <div class="payment-label">Cash on Delivery</div>
-                                            <div class="payment-sublabel">Pay when your order arrives</div>
+                                        <!-- COD Option -->
+                                        <div class="payment-card" data-payment="cod" onclick="selectPayment('cod')">
+                                            <div class="payment-radio">
+                                                <div class="radio-circle"></div>
+                                            </div>
+                                            <div class="payment-details">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                                <div>
+                                                    <div class="payment-label">Cash on Delivery</div>
+                                                    <div class="payment-sublabel">Pay when your order arrives</div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
@@ -333,7 +338,8 @@
                                                 <% if (item.size) { %>
                                                     <small
                                                         style="display:block;color:#999;font-size:0.75rem;margin-top:2px;">Size:
-                                                        <%= item.size %></small>
+                                                        <%= item.size %>
+                                                    </small>
                                                     <% } %>
                                         </div>
                                         <span class="summary-item-qty">

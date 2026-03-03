@@ -642,7 +642,10 @@ exports.loadOrders = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const { status, payment, search } = req.query;
-        let query = {};
+        let query = {
+            // Exclude UPI orders where payment was never completed
+            $nor: [{ paymentMethod: 'upi', paymentStatus: 'Pending' }]
+        };
 
         if (status) query.status = status;
         if (payment) query.paymentMethod = payment;

@@ -309,7 +309,7 @@ if (applyFilter) {
 }
 
 // Report Downloads
-const downloadReport = (type) => {
+const downloadReport = async (type) => {
   const filter = dashboardFilter.value;
   const start = startDateInput.value;
   const end = endDateInput.value;
@@ -319,7 +319,21 @@ const downloadReport = (type) => {
     url += `&startDate=${start}&endDate=${end}`;
   }
 
-  window.location.href = url;
+  showLoading('Generating report...');
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const filename = res.headers.get('Content-Disposition')?.match(/filename="?(.+?)"?$/)?.[1] || `report.${type}`;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch (err) {
+    console.error('Export failed:', err);
+  } finally {
+    hideLoading();
+  }
 };
 
 document.getElementById('downloadPDF')?.addEventListener('click', () => downloadReport('pdf'));

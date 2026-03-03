@@ -200,7 +200,7 @@
                         const response = await fetch(`/admin/products/toggle-status/${id}`, { method: 'PATCH' });
                         const data = await response.json();
                         if (data.success) {
-                            Swal.fire('Updated!', data.message, 'success').then(() => window.location.reload());
+                            Swal.fire('Updated!', data.message, 'success').then(() => { showLoading('Refreshing...'); window.location.reload(); });
                         }
                     } catch (err) {
                         Swal.fire('Error', 'Update failed', 'error');
@@ -212,9 +212,17 @@
             function handleSearch(event) {
                 if (event.key === 'Enter') {
                     const searchValue = document.getElementById('productSearch').value;
+                    showLoading('Searching products...');
                     window.location.href = `/admin/products?page=1&search=${encodeURIComponent(searchValue)}`;
                 }
             }
+
+            // Add loading to pagination links
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('.pagination-link').forEach(link => {
+                    link.addEventListener('click', () => showLoading('Loading page...'));
+                });
+            });
         </script>
         <%- include('../partials/admin/overlay-scripts') %>
 </body>
