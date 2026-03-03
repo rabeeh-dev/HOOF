@@ -128,6 +128,11 @@ if (forgotPasswordForm) {
     submitBtn.disabled = true;
     btnText.style.display = "none";
     btnLoader.style.display = "inline-flex";
+
+    // Show global loading overlay
+    if (typeof showLoading === 'function') {
+      showLoading('Sending reset link...');
+    }
   });
 }
 
