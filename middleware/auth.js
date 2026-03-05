@@ -15,6 +15,10 @@ const isUser = (req, res, next) => {
     if (req.session && req.session.userId) {
         return next();
     }
+    // For AJAX/fetch requests, return JSON so frontend can handle redirect
+    if (req.xhr || req.headers.accept?.includes('application/json')) {
+        return res.status(401).json({ success: false, message: 'Login required', redirect: '/user/login' });
+    }
     res.redirect('/user/login');
 };
 
