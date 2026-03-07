@@ -1,8 +1,3 @@
-/**
- * @file config/db.js
- * @description Database connection configuration using Mongoose.
- */
-
 const mongoose = require('mongoose');
 
 /**

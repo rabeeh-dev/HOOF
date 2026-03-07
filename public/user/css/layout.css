@@ -455,10 +455,15 @@ img {
         justify-content: center;
         transition: 0.4s ease;
         z-index: 999;
+        gap: 2rem;
     }
 
     .nav-links.open {
         right: 0;
+    }
+
+    .nav-actions {
+        gap: 1rem;
     }
 
     .footer-inner {
@@ -468,6 +473,57 @@ img {
 
     .footer-info p {
         margin-inline: auto;
+    }
+
+    .footer-social {
+        justify-content: center;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+    }
+
+    .page-subtitle {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo {
+        font-size: 1.8rem;
+    }
+
+    .nav-actions {
+        gap: 0.8rem;
+    }
+
+    .nav-icon {
+        font-size: 1.05rem;
+        padding: 0.4rem;
+    }
+
+    .footer {
+        padding-block: 2.5rem 1.5rem;
+    }
+
+    .footer-inner {
+        gap: 2rem;
+    }
+
+    .footer-col h4 {
+        margin-bottom: 1rem;
+    }
+
+    .page-header {
+        padding: 1.5rem 0 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+    }
+
+    .page-subtitle {
+        font-size: 0.85rem;
     }
 }
 

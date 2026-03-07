@@ -159,6 +159,113 @@
                 </form>
               </div>
 
+              <div class="tab-content" id="faq-tab">
+                <div class="content-header">
+                  <h2>Frequently Asked Questions</h2>
+                  <p style="color: #666; margin-top: 0.5rem;">Find answers to common questions about HOOF</p>
+                </div>
+                <div class="faq-accordion">
+
+                  <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                      <span><i class="fas fa-box"></i> How can I track my order?</span>
+                      <i class="fas fa-chevron-down faq-arrow"></i>
+                    </button>
+                    <div class="faq-answer">
+                      <p>Once your order is placed, you can track it from the <strong>Orders</strong> tab in your
+                        profile. Click on any order to see its current status, including processing, shipped, out for
+                        delivery, and delivered updates.</p>
+                    </div>
+                  </div>
+
+                  <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                      <span><i class="fas fa-undo-alt"></i> What is the return policy?</span>
+                      <i class="fas fa-chevron-down faq-arrow"></i>
+                    </button>
+                    <div class="faq-answer">
+                      <p>We offer a <strong>30-day return policy</strong> on all delivered orders. You can initiate a
+                        return from the order details page. Items must be in their original condition with tags
+                        attached. Once the return is approved, the refund will be credited to your wallet.</p>
+                    </div>
+                  </div>
+
+                  <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                      <span><i class="fas fa-credit-card"></i> What payment methods are accepted?</span>
+                      <i class="fas fa-chevron-down faq-arrow"></i>
+                    </button>
+                    <div class="faq-answer">
+                      <p>We accept multiple payment methods including <strong>Razorpay</strong> (credit/debit cards,
+                        UPI, net banking), <strong>Cash on Delivery (COD)</strong>, and <strong>Wallet balance</strong>.
+                        You can also combine wallet balance with other payment methods at checkout.</p>
+                    </div>
+                  </div>
+
+                  <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                      <span><i class="fas fa-truck"></i> How long does delivery take?</span>
+                      <i class="fas fa-chevron-down faq-arrow"></i>
+                    </button>
+                    <div class="faq-answer">
+                      <p>Standard delivery takes <strong>5–7 business days</strong> depending on your location. We offer
+                        free delivery on all orders. You will receive a notification once your order is shipped with
+                        estimated delivery time.</p>
+                    </div>
+                  </div>
+
+                  <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                      <span><i class="fas fa-wallet"></i> How does the wallet work?</span>
+                      <i class="fas fa-chevron-down faq-arrow"></i>
+                    </button>
+                    <div class="faq-answer">
+                      <p>Your HOOF wallet stores refunds from cancelled or returned orders. You can use your wallet
+                        balance to pay for future purchases at checkout. The wallet balance is also credited with
+                        referral rewards. Check your balance anytime from the <strong>Wallet</strong> tab.</p>
+                    </div>
+                  </div>
+
+                  <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                      <span><i class="fas fa-ruler"></i> How do I find my shoe size?</span>
+                      <i class="fas fa-chevron-down faq-arrow"></i>
+                    </button>
+                    <div class="faq-answer">
+                      <p>Each product page shows available sizes (UK sizing). If you are unsure, we recommend going with
+                        your usual sneaker size. You can also measure your foot length and refer to standard UK size
+                        charts. If the fit isn't right, you can always return the product within 30 days.</p>
+                    </div>
+                  </div>
+
+                  <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                      <span><i class="fas fa-tags"></i> How do I apply a coupon code?</span>
+                      <i class="fas fa-chevron-down faq-arrow"></i>
+                    </button>
+                    <div class="faq-answer">
+                      <p>During checkout, you will see an <strong>"Available Coupons"</strong> section where you can
+                        browse and apply valid coupon codes. Simply click on a coupon to apply it, and the discount will
+                        be reflected in your order total instantly.</p>
+                    </div>
+                  </div>
+
+                  <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this)">
+                      <span><i class="fas fa-gift"></i> How does the referral program work?</span>
+                      <i class="fas fa-chevron-down faq-arrow"></i>
+                    </button>
+                    <div class="faq-answer">
+                      <p>Share your unique referral code with friends. When they sign up and make their first purchase
+                        using your code, both you and your friend earn <strong>referral rewards</strong> credited to
+                        your wallets. Visit the <strong>Referral</strong> tab to find your code and track your earnings.
+                      </p>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
             </div>
       </div>
     </div>
@@ -206,3 +313,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.3/dist/heic2any.min.js"></script>
 <script src="/user/js/user-profile.js" defer></script>
+<script>
+  function toggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    const isActive = item.classList.contains('active');
+    // Close all other FAQ items
+    document.querySelectorAll('.faq-item.active').forEach(el => el.classList.remove('active'));
+    // Toggle the clicked one
+    if (!isActive) item.classList.add('active');
+  }
+</script>

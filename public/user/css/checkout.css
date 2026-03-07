@@ -808,6 +808,30 @@
     }
 }
 
+@media (max-width: 768px) {
+    .checkout-section {
+        padding: 2.5rem 0;
+    }
+
+    .checkout-card {
+        padding: 1.8rem;
+        border-radius: 20px;
+    }
+
+    .step-connector {
+        width: 50px;
+        margin: 0 0.5rem;
+    }
+
+    .security-badges {
+        gap: 1rem;
+    }
+
+    .order-summary-card {
+        padding: 1.5rem;
+    }
+}
+
 @media (max-width: 480px) {
     .checkout-section {
         padding: 2rem 0;

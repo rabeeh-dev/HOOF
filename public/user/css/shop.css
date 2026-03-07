@@ -1431,4 +1431,29 @@ img {
     align-items: stretch;
     width: 100%;
   }
+
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.2rem;
+  }
+
+  .product-image {
+    height: 220px;
+  }
+
+  .product-info {
+    padding: 1rem;
+  }
+
+  .product-name {
+    font-size: 1rem;
+  }
+
+  .product-price {
+    font-size: 1.3rem;
+  }
+
+  .product-footer {
+    margin-top: 0.8rem;
+  }
 }
