@@ -24,7 +24,7 @@
 
 <br/>
 
-[🚀 Live Demo](#-live-demo) • [✨ Features](#-features) • [🛠️ Tech Stack](#️-tech-stack) • [⚙️ Installation](#️-installation--setup) • [📸 Screenshots](#-screenshots) • [🤝 Contributing](#-contributing)
+[✨ Features](#-features) • [🛠️ Tech Stack](#️-tech-stack) • [⚙️ Installation](#️-installation--setup) • [📸 Screenshots](#-screenshots) • [🤝 Contributing](#-contributing)
 
 ---
 
@@ -38,7 +38,6 @@
 - [📁 Project Structure](#-project-structure)
 - [⚙️ Installation & Setup](#️-installation--setup)
 - [🔐 Environment Variables](#-environment-variables)
-- [🚀 Live Demo](#-live-demo)
 - [📸 Screenshots](#-screenshots)
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
@@ -372,10 +371,6 @@ RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 > ⚠️ **Never commit your `.env` file!** It's already covered by `.gitignore`.
 
 ---
-
-## 🚀 Live Demo
-
-🔗 **[Visit HOOF Live →](#)** *(Coming Soon)*
 
 ---
 
