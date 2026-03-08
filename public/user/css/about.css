@@ -407,9 +407,11 @@
 }
 
 /* ==========================================
-   RESPONSIVE
+   RESPONSIVE OVERHAUL (From Scratch)
    ========================================== */
-@media (max-width: 900px) {
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
     .about-mission-grid {
         grid-template-columns: 1fr;
         gap: 3rem;
@@ -418,17 +420,23 @@
     .about-stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+}
 
-    .about-values-grid {
-        grid-template-columns: 1fr;
-    }
+/* Tablet / Mobile Layout Transition (max-width: 768px) */
+@media (max-width: 768px) {
 
+    .about-values-grid,
     .about-team-grid {
         grid-template-columns: 1fr;
     }
+
+    .about-mission-title {
+        font-size: clamp(2rem, 5vw, 3rem);
+    }
 }
 
-@media (max-width: 600px) {
+/* Standard Mobile (max-width: 480px) */
+@media (max-width: 480px) {
     .container {
         width: 92%;
     }
@@ -439,5 +447,59 @@
 
     .about-stats-grid {
         grid-template-columns: 1fr;
+    }
+
+    .hero-about {
+        padding: 6rem 0 4rem;
+    }
+
+    .about-mission-section,
+    .about-stats-section,
+    .about-values-section,
+    .about-team-section {
+        padding: 5rem 0;
+    }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+    .hero-about {
+        padding: 5rem 0 3rem;
+    }
+
+    .hero-about .hero-title {
+        font-size: 2.2rem;
+    }
+
+    .about-mission-section,
+    .about-stats-section,
+    .about-values-section,
+    .about-team-section {
+        padding: 4rem 0;
+    }
+
+    .about-mission-title {
+        font-size: 1.8rem;
+    }
+
+    .about-quote-card {
+        padding: 2.5rem 1.5rem;
+        border-radius: 20px;
+    }
+
+    .about-quote-text {
+        font-size: 1.2rem;
+    }
+
+    .about-stat-card,
+    .about-value-card,
+    .about-team-card {
+        padding: 2rem 1.2rem;
+        border-radius: 20px;
+    }
+
+    .about-cta-btn {
+        width: 100%;
+        justify-content: center;
     }
 }

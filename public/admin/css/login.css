@@ -400,8 +400,23 @@ body::before {
   color: var(--admin-text-light);
 }
 
-/* Responsive */
-@media (max-width: 600px) {
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet / Mobile Menu Breakpoint (max-width: 768px) */
+@media (max-width: 768px) {
+  body {
+    padding: 1.5rem;
+  }
+
+  .admin-login-card {
+    padding: 2.5rem 2rem;
+  }
+}
+
+/* Standard Mobile (max-width: 480px) */
+@media (max-width: 480px) {
   body {
     padding: 1rem;
   }
@@ -414,21 +429,29 @@ body::before {
     font-size: 1.5rem;
   }
 
-  .admin-bottom-links {
-    gap: 1rem;
-  }
-
   .admin-toast {
     right: 1rem;
     left: 1rem;
     max-width: none;
   }
+
+  .admin-bottom-links {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+  }
 }
 
-@media (max-width: 400px) {
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+  .admin-login-card {
+    padding: 1.5rem 1rem;
+  }
+
   .admin-shield-icon {
     width: 50px;
     height: 50px;
+    margin-bottom: 1rem;
   }
 
   .admin-shield-icon i {
@@ -436,16 +459,28 @@ body::before {
   }
 
   .admin-header h1 {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
   }
 
   .admin-header p {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 
-  .admin-bottom-links {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.8rem;
+  .admin-form-group input {
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .admin-signin-btn {
+    padding: 0.9rem;
+    font-size: 0.9rem;
+  }
+
+  .admin-toast-content h4 {
+    font-size: 0.9rem;
+  }
+
+  .admin-toast-content p {
+    font-size: 0.8rem;
   }
 }

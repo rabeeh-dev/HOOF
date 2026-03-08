@@ -431,58 +431,6 @@ body {
   transform: scale(1.1);
 }
 
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-  }
-
-  .main-content {
-    margin-left: 0;
-    padding: 1rem;
-  }
-
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .customers-table {
-    font-size: 0.85rem;
-  }
-
-  .customers-table th,
-  .customers-table td {
-    padding: 0.8rem;
-  }
-
-  .customer-avatar {
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 600px) {
-
-  .customers-table th:nth-child(3),
-  .customers-table td:nth-child(3),
-  .customers-table th:nth-child(4),
-  .customers-table td:nth-child(4) {
-    display: none;
-  }
-}
-
 .pagination-container {
   display: flex;
   justify-content: space-between;
@@ -529,16 +477,6 @@ body {
   box-shadow: 0 4px 10px rgba(196, 30, 58, 0.2);
 
 }
-
-@media (max-width: 600px) {
-  .pagination-container {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-  }
-}
-
-
 
 /* MODAL SYSTEM (Replicated from User Side) */
 .custom-modal {
@@ -693,5 +631,166 @@ body {
 
   to {
     opacity: 1;
+  }
+}
+
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
+
+  .customers-table th:nth-child(4),
+  .customers-table td:nth-child(4) {
+    display: none;
+    /* Hide 'Joined' date to save space */
+  }
+}
+
+/* Tablet / Mobile Menu Breakpoint (max-width: 768px) */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .btn-export {
+    align-self: flex-start;
+  }
+
+  .customers-table th:nth-child(3),
+  .customers-table td:nth-child(3) {
+    display: none;
+    /* Hide Phone Number */
+  }
+
+  .customer-avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+
+  .customer-info h4 {
+    font-size: 0.9rem;
+  }
+
+  .customer-info p {
+    font-size: 0.75rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .action-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+
+  .pagination-container {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+}
+
+/* Standard Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+  .search-bar {
+    width: 100%;
+  }
+
+  .customers-table {
+    font-size: 0.85rem;
+  }
+
+  .customers-table th,
+  .customers-table td {
+    padding: 0.8rem 0.5rem;
+  }
+
+  .status-badge {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .modal-container {
+    padding: 1.5rem;
+    width: 95%;
+    margin: 1rem;
+  }
+
+  .modal-icon-wrapper {
+    width: 60px;
+    height: 60px;
+  }
+
+  .modal-icon-wrapper i {
+    font-size: 1.8rem;
+  }
+
+  .modal-container h3 {
+    font-size: 1.3rem;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .modal-btn {
+    width: 100%;
+  }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+  .page-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .btn-export {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .search-bar {
+    padding: 0.8rem;
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 8px;
+  }
+
+  .search-bar i {
+    display: none;
+    /* Hide search icon if too tight */
+  }
+
+  .search-bar input {
+    padding-left: 0.5rem;
+  }
+
+  .customers-table th,
+  .customers-table td {
+    padding: 0.6rem 0.3rem;
+    font-size: 0.8rem;
+  }
+
+  .customer-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+
+  .customer-info h4 {
+    font-size: 0.8rem;
+  }
+
+  .modal-container {
+    padding: 1.2rem;
   }
 }

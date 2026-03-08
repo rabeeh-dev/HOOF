@@ -174,7 +174,20 @@ body {
     margin-bottom: 2.5rem;
 }
 
-/* ==================== RESPONSIVE ==================== */
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
+
+    /* Product grid scales handled by shop.css natively */
+    .wishlist-toolbar {
+        padding: 1.5rem 2rem;
+    }
+}
+
+/* Tablet / Mobile Layout Transition (max-width: 768px) */
 @media (max-width: 768px) {
     .wishlist-toolbar {
         flex-direction: column;
@@ -197,6 +210,7 @@ body {
     }
 }
 
+/* Standard Mobile (max-width: 480px) */
 @media (max-width: 480px) {
     .page-header {
         padding: 4rem 0 2rem;
@@ -230,5 +244,43 @@ body {
 
     .wishlist-toolbar {
         padding: 1rem 1.2rem;
+    }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+    .wishlist-section {
+        padding: 2rem 0 3rem;
+    }
+
+    .wishlist-toolbar {
+        padding: 0.8rem 1rem;
+        border-radius: 14px;
+        margin-bottom: 2rem;
+    }
+
+    .wishlist-empty {
+        padding: 3rem 1rem;
+        border-radius: 16px;
+    }
+
+    .wishlist-empty h2 {
+        font-size: 1.5rem;
+    }
+
+    .wishlist-empty i {
+        font-size: 3rem;
+    }
+
+    .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+        width: 100%;
+        /* Full width buttons on tiny screens */
+    }
+
+    .toolbar-right {
+        flex-direction: column;
+        width: 100%;
     }
 }

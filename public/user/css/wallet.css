@@ -313,7 +313,19 @@
     border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-/* RESPONSIVE */
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
+    .wallet-filter-row {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+/* Tablet / Mobile Layout Transition (max-width: 768px) */
 @media (max-width: 768px) {
     .wallet-balance-bg {
         padding: 24px 20px;
@@ -341,6 +353,7 @@
     }
 }
 
+/* Standard Mobile (max-width: 480px) */
 @media (max-width: 480px) {
     .wallet-balance-bg {
         padding: 20px 16px;
@@ -366,5 +379,52 @@
 
     .wallet-txn-meta {
         gap: 8px;
+    }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+    .wallet-balance-bg {
+        padding: 16px 12px;
+        border-radius: 16px;
+    }
+
+    .wallet-balance-amount {
+        font-size: 1.2rem;
+    }
+
+    .wallet-balance-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .wallet-balance-subtext {
+        padding: 10px 12px;
+        font-size: 0.75rem;
+    }
+
+    .wallet-txn-card {
+        padding: 14px 12px;
+        border-radius: 12px;
+    }
+
+    .wallet-txn-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 0.8rem;
+    }
+
+    .wallet-txn-details {
+        width: 100%;
+    }
+
+    .wallet-txn-desc {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .wallet-txn-amount {
+        font-size: 0.95rem;
     }
 }

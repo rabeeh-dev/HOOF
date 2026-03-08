@@ -100,3 +100,53 @@
 .modern-clear-btn[style*="display: flex"] {
     animation: fadeIn 0.2s ease forwards;
 }
+
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet / Mobile Menu Breakpoint (max-width: 768px) */
+@media (max-width: 768px) {
+    .modern-search-bar {
+        padding: 10px 15px;
+        margin-bottom: 20px;
+    }
+}
+
+/* Standard Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+    .modern-search-bar {
+        border-radius: 10px;
+        padding: 8px 12px;
+    }
+
+    .modern-search-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    .modern-search-input {
+        font-size: 0.9rem;
+    }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+    .modern-search-bar {
+        padding: 6px 10px;
+        border-radius: 8px;
+    }
+
+    .modern-search-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .modern-search-btn i {
+        font-size: 0.85rem;
+    }
+
+    .modern-search-input {
+        font-size: 0.85rem;
+    }
+}

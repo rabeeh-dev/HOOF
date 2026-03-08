@@ -807,22 +807,26 @@ body {
 }
 
 /* ==========================================
-   RESPONSIVE
+   RESPONSIVE OVERHAUL (From Scratch)
    ========================================== */
-@media (max-width: 1200px) {
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
 
   .content-grid,
   .charts-grid {
     grid-template-columns: 1fr;
   }
 
-  #statusChart {
-    max-width: 260px;
-    max-height: 260px;
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
+/* Tablet / Mobile Menu Breakpoint (max-width: 768px) */
 @media (max-width: 768px) {
+
+  /* Sidebar Logic */
   .sidebar {
     transform: translateX(-100%);
     transition: transform 0.3s ease;
@@ -834,30 +838,164 @@ body {
 
   .main-content {
     margin-left: 0;
+    padding: 1.5rem;
+  }
+
+  /* Header & Filters */
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding-top: 3.5rem;
+    /* Make room for absolute hamburger */
+  }
+
+  .dashboard-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-controls {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .custom-dates {
+    border-right: none;
+    width: 100%;
+    margin-top: 0.5rem;
+    padding-left: 0;
+    justify-content: space-between;
+  }
+
+  .date-input {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .report-actions {
+    width: 100%;
+  }
+
+  .btn-report {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Tables */
+  .orders-table th:nth-child(3),
+  .orders-table td:nth-child(3) {
+    display: none;
+    /* Hide product generic name column to save space */
+  }
+}
+
+/* Standard Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+  .main-content {
     padding: 1rem;
   }
 
   .stats-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
-  .dashboard-header {
+  .card-header {
+    padding: 1rem;
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.8rem;
   }
 
-  .dashboard-header h1 {
-    font-size: 1.4rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .orders-table {
-    font-size: 0.85rem;
+  .card-body {
+    padding: 1rem;
   }
 
   .orders-table th,
   .orders-table td {
     padding: 0.8rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .status-badge {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+  .main-content {
+    padding: 0.8rem;
+  }
+
+  .dashboard-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .dashboard-header {
+    padding-top: 3rem;
+  }
+
+  .header-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .stat-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.2rem;
+    gap: 0.8rem;
+  }
+
+  .stat-icon {
+    width: 45px;
+    height: 45px;
+    font-size: 1.2rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  /* Compact top products */
+  .top-product-item {
+    padding: 0.8rem;
+    gap: 0.6rem;
+  }
+
+  .top-product-image {
+    display: none;
+    /* Strip image for extreme space saving */
+  }
+
+  /* Compact stock items */
+  .stock-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+    padding: 0.8rem;
+  }
+
+  .stock-badge {
+    width: 100%;
+    text-align: center;
+  }
+
+  .orders-table th,
+  .orders-table td {
+    padding: 0.6rem 0.3rem;
+    font-size: 0.75rem;
+  }
+
+  /* Shrink the id significantly */
+  .order-id {
+    font-size: 0.7rem;
   }
 }

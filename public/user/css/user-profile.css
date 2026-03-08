@@ -403,7 +403,11 @@ img {
   border-color: var(--text-main);
 }
 
-/* RESPONSIVE */
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
 @media (max-width: 1024px) {
   .profile-layout {
     grid-template-columns: 1fr;
@@ -411,6 +415,7 @@ img {
 
   .profile-sidebar {
     position: static;
+    margin-bottom: 2rem;
   }
 
   .form-row {
@@ -418,6 +423,7 @@ img {
   }
 }
 
+/* Tablet / Mobile Layout Transition (max-width: 768px) */
 @media (max-width: 768px) {
   .nav-links {
     position: absolute;
@@ -443,15 +449,17 @@ img {
   }
 
   .profile-tabs {
-    overflow-x: scroll;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 0.5rem;
   }
-
 
   .tab-content-wrapper {
     padding: 1.5rem;
   }
 }
 
+/* Standard Mobile (max-width: 480px) */
 @media (max-width: 480px) {
   .profile-section {
     padding: 2rem 0;
@@ -459,6 +467,56 @@ img {
 
   .profile-card {
     padding: 2rem 1.5rem;
+  }
+
+  .profile-avatar-wrapper {
+    width: 100px;
+    height: 100px;
+  }
+
+  #avatarLetter {
+    font-size: 2.2rem;
+  }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+  .profile-section {
+    padding: 1.5rem 0;
+  }
+
+  .profile-card {
+    padding: 1.5rem 1rem;
+    border-radius: 20px;
+  }
+
+  .tab-content-wrapper {
+    padding: 1rem;
+  }
+
+  .profile-avatar-wrapper {
+    width: 80px;
+    height: 80px;
+  }
+
+  #avatarLetter {
+    font-size: 1.8rem;
+  }
+
+  .btn {
+    padding: 0.8rem 1.2rem;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+
+  .password-input-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+  }
+
+  .change-password-link {
+    text-align: right;
   }
 }
 
@@ -1025,5 +1083,40 @@ input:disabled {
   .faq-answer p {
     font-size: 0.82rem;
     padding-left: 1.5rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .profile-card {
+    padding: 1.5rem 1rem;
+    border-radius: 20px;
+  }
+
+  .tab-content-wrapper {
+    padding: 1rem;
+  }
+
+  .form-group input {
+    padding: 0.8rem 1rem;
+  }
+
+  .btn {
+    padding: 0.8rem 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .modal-container {
+    padding: 20px 15px;
+  }
+
+  .addr-card-header,
+  .addr-card-body,
+  .addr-card-footer {
+    padding: 14px 12px;
+  }
+
+  .faq-question {
+    padding: 1rem 0.8rem;
+    font-size: 0.8rem;
   }
 }

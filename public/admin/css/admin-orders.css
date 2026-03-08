@@ -978,42 +978,183 @@
     border-color: var(--admin-primary);
 }
 
-/* RESPONSIVE */
-@media (max-width: 1200px) {
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
     .stats-strip {
         grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .stats-strip {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .filter-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .orders-table th:nth-child(3),
-    .orders-table td:nth-child(3),
-    .orders-table th:nth-child(5),
-    .orders-table td:nth-child(5) {
-        display: none;
     }
 
     .detail-modal .modal-info-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* Tablet / Mobile Menu Breakpoint (max-width: 768px) */
+@media (max-width: 768px) {
+
+    /* Header & Stats */
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
     }
 
+    .stats-strip {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Filters */
+    .filter-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    /* Tables */
+    .orders-table th:nth-child(3),
+    .orders-table td:nth-child(3),
+    /* Product Info */
+    .orders-table th:nth-child(4),
+    .orders-table td:nth-child(4),
+    /* Date */
+    .orders-table th:nth-child(5),
+    .orders-table td:nth-child(5) {
+        /* Amount */
+        display: none;
+        /* Hide heavy columns */
+    }
+
+    /* Pagination */
     .pagination-container {
         flex-direction: column;
         gap: 1rem;
         text-align: center;
     }
+
+    /* Modals */
+    .status-current-block {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
 }
 
+/* Standard Mobile (max-width: 480px) */
 @media (max-width: 480px) {
+
+    /* Header & Stats */
     .stats-strip {
         grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: 1.2rem;
+    }
+
+    /* Tables */
+    .orders-table th,
+    .orders-table td {
+        padding: 0.8rem 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .status-badge {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+    }
+
+    /* Modal Tweaks */
+    .detail-modal .modal-content,
+    .status-modal .modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+
+    .detail-modal .modal-body-content {
+        padding: 1.2rem;
+    }
+
+    .modal-item-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+    }
+
+    .modal-footer-strip {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 1rem;
+    }
+
+    .modal-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+
+    /* Headers */
+    .page-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .header-subtitle {
+        font-size: 0.8rem;
+    }
+
+    /* Tables */
+    .orders-table th,
+    .orders-table td {
+        padding: 0.6rem 0.3rem;
+        font-size: 0.75rem;
+    }
+
+    .order-id {
+        font-size: 0.7rem;
+    }
+
+    .customer-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+
+    /* Modal Tweaks */
+    .detail-modal .modal-header,
+    .status-modal .modal-header {
+        padding: 1rem;
+    }
+
+    .detail-modal .modal-body-content {
+        padding: 1rem;
+    }
+
+    .detail-info-card {
+        padding: 0.8rem;
+    }
+
+    .modal-item-img {
+        width: 50px;
+        height: 50px;
+    }
+
+    .modal-total-row {
+        padding: 0.8rem;
+    }
+
+    .modal-total-value {
+        font-size: 1.1rem;
+    }
+
+    .notes-field textarea {
+        min-height: 60px;
+        padding: 0.6rem;
+        font-size: 0.85rem;
     }
 }

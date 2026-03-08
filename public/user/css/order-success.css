@@ -475,6 +475,7 @@
         opacity: 0;
         transform: translateY(40px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -486,6 +487,7 @@
         opacity: 0;
         transform: scale(0);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
@@ -496,9 +498,11 @@
     0% {
         transform: scale(0.5);
     }
+
     60% {
         transform: scale(1.2);
     }
+
     100% {
         transform: scale(1);
     }
@@ -508,6 +512,7 @@
     from {
         transform: rotate(0deg);
     }
+
     to {
         transform: rotate(360deg);
     }
@@ -517,9 +522,11 @@
     0% {
         transform: translateY(0);
     }
+
     50% {
         transform: translateY(-10px);
     }
+
     100% {
         transform: translateY(0);
     }
@@ -529,6 +536,7 @@
     from {
         background-position: 200% 0;
     }
+
     to {
         background-position: -200% 0;
     }
@@ -539,10 +547,12 @@
         opacity: 0.4;
         transform: scale(1);
     }
+
     50% {
         opacity: 0.8;
         transform: scale(1.1);
     }
+
     100% {
         opacity: 0.4;
         transform: scale(1);
@@ -555,6 +565,7 @@
         height: 0px;
         opacity: 1;
     }
+
     to {
         width: 300px;
         height: 300px;
@@ -562,8 +573,41 @@
     }
 }
 
-/* Responsive */
-@media (max-width: 600px) {
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
+    .details-strip {
+        gap: 1rem;
+    }
+}
+
+/* Tablet / Mobile Layout Transition (max-width: 768px) */
+@media (max-width: 768px) {
+    .success-card {
+        padding: 2.5rem 2rem;
+    }
+
+    .headline {
+        font-size: clamp(2.5rem, 8vw, 4rem);
+    }
+
+    .details-strip {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .info-pill {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+
+/* Standard Mobile (max-width: 480px) */
+@media (max-width: 480px) {
     .success-card {
         padding: 2rem 1.5rem;
         border-radius: 28px;
@@ -580,12 +624,72 @@
 
     .action-btn {
         width: 100%;
+        margin: 0;
+    }
+
+    .total-band {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
     }
 }
 
-@media (max-width: 400px) {
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
     .success-card {
         padding: 1.5rem 1.2rem;
+        border-radius: 20px;
+    }
+
+    .success-icon-wrap,
+    .icon-core {
+        width: 100px;
+        height: 100px;
+    }
+
+    .check-icon {
+        font-size: 2.5rem;
+    }
+
+    .headline {
+        font-size: 2.2rem;
+    }
+
+    .subhead {
+        font-size: 0.95rem;
+    }
+
+    .total-band {
+        padding: 1.2rem;
+    }
+
+    .total-amount {
+        font-size: 1.8rem;
+    }
+
+    .action-btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    .trust-strip {
+        gap: 1rem;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .item-row {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: center;
+    }
+
+    .item-name {
+        width: 100%;
+    }
+
+    .item-price {
+        align-self: flex-start;
+        margin-top: 0.5rem;
     }
 }
-

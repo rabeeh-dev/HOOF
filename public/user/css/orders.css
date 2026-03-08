@@ -684,7 +684,11 @@
   border-radius: 2px;
 }
 
-/* RESPONSIVE */
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
 @media (max-width: 1024px) {
   .orders-filter-row {
     width: 100%;
@@ -696,6 +700,7 @@
   }
 }
 
+/* Tablet / Mobile Layout Transition (max-width: 768px) */
 @media (max-width: 768px) {
   .order-card-footer {
     flex-direction: column;
@@ -704,6 +709,7 @@
 
   .order-actions {
     width: 100%;
+    margin-top: 0.5rem;
   }
 
   .payment-pills-grid {
@@ -720,6 +726,7 @@
   }
 }
 
+/* Standard Mobile (max-width: 480px) */
 @media (max-width: 480px) {
   .orders-filter-row {
     flex-direction: column;
@@ -739,5 +746,56 @@
 
   .order-meta-row {
     gap: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .order-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+  .order-card-header {
+    padding: 14px 12px;
+  }
+
+  .order-card-body {
+    padding: 12px;
+  }
+
+  .order-card-footer {
+    padding: 12px;
+  }
+
+  .order-icon-box {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+
+  .order-item-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .order-item-row img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .order-total-amount {
+    font-size: 1rem;
+  }
+
+  .order-status-badge {
+    padding: 4px 10px;
+    font-size: 0.7rem;
+  }
+
+  .payment-pill {
+    padding: 0.8rem;
   }
 }

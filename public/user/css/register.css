@@ -216,23 +216,116 @@
   text-decoration: none;
 }
 
-@media (max-width: 768px) {
-  .signup-card {
-    padding: 2.5rem 2rem;
-  }
-}
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
 
-@media (min-width: 768px) {
+/* Tablet & Smaller Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
   .signup-form {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.5rem 1.8rem;
+    gap: 1.2rem;
   }
 
   .form-group,
   .form-check,
   .signup-btn {
     grid-column: span 2;
+  }
+}
+
+/* Tablet / Mobile Layout Transition (max-width: 768px) */
+@media (max-width: 768px) {
+  .signup-hero {
+    padding: 3rem 0;
+    min-height: calc(100svh - 70px);
+  }
+
+  .signup-card {
+    padding: 2.5rem 2rem;
+    margin: 0 1rem;
+  }
+
+  .signup-form {
+    grid-template-columns: 1fr;
+    /* Stack columns on tablet */
+    gap: 1rem;
+  }
+
+  .form-group.half-width {
+    grid-column: span 1;
+    /* Reset to single column since grid is 1fr */
+  }
+}
+
+/* Standard Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+  .signup-hero {
+    padding: 2rem 0;
+  }
+
+  .signup-card {
+    padding: 2rem 1.5rem;
+    border-radius: 24px;
+  }
+
+  .signup-title {
+    font-size: clamp(1.8rem, 8vw, 2.4rem);
+  }
+
+  .signup-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .signup-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .signup-form input {
+    padding: 1rem 2.8rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+  .signup-card {
+    padding: 1.5rem 1rem;
+    border-radius: 20px;
+    margin: 0 0.5rem;
+  }
+
+  .signup-title {
+    font-size: 1.6rem;
+  }
+
+  .signup-form input {
+    padding: 0.8rem 2.5rem;
+    font-size: 0.9rem;
+  }
+
+  .input-icon {
+    left: 0.8rem;
+    font-size: 1rem;
+  }
+
+  .password-toggle {
+    right: 0.8rem;
+  }
+
+  .signup-btn {
+    padding: 0.9rem;
+    font-size: 0.95rem;
+  }
+
+  .signup-divider {
+    margin: 1.5rem 0;
+  }
+
+  .referral-toggle-btn {
+    font-size: 0.85rem;
+    padding: 0.8rem 1rem;
   }
 }
 

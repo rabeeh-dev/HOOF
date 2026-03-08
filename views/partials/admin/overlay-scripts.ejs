@@ -125,4 +125,83 @@
     window.addEventListener("pageshow", (event) => {
         if (event.persisted) hideLoading();
     });
+
+    // ==========================================
+    // GLOBAL MOBILE SIDEBAR TOGGLE
+    // ==========================================
+    const createMobileToggle = () => {
+        if (window.innerWidth <= 768) {
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+
+            if (sidebar && mainContent && !document.querySelector('.sidebar-toggle')) {
+                const toggleBtn = document.createElement('button');
+                toggleBtn.className = 'sidebar-toggle';
+                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                
+                // For admin-order-detail, header might be different. Prepend to mainContent.
+                mainContent.insertBefore(toggleBtn, mainContent.firstChild);
+
+                toggleBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    sidebar.classList.toggle('open');
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.sidebar-toggle') && !e.target.closest('.sidebar') && sidebar.classList.contains('open')) {
+                        sidebar.classList.remove('open');
+                    }
+                });
+            }
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        createMobileToggle();
+        window.addEventListener('resize', createMobileToggle);
+
+        if (!document.getElementById('mobile-sidebar-styles')) {
+            const mobileStyles = document.createElement('style');
+            mobileStyles.id = 'mobile-sidebar-styles';
+            mobileStyles.textContent = `
+              .sidebar-toggle {
+                display: none;
+                position: fixed;
+                top: 1rem;
+                left: 1rem;
+                z-index: 1000;
+                background: var(--admin-primary, #c41e3a);
+                color: white;
+                border: none;
+                width: 45px;
+                height: 45px;
+                border-radius: 12px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
+                transition: all 0.3s ease;
+              }
+              
+              .sidebar-toggle:hover {
+                background: var(--admin-primary-light, #e74c3c);
+                transform: scale(1.05);
+              }
+              
+              @media (max-width: 768px) {
+                .sidebar-toggle {
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                }
+                
+                /* Ensure sidebar overlaps content properly on mobile */
+                .sidebar.open {
+                  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+                  z-index: 1001;
+                }
+              }
+            `;
+            document.head.appendChild(mobileStyles);
+        }
+    });
+
 </script>

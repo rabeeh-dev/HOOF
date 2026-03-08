@@ -140,3 +140,60 @@
     border: none;
     cursor: pointer;
 }
+
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet / Mobile Menu Breakpoint (max-width: 768px) */
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Standard Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+    .form-container {
+        padding: 1.5rem;
+    }
+
+    .form-section-title {
+        font-size: 1.05rem;
+    }
+
+    .variants-table th,
+    .variants-table td {
+        padding: 0.6rem 0.4rem;
+        font-size: 0.8rem;
+    }
+
+    .btn-add-variant {
+        width: 100%;
+    }
+
+    .image-upload-area {
+        padding: 1.5rem 1rem;
+    }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+    .form-container {
+        padding: 1.2rem;
+    }
+
+    .form-section-title {
+        font-size: 0.95rem;
+    }
+
+    .preview-container {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    }
+
+    .variants-table th,
+    .variants-table td {
+        padding: 0.4rem 0.2rem;
+        font-size: 0.75rem;
+    }
+}

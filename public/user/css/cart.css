@@ -418,14 +418,19 @@
     margin-bottom: 2.5rem;
 }
 
-/* ==================== RESPONSIVE ==================== */
-@media (max-width: 992px) {
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
     .cart-layout {
         grid-template-columns: 1fr;
     }
 
     .order-summary {
         position: static;
+        margin-top: 1rem;
     }
 
     .cart-toolbar {
@@ -436,27 +441,28 @@
     }
 }
 
+/* Tablet / Mobile Layout Transition (max-width: 768px) */
 @media (max-width: 768px) {
     .cart-section {
         padding: 3rem 0;
     }
 
     .cart-item {
-        grid-template-columns: 90px 1fr;
-        gap: 1rem;
+        grid-template-columns: 100px 1fr;
+        gap: 1.2rem;
         padding: 1.2rem;
     }
 
     .cart-item-image {
-        width: 90px;
-        height: 90px;
+        width: 100px;
+        height: 100px;
     }
 
     .cart-item-actions {
         grid-column: 1 / -1;
         flex-direction: row;
         justify-content: space-between;
-        width: 100%;
+        margin-top: 0.5rem;
     }
 
     .cart-empty {
@@ -472,6 +478,7 @@
     }
 }
 
+/* Standard Mobile (max-width: 480px) */
 @media (max-width: 480px) {
     .cart-section {
         padding: 2rem 0;
@@ -481,13 +488,6 @@
         grid-template-columns: 80px 1fr;
         gap: 1rem;
         padding: 1rem;
-    }
-
-    .cart-item-actions {
-        grid-column: 1 / -1;
-        flex-direction: row;
-        justify-content: space-between;
-        width: 100%;
     }
 
     .cart-item-image {
@@ -501,5 +501,61 @@
 
     .order-summary {
         padding: 1.5rem;
+    }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+    .cart-item {
+        grid-template-columns: 70px 1fr;
+        gap: 0.8rem;
+        padding: 0.8rem;
+        border-radius: 14px;
+    }
+
+    .cart-item-image {
+        width: 70px;
+        height: 70px;
+        border-radius: 10px;
+    }
+
+    .cart-item-name {
+        font-size: 0.9rem;
+    }
+
+    .cart-item-sale-price {
+        font-size: 1rem;
+    }
+
+    .qty-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .qty-input {
+        width: 36px;
+        font-size: 0.95rem;
+    }
+
+    .order-summary {
+        padding: 1.2rem;
+        border-radius: 18px;
+    }
+
+    .checkout-btn {
+        padding: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .cart-empty {
+        padding: 3rem 1rem;
+    }
+
+    .cart-empty h2 {
+        font-size: 1.8rem;
+    }
+
+    .cart-empty i {
+        font-size: 3rem;
     }
 }

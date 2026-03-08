@@ -905,7 +905,18 @@
     font-size: 1.1rem;
 }
 
-@media (max-width: 992px) {
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
+    .product-details-container {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        padding: 2rem;
+    }
+
     .reviews-container {
         grid-template-columns: 1fr;
     }
@@ -916,6 +927,7 @@
     }
 }
 
+/* Tablet / Mobile Layout Transition (max-width: 768px) */
 @media (max-width: 768px) {
     .product-details-section {
         padding: 2rem 0;
@@ -1038,6 +1050,7 @@
     }
 }
 
+/* Standard Mobile (max-width: 480px) */
 @media (max-width: 480px) {
     .product-details-container {
         padding: 1rem;
@@ -1110,5 +1123,97 @@
 
     .star-rating label {
         font-size: 1.4rem;
+    }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+    .product-details-container {
+        padding: 0.8rem;
+        border-radius: 14px;
+    }
+
+    .product-title {
+        font-size: 1.5rem;
+    }
+
+    .product-price {
+        font-size: 1.1rem;
+    }
+
+    .regular-price {
+        font-size: 0.9rem;
+    }
+
+    .product-description {
+        font-size: 0.85rem;
+        padding: 0.8rem;
+    }
+
+    .size-option {
+        min-width: 42px;
+        height: 42px;
+        font-size: 0.85rem;
+        border-radius: 10px;
+    }
+
+    .quantity-selector {
+        height: 44px;
+    }
+
+    .quantity-selector button {
+        width: 32px;
+        height: 32px;
+    }
+
+    .btn-add-cart,
+    .btn-wishlist {
+        width: 44px;
+        height: 44px;
+    }
+
+    .btn-buy-now {
+        height: 44px;
+        font-size: 0.8rem;
+    }
+
+    .thumbnail {
+        width: 45px;
+        height: 45px;
+        border-radius: 8px;
+    }
+
+    .related-products-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .related-products-section,
+    .reviews-section {
+        padding: 1.5rem 1rem;
+        border-radius: 16px;
+    }
+
+    .section-title {
+        font-size: 1.4rem;
+    }
+
+    .review-item {
+        padding: 1rem;
+        border-radius: 14px;
+    }
+
+    .premium-review-form-card {
+        padding: 1.2rem;
+        border-radius: 18px;
+    }
+
+    .meta-item {
+        font-size: 0.8rem;
+    }
+
+    .meta-item i {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
     }
 }

@@ -343,6 +343,7 @@
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -475,27 +476,33 @@
   font-weight: 600;
 }
 
-/* ==================== RESPONSIVE ==================== */
-@media (max-width: 1200px) {
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
   .products-grid-home {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 900px) {
+/* Tablet / Mobile Layout Transition (max-width: 768px) */
+@media (max-width: 768px) {
   .products-grid-home {
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
   }
 }
 
-@media (max-width: 600px) {
+/* Standard Mobile (max-width: 480px) */
+@media (max-width: 480px) {
   .container {
     width: 92%;
   }
 
   .hero-title {
-    font-size: 2.4rem;
+    font-size: clamp(2.5rem, 8vw, 4rem);
     letter-spacing: 0.05em;
   }
 
@@ -515,16 +522,18 @@
   .categories-grid {
     grid-template-columns: 1fr;
   }
-}
 
-@media (max-width: 480px) {
-  .hero-title {
-    font-size: clamp(2.5rem, 8vw, 4rem);
+  .hero-home {
+    padding: 5rem 0 4rem;
   }
 
   .products-section,
   .categories-section {
     padding: 4rem 0;
+  }
+
+  .section-header {
+    margin-bottom: 2.5rem;
   }
 
   .profile-dropdown {
@@ -549,6 +558,61 @@
   }
 }
 
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+  .hero-home {
+    padding: 3rem 0 2.5rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .hero-search-minimal {
+    padding: 0.6rem 1rem;
+  }
+
+  .products-section,
+  .categories-section {
+    padding: 3rem 0;
+  }
+
+  .products-grid-home {
+    gap: 1.2rem;
+  }
+
+  .home-product-image {
+    height: 220px;
+  }
+
+  .home-product-details {
+    padding: 1rem 1.2rem 1.2rem;
+  }
+
+  .home-product-name {
+    font-size: 1rem;
+  }
+
+  .home-current-price {
+    font-size: 1.2rem;
+  }
+
+  .category-card {
+    padding: 2rem 1.5rem;
+    border-radius: 20px;
+  }
+
+  .category-icon {
+    font-size: 3rem;
+  }
+
+  .category-card h3 {
+    font-size: 1.3rem;
+  }
+}
+
+/* Hover Support Fallback */
 @media (hover: none) {
   .home-card-actions {
     transform: translateX(-50%) translateY(0);

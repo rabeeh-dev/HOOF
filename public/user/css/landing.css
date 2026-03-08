@@ -1112,21 +1112,33 @@
   transform: translateX(4px);
 }
 
-/* ==================== RESPONSIVE ==================== */
-@media (max-width: 1200px) {
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
   .products-grid-home {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 900px) {
+/* Tablet / Mobile Layout Transition (max-width: 768px) */
+@media (max-width: 768px) {
   .products-grid-home {
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
   }
+
+  .hero-badge {
+    position: static;
+    transform: none;
+    margin-top: 1rem;
+  }
 }
 
-@media (max-width: 600px) {
+/* Standard Mobile (max-width: 480px) */
+@media (max-width: 480px) {
   .products-grid-home {
     grid-template-columns: 1fr;
     gap: 1.5rem;
@@ -1135,8 +1147,59 @@
   .home-product-image {
     height: 260px;
   }
+
+  .hero-left h1 {
+    font-size: clamp(3.5rem, 12vw, 4.5rem);
+  }
+
+  .hero-shoe-card {
+    border-radius: 20px;
+  }
+
+  .band-label {
+    font-size: 2rem;
+  }
+
+  .about-block h3 {
+    font-size: 2.5rem;
+  }
 }
 
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+  .hero-left h1 {
+    font-size: 2.8rem;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hero-buttons .btn {
+    width: 100%;
+    margin: 0;
+    text-align: center;
+  }
+
+  .hero-badge {
+    min-width: 100%;
+  }
+
+  .products-grid-home {
+    gap: 1rem;
+  }
+
+  .home-product-image {
+    height: 220px;
+  }
+
+  .band-label {
+    font-size: 1.6rem;
+  }
+}
+
+/* Hover Support Fallback */
 @media (hover: none) {
   .home-card-actions {
     transform: translateX(-50%) translateY(0);

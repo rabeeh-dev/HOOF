@@ -488,3 +488,122 @@ body {
     margin-top: 0.3rem;
     display: block;
 }
+
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
+
+    .categories-table th:nth-child(2),
+    .categories-table td:nth-child(2) {
+        display: none;
+        /* Hide Description Column on iPad to prevent squeeze */
+    }
+}
+
+/* Tablet / Mobile Menu Breakpoint (max-width: 768px) */
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .btn-add {
+        align-self: flex-start;
+    }
+
+    .search-bar {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Standard Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+
+    .categories-table th,
+    .categories-table td {
+        padding: 0.8rem 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .status-badge {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+    }
+
+    .modal-content {
+        padding: 1.5rem;
+        width: 95%;
+        margin: 1rem;
+    }
+
+    .modal-header h2 {
+        font-size: 1.25rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    .btn-save,
+    .btn-cancel {
+        width: 100%;
+    }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+    .page-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .btn-add {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .search-bar {
+        padding: 0.8rem;
+        flex-direction: column;
+        border-radius: 8px;
+    }
+
+    .search-bar i {
+        display: none;
+    }
+
+    .search-bar input {
+        padding-left: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .categories-table th,
+    .categories-table td {
+        padding: 0.6rem 0.3rem;
+        font-size: 0.8rem;
+    }
+
+    .category-name {
+        font-size: 0.85rem;
+    }
+
+    .modal-content {
+        padding: 1.2rem;
+    }
+}

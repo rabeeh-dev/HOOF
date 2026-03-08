@@ -397,7 +397,18 @@
     }
 }
 
-/* RESPONSIVE */
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
+    .rewards-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Tablet / Mobile Layout Transition (max-width: 768px) */
 @media (max-width: 768px) {
     .rewards-grid {
         grid-template-columns: 1fr;
@@ -422,6 +433,7 @@
     }
 }
 
+/* Standard Mobile (max-width: 480px) */
 @media (max-width: 480px) {
     .steps-grid {
         grid-template-columns: 1fr;
@@ -429,5 +441,70 @@
 
     .referral-code-text {
         font-size: 1.4rem;
+    }
+
+    .referral-code-card,
+    .referral-rewards-card,
+    .referral-how-it-works {
+        padding: 1.5rem;
+    }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+    .referral-code-bg {
+        padding: 1.5rem 1rem;
+    }
+
+    .referral-code-icon {
+        width: 44px;
+        height: 44px;
+        margin: 0 auto;
+    }
+
+    .referral-code-text {
+        font-size: 1.2rem;
+    }
+
+    .referral-copy-btn {
+        width: 100%;
+        justify-content: center;
+        margin-top: 0.5rem;
+    }
+
+    .referral-code-subtext {
+        padding: 0.8rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .referral-rewards-card,
+    .referral-how-it-works {
+        padding: 1.5rem 1rem;
+    }
+
+    .reward-stat-card {
+        padding: 1.2rem 0.8rem;
+    }
+
+    .reward-stat-value {
+        font-size: 1.2rem;
+    }
+
+    .conversion-info {
+        padding: 1rem;
+    }
+
+    .conversion-row {
+        font-size: 0.85rem;
+    }
+
+    .withdraw-section {
+        padding: 1.2rem 1rem;
+    }
+
+    .withdraw-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.8rem 1rem;
     }
 }

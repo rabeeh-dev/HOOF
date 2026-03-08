@@ -228,7 +228,11 @@
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
 
-/* RESPONSIVE */
+/* ==========================================
+   RESPONSIVE OVERHAUL (From Scratch)
+   ========================================== */
+
+/* Tablet & Smaller Desktop (max-width: 1024px) */
 @media (max-width: 1024px) {
 
     /* profile-layout handled in user-profile.css, but ensure stacking works */
@@ -237,6 +241,7 @@
     }
 }
 
+/* Tablet / Mobile Layout Transition (max-width: 768px) */
 @media (max-width: 768px) {
     .tab-content-wrapper {
         padding: 1.5rem !important;
@@ -244,14 +249,21 @@
 
     .action-buttons-row {
         justify-content: center;
+        flex-direction: column;
     }
 
     .action-btn-detail {
         width: 100%;
         justify-content: center;
     }
+
+    .detail-item-pricing {
+        align-self: flex-start;
+        margin-top: 0.5rem;
+    }
 }
 
+/* Standard Mobile (max-width: 480px) */
 @media (max-width: 480px) {
     .action-btn-detail {
         padding: 0.8rem 1.4rem;
@@ -269,9 +281,46 @@
 
     .detail-item-row {
         gap: 0.8rem;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .detail-item-pricing {
+        text-align: left;
     }
 
     .detail-item-info h4 {
         font-size: 0.9rem !important;
+    }
+}
+
+/* Small Mobile (max-width: 320px) */
+@media (max-width: 320px) {
+
+    .order-detail-block-header,
+    .order-detail-block-body,
+    .order-detail-block-footer {
+        padding: 14px 12px;
+    }
+
+    .detail-item-image {
+        width: 50px;
+        height: 50px;
+    }
+
+    .action-btn-detail {
+        padding: 0.8rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .payment-pills-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .support-contact-card {
+        padding: 1rem;
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
     }
 }
