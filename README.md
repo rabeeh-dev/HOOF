@@ -1,6 +1,6 @@
 <div align="center">
 
-<pre style="color:#e53935; font-weight:bold;">
+<pre style="color:#b51505; font-weight:bold;">
 ██╗  ██╗ ██████╗  ██████╗ ███████╗
 ██║  ██║██╔═══██╗██╔═══██╗██╔════╝
 ███████║██║   ██║██║   ██║█████╗  
