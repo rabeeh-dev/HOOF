@@ -507,44 +507,64 @@ let discountAmt = 0;
 function openCouponModal() {
     const modal = document.getElementById("couponModal");
     const list = document.getElementById("availableCouponsList");
-    modal.style.display = "flex";
+    if (!modal || !list) return;
+
+    modal.classList.add("active");
+    list.innerHTML = '<div class="loading-coupons"><i class="fas fa-spinner fa-spin"></i> Loading coupons...</div>';
 
     // Fetch available coupons
     fetch("/user/available-coupons")
-        .then(res => res.json())
+        .then(async res => {
+            if (!res.ok) {
+                // Handle 401/403 or other errors
+                if (res.status === 401) {
+                    window.location.href = "/user/login";
+                    return;
+                }
+                throw new Error('Network response was not ok');
+            }
+            const contentType = res.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new TypeError("Oops, we haven't got JSON!");
+            }
+            return res.json();
+        })
         .then(data => {
-            if (data.success) {
-                if (data.coupons.length === 0) {
+            if (data && data.success) {
+                if (!data.coupons || !Array.isArray(data.coupons) || data.coupons.length === 0) {
                     list.innerHTML = '<div class="no-coupons">No coupons available at the moment.</div>';
                 } else {
                     list.innerHTML = data.coupons.map(coupon => `
                         <div class="coupon-list-item">
-                            <div class="coupon-item-header">
-                                <span class="coupon-code-badge">${coupon.couponCode}</span>
-                                <span class="coupon-discount-text">
-                                    ${coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '₹' + coupon.discountValue} OFF
-                                </span>
+                            <div class="coupon-details">
+                                <h4>${coupon.couponCode || 'N/A'}</h4>
+                                <p>${coupon.description || 'Special Discount'}</p>
+                                <div class="coupon-req">Min Purchase: ₹${coupon.minPurchaseAmount || 0}</div>
                             </div>
-                            <div class="coupon-desc">${coupon.description}</div>
-                            <div class="coupon-item-footer">
-                                <span class="coupon-expiry">Expires: ${new Date(coupon.expiryDate).toLocaleDateString()}</span>
+                            <div class="coupon-item-actions">
+                                <div class="coupon-discount-badge">
+                                    ${coupon.discountType === 'percentage' ? (coupon.discountValue || 0) + '%' : '₹' + (coupon.discountValue || 0)} OFF
+                                </div>
                                 <button class="btn-select-coupon" onclick="selectCoupon('${coupon.couponCode}')">Select</button>
                             </div>
                         </div>
                     `).join("");
                 }
             } else {
-                list.innerHTML = '<div class="error-msg">Failed to load coupons.</div>';
+                list.innerHTML = `<div class="error-msg">${data && data.message ? data.message : 'Failed to load coupons.'}</div>`;
             }
         })
         .catch(err => {
-            console.error(err);
-            list.innerHTML = '<div class="error-msg">Something went wrong.</div>';
+            console.error("Coupon Fetch Error:", err);
+            list.innerHTML = '<div class="error-msg">Something went wrong while fetching coupons.</div>';
         });
 }
 
 function closeCouponModal() {
-    document.getElementById("couponModal").style.display = "none";
+    const modal = document.getElementById("couponModal");
+    if (modal) {
+        modal.classList.remove("active");
+    }
 }
 
 function selectCoupon(code) {
@@ -579,13 +599,13 @@ async function applyCoupon() {
             document.querySelector(".available-coupons-btn").style.display = "none";
 
             updateOrderSummary(discountAmt);
-            showToast(data.message, "success");
+            showToast(data.message || "Coupon applied successfully!", "success");
         } else {
-            showToast(data.message, "error");
+            showToast(data.message || "Invalid coupon code", "error");
         }
     } catch (err) {
-        console.error(err);
-        showToast("Failed to apply coupon", "error");
+        console.error("Coupon application error:", err);
+        showToast("Failed to apply coupon. Please try again.", "error");
     }
 }
 
