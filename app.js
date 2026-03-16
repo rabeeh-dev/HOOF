@@ -157,6 +157,17 @@ app.use('/admin', (req, res, next) => {
 app.get("/", userController.landingPage);
 
 // ==========================================
+// CATCH-ALL 404 HANDLER
+// ==========================================
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith('/admin')) {
+    res.status(404).render('Admin/404', { layout: false, title: '404 - Page Not Found' });
+  } else {
+    res.status(404).render('User/404', { title: '404 - Page Not Found' });
+  }
+});
+
+// ==========================================
 // SERVER INITIALIZATION
 // ==========================================
 const PORT = process.env.PORT || 8080;

@@ -114,32 +114,68 @@ document.addEventListener("DOMContentLoaded", () => {
     // DELETE ADDRESS
     // ==========================================
 
-    window.deleteAddress = async function (id) {
-        if (!confirm("Are you sure you want to delete this address?")) return;
-        try {
-            const res = await fetch(`/user/address/delete/${id}`, { method: 'DELETE' });
-            const result = await res.json();
-            if (result.success) {
-                showToast(result.message, "success");
-                const card = document.getElementById(`address-${id}`);
-                if (card) card.remove();
-                // Check if no addresses left
-                const grid = document.getElementById('addressGrid');
-                if (grid && grid.querySelectorAll('.address-card').length === 0) {
-                    grid.innerHTML = `
-                        <div class="empty-state">
-                            <div style="text-align: center; padding: 40px 20px;">
-                                <i class="fas fa-map-marked-alt" style="font-size: 3rem; color: rgba(0,0,0,0.15); margin-bottom: 16px;"></i>
-                                <p style="color: #999; font-size: 1rem;">No addresses saved yet.</p>
-                            </div>
-                        </div>`;
+    window.deleteAddress = function (id) {
+        // Remove existing confirm modal if any
+        const existing = document.getElementById('deleteConfirmModal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'deleteConfirmModal';
+        modal.className = 'custom-modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-overlay"></div>
+            <div class="modal-container" style="max-width: 420px; text-align: center;">
+                <div class="modal-header" style="justify-content: center; border: none; padding-bottom: 0;">
+                    <div style="background: rgba(220, 53, 69, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                        <i class="fas fa-trash-alt" style="font-size: 2.5rem; color: #dc3545;"></i>
+                    </div>
+                </div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 10px;">Delete Address</h3>
+                <p style="color: #666; margin-bottom: 25px; line-height: 1.6;">Are you sure you want to delete this address? This action cannot be undone.</p>
+                <div class="modal-footer" style="display: flex; gap: 12px; border: none; padding: 0;">
+                    <button type="button" class="btn primary" id="confirmDeleteBtn" style="flex: 1; background: #dc3545; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);">Delete</button>
+                    <button type="button" class="btn outline" id="cancelDeleteBtn" style="flex: 1;">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        modal.querySelector('#confirmDeleteBtn').addEventListener('click', async () => {
+            const btn = modal.querySelector('#confirmDeleteBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i>Deleting...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`/user/address/delete/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    showToast(result.message, "success");
+                    const card = document.getElementById(`address-${id}`);
+                    if (card) card.remove();
+                    // Check if no addresses left
+                    const grid = document.getElementById('addressGrid');
+                    if (grid && grid.querySelectorAll('.address-card').length === 0) {
+                        grid.innerHTML = `
+                            <div class="empty-state">
+                                <div style="text-align: center; padding: 40px 20px;">
+                                    <i class="fas fa-map-marked-alt" style="font-size: 3rem; color: rgba(0,0,0,0.15); margin-bottom: 16px;"></i>
+                                    <p style="color: #999; font-size: 1rem;">No addresses saved yet.</p>
+                                </div>
+                            </div>`;
+                    }
+                } else {
+                    showToast(result.message, "error");
                 }
-            } else {
-                showToast(result.message, "error");
+            } catch (err) {
+                showToast("Failed to delete address", "error");
+            } finally {
+                modal.remove();
             }
-        } catch (err) {
-            showToast("Failed to delete address", "error");
-        }
+        });
+
+        modal.querySelector('#cancelDeleteBtn').addEventListener('click', () => modal.remove());
+        modal.querySelector('.modal-overlay').addEventListener('click', () => modal.remove());
     };
 
     // ==========================================
