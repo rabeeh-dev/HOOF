@@ -386,6 +386,9 @@ function verifyAndChange(type) {
     document.body.appendChild(modal);
 
     modal.querySelector('#confirmVerifyBtn').addEventListener('click', () => {
+        if (typeof showLoading === 'function') {
+            showLoading('Processing Request...');
+        }
         window.location.href = redirectUrl;
     });
     modal.querySelector('#cancelVerifyBtn').addEventListener('click', () => {
