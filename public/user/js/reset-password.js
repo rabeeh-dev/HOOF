@@ -191,6 +191,8 @@ if (resetForm) {
     if (!isFormValid) {
       e.preventDefault();
       showMessage("Please fix the errors above", "error");
+    } else {
+      showLoading("Resetting your password...");
     }
   });
 }

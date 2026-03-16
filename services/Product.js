@@ -20,7 +20,7 @@ class ProductService {
      * @param {number} [limit=12] - Number of products per page.
      * @returns {Promise<Object>} Object containing products, totalCount, totalPages, and currentPage.
      */
-    async getAllProducts(query, limit = 12) {
+    async getAllProducts(query, limit = 6) {
         const { category, sort, page = 1, search, minPrice, maxPrice, size } = query;
         const skip = (page - 1) * limit;
 

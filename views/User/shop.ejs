@@ -50,9 +50,9 @@
               </div>
               <div class="dual-range-slider">
                 <div class="slider-track"></div>
-                <input type="range" id="minPriceRange" min="0" max="300000" step="100" value="<%= minPrice %>"
+                <input type="range" id="minPriceRange" min="0" max="20000" step="100" value="<%= minPrice %>"
                   oninput="updatePriceLabels()">
-                <input type="range" id="maxPriceRange" min="0" max="300000" step="100" value="<%= maxPrice %>"
+                <input type="range" id="maxPriceRange" min="0" max="20000" step="100" value="<%= maxPrice %>"
                   oninput="updatePriceLabels()">
               </div>
             </div>
@@ -84,11 +84,10 @@
               </span> products</p>
           </div>
           <div class="toolbar-right">
-            <div class="product-search" style="position: relative; display: flex; align-items: center;">
+            <div class="product-search">
               <input type="text" id="searchInput" placeholder="Search sneakers..."
-                value="<%= typeof search !== 'undefined' ? search : '' %>" style="padding-right: 30px;">
-              <button id="clearSearchBtn" onclick="clearSearch()"
-                style="position: absolute; right: 40px; background: none; border: none; cursor: pointer; display: none; color: #666; font-size: 0.9rem;">
+                value="<%= typeof search !== 'undefined' ? search : '' %>">
+              <button id="clearSearchBtn" onclick="clearSearch()">
                 <i class="fas fa-times"></i>
               </button>
               <button onclick="applyFilters()"><i class="fas fa-search"></i></button>

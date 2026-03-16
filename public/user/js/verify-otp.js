@@ -78,7 +78,7 @@ otpInputs.forEach((input, index) => {
 // COUNTDOWN TIMER
 // ==========================================
 
-let timeLeft = 120; // 2 minutes
+let timeLeft = 60; // 1 minutes
 const timerEl = document.getElementById("timer");
 const resendBtn = document.getElementById("resendOtp");
 

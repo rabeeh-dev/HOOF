@@ -101,3 +101,8 @@ function hideLoading() {
         overlay.style.display = "none";
     }
 }
+
+// Hide loading overlay if user navigated back (bfcache)
+window.addEventListener("pageshow", (event) => {
+    if (event.persisted) hideLoading();
+});

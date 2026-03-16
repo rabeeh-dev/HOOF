@@ -69,6 +69,7 @@
         confirmEmail.style.borderColor = '#ff4d4d';
       } else {
         emailError.style.display = 'none';
+        showLoading('Sending verification OTP...');
         document.querySelector('.btn-text').innerText = 'Sending OTP...';
         document.getElementById('submitBtn').disabled = true;
       }
