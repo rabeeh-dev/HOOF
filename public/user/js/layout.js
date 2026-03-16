@@ -102,6 +102,11 @@ function hideLoading() {
     }
 }
 
+// Show loading overlay globally on all page navigations
+window.addEventListener('beforeunload', () => {
+    showLoading();
+});
+
 // Hide loading overlay if user navigated back (bfcache)
 window.addEventListener("pageshow", (event) => {
     if (event.persisted) hideLoading();
