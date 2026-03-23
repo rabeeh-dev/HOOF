@@ -10,6 +10,12 @@
 <section class="cart-section">
     <div class="container">
         <% if (cartItems && cartItems.length> 0) { %>
+            <% if (hasBlockedItems) { %>
+                <div class="cart-blocked-banner">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Some items in your bag are currently unavailable and have been excluded from your total. Please remove them to proceed.</span>
+                </div>
+            <% } %>
             <div class="cart-layout">
 
                 <!-- LEFT COLUMN: Cart Items -->
@@ -27,16 +33,25 @@
 
                     <div class="cart-items-list">
                         <% cartItems.forEach((item, index)=> { %>
-                            <div class="cart-item" id="cart-item-<%= item.productId._id %>"
+                            <div class="cart-item <%= item.productId.isBlocked ? 'cart-item-blocked' : '' %>" id="cart-item-<%= item.productId._id %>"
                                 style="animation-delay: <%= index * 0.08 %>s">
+                                <% if (item.productId.isBlocked) { %>
+                                    <div class="cart-blocked-overlay">
+                                        <span class="cart-blocked-tag"><i class="fas fa-ban"></i> UNAVAILABLE</span>
+                                    </div>
+                                <% } %>
                                 <div class="cart-item-image"
-                                    onclick="window.location.href='/user/product-details/<%= item.productId._id %>'">
+                                    <% if (!item.productId.isBlocked) { %>
+                                    onclick="window.location.href='/user/product-details/<%= item.productId._id %>'"
+                                    <% } %>>
                                     <img src="<%= item.productId.productImage[0] %>"
                                         alt="<%= item.productId.productName %>" />
                                 </div>
                                 <div class="cart-item-info">
                                     <h3 class="cart-item-name"
-                                        onclick="window.location.href='/user/product-details/<%= item.productId._id %>'">
+                                        <% if (!item.productId.isBlocked) { %>
+                                        onclick="window.location.href='/user/product-details/<%= item.productId._id %>'"
+                                        <% } %>>
                                         <%= item.productId.productName %>
                                     </h3>
                                     <span class="cart-item-category">
@@ -54,23 +69,29 @@
                                                     <% } %>
                                     </div>
                                     <div class="cart-item-price-row">
-                                        <span class="cart-item-sale-price">₹<%= item.productId.salePrice %></span>
-                                        <% if (item.productId.salePrice < item.productId.regularPrice) { %>
-                                            <span class="cart-item-regular-price">₹<%= item.productId.regularPrice %>
-                                            </span>
+                                        <% if (item.productId.isBlocked) { %>
+                                            <span class="cart-item-unavailable-label">Unavailable</span>
+                                        <% } else { %>
+                                            <span class="cart-item-sale-price">₹<%= item.productId.salePrice %></span>
+                                            <% if (item.productId.salePrice < item.productId.regularPrice) { %>
+                                                <span class="cart-item-regular-price">₹<%= item.productId.regularPrice %>
+                                                </span>
                                             <% } %>
+                                        <% } %>
                                     </div>
                                 </div>
                                 <div class="cart-item-actions">
-                                    <div class="qty-control">
-                                        <button class="qty-btn"
-                                            onclick="updateQuantity('<%= item.productId._id %>', -1)">−</button>
-                                        <span class="qty-count" id="qty-<%= item.productId._id %>">
-                                            <%= item.quantity %>
-                                        </span>
-                                        <button class="qty-btn"
-                                            onclick="updateQuantity('<%= item.productId._id %>', 1)">+</button>
-                                    </div>
+                                    <% if (!item.productId.isBlocked) { %>
+                                        <div class="qty-control">
+                                            <button class="qty-btn"
+                                                onclick="updateQuantity('<%= item.productId._id %>', -1)">−</button>
+                                            <span class="qty-count" id="qty-<%= item.productId._id %>">
+                                                <%= item.quantity %>
+                                            </span>
+                                            <button class="qty-btn"
+                                                onclick="updateQuantity('<%= item.productId._id %>', 1)">+</button>
+                                        </div>
+                                    <% } %>
                                     <button class="remove-btn" onclick="removeItem('<%= item.productId._id %>')">
                                         <i class="fas fa-trash"></i> Remove
                                     </button>
@@ -101,10 +122,19 @@
                             <span id="summary-total">₹<%= totalAmount>= 999 ? totalAmount : totalAmount + 99 %></span>
                         </div>
 
-
-                        <a href="/user/checkout" class="checkout-btn">
-                            Proceed to Checkout
-                        </a>
+                        <% if (hasBlockedItems) { %>
+                            <div class="checkout-blocked-msg">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Remove unavailable items to checkout</span>
+                            </div>
+                            <button class="checkout-btn checkout-btn-disabled" disabled>
+                                Proceed to Checkout
+                            </button>
+                        <% } else { %>
+                            <a href="/user/checkout" class="checkout-btn">
+                                Proceed to Checkout
+                            </a>
+                        <% } %>
 
                         <div class="secure-note">
                             <i class="fas fa-lock"></i> Secure Checkout
@@ -128,6 +158,7 @@
                 </div>
                 <% } %>
     </div>
+
 </section>
 
 <script src="/user/js/cart.js" defer></script>

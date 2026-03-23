@@ -321,14 +321,20 @@ router.get('/cart', isUser, async (req, res) => {
     let cartItems = [];
     let totalAmount = 0;
     let totalItems = 0;
+    let hasBlockedItems = false;
 
     if (cart && cart.items.length > 0) {
       // Filter out items with null products (deleted products)
       cartItems = cart.items.filter(item => item.productId);
       cartItems.forEach(item => {
-        item.totalPrice = item.productId.salePrice * item.quantity;
-        totalAmount += item.totalPrice;
-        totalItems += item.quantity;
+        // Only count non-blocked items in totals
+        if (!item.productId.isBlocked) {
+          item.totalPrice = item.productId.salePrice * item.quantity;
+          totalAmount += item.totalPrice;
+          totalItems += item.quantity;
+        } else {
+          hasBlockedItems = true;
+        }
       });
     }
 
@@ -338,6 +344,7 @@ router.get('/cart', isUser, async (req, res) => {
       cartItems,
       totalAmount,
       totalItems,
+      hasBlockedItems,
     });
   } catch (err) {
     console.error('Cart page error:', err);
@@ -347,6 +354,7 @@ router.get('/cart', isUser, async (req, res) => {
       cartItems: [],
       totalAmount: 0,
       totalItems: 0,
+      hasBlockedItems: false,
     });
   }
 });
