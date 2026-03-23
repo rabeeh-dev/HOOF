@@ -618,6 +618,15 @@ exports.toggleCategoryStatus = async (req, res) => {
         category.isListed = !category.isListed;
         await category.save();
 
+        // Emit real-time event to all user clients
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('category:statusChanged', {
+                categoryId: category._id.toString(),
+                isListed: category.isListed
+            });
+        }
+
         res.json({ success: true, message: `Category ${category.isListed ? 'listed' : 'unlisted'} successfully` });
 
     } catch (error) {

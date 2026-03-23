@@ -8,6 +8,7 @@ require("dotenv").config();
 const helmet = require('helmet');
 const compression = require('compression');
 const express = require("express");
+const http = require("http");
 const session = require("express-session");
 const expressLayouts = require("express-ejs-layouts");
 const MongoStore = require("connect-mongo");
@@ -21,6 +22,12 @@ const morgan = require('morgan');
 
 
 const app = express();
+const server = http.createServer(app);
+
+// Socket.IO Setup
+const { Server } = require('socket.io');
+const io = new Server(server);
+app.set('io', io);
 app.use(compression());
 
 // Establish Database Connection
@@ -42,7 +49,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       imgSrc: ["'self'", "data:", "blob:", "https:"],
-      connectSrc: ["'self'", "https://api.razorpay.com"],
+      connectSrc: ["'self'", "https://api.razorpay.com", "ws:", "wss:"],
       frameSrc: ["'self'", "https://api.razorpay.com"],
     }
   }
@@ -171,6 +178,6 @@ app.use((req, res, next) => {
 // SERVER INITIALIZATION
 // ==========================================
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

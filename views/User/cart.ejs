@@ -33,7 +33,7 @@
 
                     <div class="cart-items-list">
                         <% cartItems.forEach((item, index)=> { %>
-                            <div class="cart-item <%= item.productId.isBlocked ? 'cart-item-blocked' : '' %>" id="cart-item-<%= item.productId._id %>"
+                            <div class="cart-item <%= item.productId.isBlocked ? 'cart-item-blocked' : '' %>" id="cart-item-<%= item.productId._id %>" data-product-id="<%= item.productId._id %>" data-category-id="<%= item.productId.category ? item.productId.category._id : '' %>"
                                 style="animation-delay: <%= index * 0.08 %>s">
                                 <% if (item.productId.isBlocked) { %>
                                     <div class="cart-blocked-overlay">

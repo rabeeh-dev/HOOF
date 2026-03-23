@@ -112,6 +112,15 @@ exports.toggleProductStatus = async (req, res) => {
         product.isBlocked = !product.isBlocked;
         await product.save();
 
+        // Emit real-time event to all user clients
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('product:statusChanged', {
+                productId: product._id.toString(),
+                isBlocked: product.isBlocked
+            });
+        }
+
         res.json({ success: true, message: `Product ${product.isBlocked ? 'Blocked' : 'Unblocked'} successfully` });
     } catch (error) {
         console.error("Toggle Product Status Error:", error);
