@@ -3,6 +3,21 @@
  * @description Logic for retrying payments from the failure page.
  */
 
+// Fallback loading helpers since layout.js is missing on this standalone page
+function showLoading(text = "Processing...") {
+    const overlay = document.getElementById("global-loading-overlay");
+    if (overlay) {
+        const textEl = overlay.querySelector(".loading-text");
+        if (textEl) textEl.textContent = text;
+        overlay.style.display = "flex";
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById("global-loading-overlay");
+    if (overlay) overlay.style.display = "none";
+}
+
 function showToast(message, type = "info") {
     const existing = document.querySelector(".toast-notification");
     if (existing) existing.remove();

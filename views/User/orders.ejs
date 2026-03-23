@@ -203,6 +203,14 @@
                               <i class="fas fa-times"></i> Cancel
                             </button>
                             <% } %>
+                              <% if (order.paymentStatus==='Failed' || (order.paymentStatus==='Pending' &&
+                                order.paymentMethod==='Razorpay' )) { %>
+                                <button class="order-action-btn retry-btn" id="retry-btn-<%= order._id %>"
+                                  onclick="retryPayment('<%= order._id %>')"
+                                  style="background:rgba(102, 126, 234, 0.1);color:#667eea;border:1px solid rgba(102, 126, 234, 0.3);">
+                                  <i class="fas fa-redo"></i> Pay Now
+                                </button>
+                                <% } %>
                               <% if (normalizedStatus==='delivered' ) { %>
                                 <button class="order-action-btn return-btn" onclick="requestReturn('<%= order._id %>')">
                                   <i class="fas fa-undo"></i> Return
@@ -327,4 +335,5 @@
   </div>
 </div>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="/user/js/orders.js" defer></script>
