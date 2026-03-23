@@ -315,7 +315,7 @@ router.get('/cart', isUser, async (req, res) => {
     const cart = await Cart.findOne({ userId: req.session.userId })
       .populate({
         path: 'items.productId',
-        populate: { path: 'category', select: 'name' }
+        populate: { path: 'category', select: 'name isListed' }
       });
 
     let cartItems = [];
@@ -327,9 +327,20 @@ router.get('/cart', isUser, async (req, res) => {
       // Filter out items with null products (deleted products)
       cartItems = cart.items.filter(item => item.productId);
       cartItems.forEach(item => {
-        // Only count non-blocked items in totals
-        if (!item.productId.isBlocked) {
-          item.totalPrice = item.productId.salePrice * item.quantity;
+        const product = item.productId;
+        const variant = product.variants ? product.variants.find(v => v.size === item.size) : null;
+        
+        const isProductBlocked = product.isBlocked === true;
+        const isCategoryUnlisted = product.category && product.category.isListed === false;
+        const isOutOfStock = !variant || item.quantity > variant.quantity;
+
+        const isItemInvalid = isProductBlocked || isCategoryUnlisted || isOutOfStock;
+        
+        // Attach a dynamic field so the EJS template knows
+        item.isInvalid = isItemInvalid;
+
+        if (!isItemInvalid) {
+          item.totalPrice = product.salePrice * item.quantity;
           totalAmount += item.totalPrice;
           totalItems += item.quantity;
         } else {
@@ -371,9 +382,13 @@ router.post('/cart/add', isUser, async (req, res) => {
     const { productId, quantity = 1, size } = req.body;
 
     // 1. Validate Product and Variant Stock
-    const product = await Product.findById(productId);
+    const product = await Product.findById(productId).populate('category');
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    if (product.isBlocked || (product.category && !product.category.isListed)) {
+      return res.status(400).json({ success: false, message: 'This product is currently unavailable.' });
     }
 
     const variant = product.variants.find(v => v.size === size);
@@ -457,9 +472,13 @@ router.put('/cart/update', isUser, async (req, res) => {
     }
 
     // Get the product details (fresh from DB to get stock)
-    const product = await Product.findById(productId);
+    const product = await Product.findById(productId).populate('category');
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    if (product.isBlocked || (product.category && !product.category.isListed)) {
+      return res.status(400).json({ success: false, message: 'This product is currently unavailable.' });
     }
 
     // We use the size from the cart item if not passed

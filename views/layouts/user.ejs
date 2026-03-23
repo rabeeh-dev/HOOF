@@ -10,7 +10,8 @@
         <link rel="stylesheet" href="/user/css/layout.css">
         <link rel="stylesheet" href="/user/css/breadcrumb.css">
         <%- style %>
-            <%- meta %>
+        <%- meta %>
+        <meta name="user-id" content="<%= locals.user ? locals.user.id : '' %>">
 </head>
 
 <body>

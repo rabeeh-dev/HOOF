@@ -33,9 +33,9 @@
 
                     <div class="cart-items-list">
                         <% cartItems.forEach((item, index)=> { %>
-                            <div class="cart-item <%= item.productId.isBlocked ? 'cart-item-blocked' : '' %>" id="cart-item-<%= item.productId._id %>" data-product-id="<%= item.productId._id %>" data-category-id="<%= item.productId.category ? item.productId.category._id : '' %>"
+                            <div class="cart-item <%= item.isInvalid ? 'cart-item-blocked' : '' %>" id="cart-item-<%= item.productId._id %>" data-product-id="<%= item.productId._id %>" data-category-id="<%= item.productId.category ? item.productId.category._id : '' %>"
                                 style="animation-delay: <%= index * 0.08 %>s">
-                                <% if (item.productId.isBlocked) { %>
+                                <% if (item.isInvalid) { %>
                                     <div class="cart-blocked-overlay">
                                         <span class="cart-blocked-tag"><i class="fas fa-ban"></i> UNAVAILABLE</span>
                                     </div>
@@ -49,7 +49,7 @@
                                 </div>
                                 <div class="cart-item-info">
                                     <h3 class="cart-item-name"
-                                        <% if (!item.productId.isBlocked) { %>
+                                        <% if (!item.isInvalid) { %>
                                         onclick="window.location.href='/user/product-details/<%= item.productId._id %>'"
                                         <% } %>>
                                         <%= item.productId.productName %>
@@ -69,7 +69,7 @@
                                                     <% } %>
                                     </div>
                                     <div class="cart-item-price-row">
-                                        <% if (item.productId.isBlocked) { %>
+                                        <% if (item.isInvalid) { %>
                                             <span class="cart-item-unavailable-label">Unavailable</span>
                                         <% } else { %>
                                             <span class="cart-item-sale-price">₹<%= item.productId.salePrice %></span>
@@ -81,7 +81,7 @@
                                     </div>
                                 </div>
                                 <div class="cart-item-actions">
-                                    <% if (!item.productId.isBlocked) { %>
+                                    <% if (!item.isInvalid) { %>
                                         <div class="qty-control">
                                             <button class="qty-btn"
                                                 onclick="updateQuantity('<%= item.productId._id %>', -1)">−</button>

@@ -290,6 +290,83 @@ window.addEventListener("pageshow", (event) => {
             if (cards.length > 0) window.location.reload();
         }
     });
+    // ---------- USER BLOCKED/UNBLOCKED ----------
+    const userIdMeta = document.querySelector('meta[name="user-id"]');
+    const myUserId = userIdMeta ? userIdMeta.getAttribute('content') : null;
+
+    socket.on('user:statusChanged', function (data) {
+        if (!myUserId) return;
+        if (data.userId === myUserId && data.isBlocked) {
+            window.location.reload(); // The backend checkBlocked middleware will kick them to login
+        }
+    });
+
+    // ---------- ORDER STATUS CHANGED ----------
+    socket.on('order:statusChanged', function(data) {
+        if (!myUserId || data.userId !== myUserId) return;
+        
+        const path = window.location.pathname;
+        if (path === '/user/orders' || path === `/user/order-details/${data.orderId}`) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Order Updated',
+                    text: `Your order #${data.orderId.slice(-8).toUpperCase()} status is now: ${data.status}`,
+                    timer: 3000,
+                    showConfirmButton: false,
+                    position: 'top-end',
+                    toast: true
+                }).then(() => {
+                    window.location.reload();
+                });
+            } else {
+                window.location.reload();
+            }
+        }
+    });
+
+    // ---------- COUPON STATUS CHANGED ----------
+    socket.on('coupon:statusChanged', function(data) {
+        const { couponCode, isBlocked } = data;
+        
+        const path = window.location.pathname;
+        if (path === '/user/checkout') {
+            if (isBlocked) {
+                const appliedCouponLabel = document.getElementById('appliedCouponCodeText');
+                if (appliedCouponLabel && appliedCouponLabel.textContent.trim().toUpperCase() === couponCode.toUpperCase()) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Coupon Expired',
+                            text: `The applied coupon ${couponCode} is no longer active.`,
+                            confirmButtonText: 'Refresh Totals',
+                            allowOutsideClick: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    const modal = document.getElementById('couponModal');
+                    if (modal && modal.style.display !== 'none' || modal && modal.classList.contains('active')) {
+                        if (typeof closeCouponModal === 'function') closeCouponModal();
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Coupons Updated',
+                                text: 'Available coupons have changed.',
+                                timer: 3000,
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    });
 
     // Helper: show blocked state in cart summary
     function _showCartBlockedState() {

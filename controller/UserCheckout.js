@@ -24,6 +24,10 @@ exports.loadCheckout = async (req, res) => {
         res.render('User/checkout', data);
     } catch (err) {
         console.error("Load checkout error:", err);
+        // If prepareCheckout throws a validation error, redirect to cart with unavailable flag
+        if (err.message.includes("no longer available") || err.message === "Cart is empty") {
+            return res.redirect('/user/cart?unavailable=1');
+        }
         res.redirect('/user/cart');
     }
 };

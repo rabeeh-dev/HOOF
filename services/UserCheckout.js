@@ -11,7 +11,10 @@ const walletService = require('./Wallet');
  */
 exports.prepareCheckout = async (userId) => {
     const cart = await Cart.findOne({ userId })
-        .populate('items.productId');
+        .populate({
+            path: 'items.productId',
+            populate: { path: 'category' }
+        });
 
     if (!cart || cart.items.length === 0) {
         throw new Error("Cart is empty");
@@ -21,12 +24,22 @@ exports.prepareCheckout = async (userId) => {
 
     let subtotal = 0;
 
-    // Filter out blocked or unavailable products
-    const blockedProducts = cart.items
-        .filter(item => item.productId && item.productId.isBlocked)
-        .map(item => item.productId.productName);
+    // Check for ANY invalid items
+    const invalidItems = cart.items.filter(item => {
+        if (!item.productId) return true; // deleted product
+        const product = item.productId;
+        if (product.isBlocked) return true;
+        if (product.category && !product.category.isListed) return true;
+        const variant = product.variants ? product.variants.find(v => v.size === item.size) : null;
+        if (!variant || item.quantity > variant.quantity) return true;
+        return false;
+    });
 
-    const validItems = cart.items.filter(item => item.productId && !item.productId.isBlocked);
+    if (invalidItems.length > 0) {
+        throw new Error("Some items in your cart are no longer available. Please remove them to proceed.");
+    }
+
+    const validItems = cart.items.filter(item => item.productId);
 
     const cartItems = validItems.map(item => {
         const totalPrice = item.productId.salePrice * item.quantity;
@@ -62,7 +75,10 @@ const Coupon = require('../model/Coupon');
  */
 exports.createOrder = async (userId, addressId, paymentMethod = "COD", couponCode = null) => {
     const cart = await Cart.findOne({ userId })
-        .populate('items.productId');
+        .populate({
+            path: 'items.productId',
+            populate: { path: 'category' }
+        });
 
     if (!cart || cart.items.length === 0) {
         throw new Error("Cart empty");
@@ -84,13 +100,17 @@ exports.createOrder = async (userId, addressId, paymentMethod = "COD", couponCod
             throw new Error("A product in your cart is no longer available.");
         }
 
-        if (product.isBlocked) {
-            throw new Error(`"${product.productName}" is currently blocked and cannot be purchased.`);
+        if (product.isBlocked || (product.category && !product.category.isListed)) {
+            throw new Error(`"${product.productName}" is currently unavailable and cannot be purchased.`);
         }
 
-        // Validate stock (simple version without variants)
-        if (product.quantity < item.quantity) {
-            throw new Error(`Insufficient stock for "${product.productName}". Available: ${product.quantity}`);
+        const variant = product.variants ? product.variants.find(v => v.size === item.size) : null;
+        if (!variant) {
+            throw new Error(`Size ${item.size} is no longer available for "${product.productName}".`);
+        }
+
+        if (variant.quantity < item.quantity) {
+            throw new Error(`Insufficient stock for "${product.productName}" (Size ${item.size}). Available: ${variant.quantity}`);
         }
 
         subtotal += product.salePrice * item.quantity;
@@ -104,7 +124,8 @@ exports.createOrder = async (userId, addressId, paymentMethod = "COD", couponCod
             variantSize: item.size || null
         });
 
-        // Deduct stock
+        // Deduct stock from variant and global
+        variant.quantity -= item.quantity;
         product.quantity -= item.quantity;
         await product.save();
     }

@@ -413,6 +413,10 @@ exports.toggleUserStatus = async (req, res) => {
         );
 
         if (updatedUser) {
+            const io = req.app.get('io');
+            if (io) {
+                io.emit('user:statusChanged', { userId: id, isBlocked: blockStatus });
+            }
             res.json({ success: true });
         } else {
             res.json({ success: false, message: "User not found" });
@@ -836,6 +840,12 @@ exports.updateOrderStatus = async (req, res) => {
         }
 
         await order.save();
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('order:statusChanged', { orderId: order._id, userId: order.userId, status: status });
+        }
+
         res.json({ success: true, message: "Status updated successfully" });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -879,6 +889,12 @@ exports.cancelOrderAdmin = async (req, res) => {
         }
 
         await order.save();
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('order:statusChanged', { orderId: order._id, userId: order.userId, status: 'CANCELLED' });
+        }
+
         res.json({ success: true, message: "Order cancelled successfully" });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
