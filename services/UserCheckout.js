@@ -30,7 +30,7 @@ exports.prepareCheckout = async (userId) => {
         const product = item.productId;
         if (product.isBlocked) return true;
         if (product.category && !product.category.isListed) return true;
-        const variant = product.variants ? product.variants.find(v => v.size === item.size) : null;
+        const variant = product.variants ? product.variants.find(v => String(v.size) === String(item.size)) : null;
         if (!variant || item.quantity > variant.quantity) return true;
         return false;
     });
@@ -58,8 +58,7 @@ exports.prepareCheckout = async (userId) => {
         addresses,
         subtotal,
         shippingCharge,
-        totalAmount,
-        blockedProducts
+        totalAmount
     };
 };
 
@@ -104,7 +103,7 @@ exports.createOrder = async (userId, addressId, paymentMethod = "COD", couponCod
             throw new Error(`"${product.productName}" is currently unavailable and cannot be purchased.`);
         }
 
-        const variant = product.variants ? product.variants.find(v => v.size === item.size) : null;
+        const variant = product.variants ? product.variants.find(v => String(v.size) === String(item.size)) : null;
         if (!variant) {
             throw new Error(`Size ${item.size} is no longer available for "${product.productName}".`);
         }

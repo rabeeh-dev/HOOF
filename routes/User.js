@@ -328,7 +328,7 @@ router.get('/cart', isUser, async (req, res) => {
       cartItems = cart.items.filter(item => item.productId);
       cartItems.forEach(item => {
         const product = item.productId;
-        const variant = product.variants ? product.variants.find(v => v.size === item.size) : null;
+        const variant = product.variants ? product.variants.find(v => String(v.size) === String(item.size)) : null;
         
         const isProductBlocked = product.isBlocked === true;
         const isCategoryUnlisted = product.category && product.category.isListed === false;
@@ -391,7 +391,7 @@ router.post('/cart/add', isUser, async (req, res) => {
       return res.status(400).json({ success: false, message: 'This product is currently unavailable.' });
     }
 
-    const variant = product.variants.find(v => v.size === size);
+    const variant = product.variants.find(v => String(v.size) === String(size));
     if (!variant) {
       return res.status(404).json({ success: false, message: 'Size not available' });
     }
@@ -402,7 +402,7 @@ router.post('/cart/add', isUser, async (req, res) => {
     }
 
     const existingItem = cart.items.find(
-      item => item.productId.toString() === productId && item.size === size
+      item => item.productId.toString() === productId && String(item.size) === String(size)
     );
 
     let currentQty = existingItem ? existingItem.quantity : 0;
@@ -483,7 +483,7 @@ router.put('/cart/update', isUser, async (req, res) => {
 
     // We use the size from the cart item if not passed
     const itemSize = size || item.size;
-    const variant = product.variants.find(v => v.size == itemSize); // weak check for string/number match
+    const variant = product.variants.find(v => String(v.size) === String(itemSize));
 
     if (!variant) {
       return res.status(400).json({ success: false, message: 'Variant unavailable' });

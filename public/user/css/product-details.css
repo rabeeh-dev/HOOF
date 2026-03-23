@@ -345,41 +345,11 @@
 }
 
 .btn-add-cart {
-    flex: none;
-    /* Don't grow */
-    width: 60px;
-    /* Fixed width */
-    height: 60px;
-    /* Fixed height match width */
-    background: #fff;
-    /* White background for icon */
-    color: #000;
-    font-size: 1.2rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 50%;
-    /* Circle */
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-}
-
-.btn-add-cart:hover {
-    background: #000;
-    color: #fff;
-    border-color: #000;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-.btn-buy-now {
     flex: 1;
     /* Grow to fill space */
     height: 60px;
     background: #000;
-    /* Black for Buy Now as primary */
+    /* Black primary */
     color: #fff;
     font-size: 1rem;
     font-family: 'Roboto', sans-serif;
@@ -387,27 +357,24 @@
     text-transform: uppercase;
     letter-spacing: 2px;
     border: none;
-    border-radius: 999px;
-    /* Pill shape */
+    border-radius: 999px; /* Pill */
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.8rem;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
-.btn-buy-now:hover {
+.btn-add-cart:hover {
     background: #333;
     transform: translateY(-2px);
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
 }
 
-.btn-add-cart:disabled,
-.btn-buy-now:disabled {
+.btn-add-cart:disabled {
     background: #f5f5f5;
-    border-color: #f5f5f5;
     color: #ccc;
     cursor: not-allowed;
     transform: none;
