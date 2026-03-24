@@ -123,10 +123,14 @@ exports.createOrder = async (userId, addressId, paymentMethod = "COD", couponCod
             variantSize: item.size || null
         });
 
-        // Deduct stock from variant and global
-        variant.quantity -= item.quantity;
-        product.quantity -= item.quantity;
-        await product.save();
+        // Deduct stock only for COD and wallet (payment is guaranteed)
+        // UPI orders: stock is deducted after payment verification
+        if (paymentMethod !== 'upi') {
+            variant.quantity -= item.quantity;
+            variant.status = variant.quantity > 0 ? 'Available' : 'Out of Stock';
+            product.quantity -= item.quantity;
+            await product.save();
+        }
     }
 
     let discountAmount = 0;
@@ -242,4 +246,54 @@ exports.verifyRazorpayPayment = (razorpayOrderId, razorpayPaymentId, signature) 
     hmac.update(razorpayOrderId + "|" + razorpayPaymentId);
     const generatedSignature = hmac.digest('hex');
     return generatedSignature === signature;
+};
+
+/**
+ * @desc    Deduct stock for a verified order (used after UPI payment success).
+ * @param   {string} orderId - The order ID.
+ */
+exports.deductStockForOrder = async (orderId) => {
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error('Order not found');
+
+    for (const item of order.items) {
+        const product = await Product.findById(item.productId);
+        if (!product) continue;
+
+        const variant = product.variants
+            ? product.variants.find(v => String(v.size) === String(item.variantSize))
+            : null;
+
+        if (variant) {
+            variant.quantity -= item.quantity;
+            variant.status = variant.quantity > 0 ? 'Available' : 'Out of Stock';
+        }
+        product.quantity -= item.quantity;
+        await product.save();
+    }
+};
+
+/**
+ * @desc    Restore stock when an order is cancelled.
+ * @param   {string} orderId - The order ID.
+ */
+exports.restoreStockForOrder = async (orderId) => {
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error('Order not found');
+
+    for (const item of order.items) {
+        const product = await Product.findById(item.productId);
+        if (!product) continue;
+
+        const variant = product.variants
+            ? product.variants.find(v => String(v.size) === String(item.variantSize))
+            : null;
+
+        if (variant) {
+            variant.quantity += item.quantity;
+            variant.status = 'Available';
+        }
+        product.quantity += item.quantity;
+        await product.save();
+    }
 };

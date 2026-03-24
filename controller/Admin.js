@@ -876,6 +876,13 @@ exports.cancelOrderAdmin = async (req, res) => {
             note: 'Cancelled by administrator'
         });
 
+        // Restore stock (only if stock was deducted — skip for UPI orders that never paid)
+        const stockWasDeducted = order.paymentMethod !== 'upi' || order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'Paid';
+        if (stockWasDeducted) {
+            const checkoutService = require("../services/UserCheckout");
+            await checkoutService.restoreStockForOrder(order._id);
+        }
+
         // Refund to wallet if payment was already made
         if (order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'Paid') {
             const shortId = String(order._id).slice(-8).toUpperCase();

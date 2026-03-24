@@ -98,6 +98,9 @@ async function addProduct(productData, files) {
         throw new Error("At least one valid variant is required.");
     }
 
+    // Auto-calculate total quantity from variant stocks
+    const totalQuantity = variants.reduce((sum, v) => sum + v.quantity, 0);
+
     const newProduct = new Product({
         productName: productData.productName,
         description: productData.description,
@@ -105,7 +108,7 @@ async function addProduct(productData, files) {
         category: productData.category,
         regularPrice: parseFloat(productData.regularPrice),
         salePrice: parseFloat(productData.salePrice),
-        quantity: parseInt(productData.quantity) || 0,
+        quantity: totalQuantity,
         productImage: imagePaths,
         variants: variants
     });
@@ -246,6 +249,9 @@ async function updateProduct(id, productData, files) {
         throw new Error("At least one valid variant is required.");
     }
 
+    // Auto-calculate total quantity from variant stocks
+    const totalQuantity = variants.reduce((sum, v) => sum + v.quantity, 0);
+
     // 4. Update Database
     const updateFields = {
         productName: productData.productName,
@@ -254,7 +260,7 @@ async function updateProduct(id, productData, files) {
         category: productData.category,
         regularPrice: parseFloat(productData.regularPrice),
         salePrice: parseFloat(productData.salePrice),
-        quantity: parseInt(productData.quantity) || 0,
+        quantity: totalQuantity,
         productImage: finalImages,
         variants: variants
     };

@@ -130,6 +130,9 @@ exports.verifyPayment = async (req, res) => {
             const order = await Order.findById(orderId);
             if (!order) return res.status(404).json({ success: false, message: "Order not found" });
 
+            // Deduct stock now that payment is confirmed
+            await checkoutService.deductStockForOrder(orderId);
+
             order.paymentStatus = "SUCCESS";
             order.status = "Processing";
             order.razorpayPaymentId = razorpay_payment_id;

@@ -160,24 +160,34 @@
 
                         <div class="form-container" style="margin-top: 1.5rem;">
                             <div class="form-section-title">Stocks & Variants</div>
-                            <div class="form-group">
-                                <label for="totalStock">Total Base Stock</label>
-                                <input type="number" id="totalStock" name="quantity" value="<%= product.quantity %>"
-                                    min="0">
+
+                            <!-- Auto-Calculated Total Stock Summary -->
+                            <div class="stock-summary-card">
+                                <div class="stock-summary-icon">
+                                    <i class="fas fa-boxes-stacked"></i>
+                                </div>
+                                <div class="stock-summary-info">
+                                    <span class="stock-summary-label">Total Stock</span>
+                                    <span class="stock-summary-value" id="totalStockDisplay">0</span>
+                                </div>
+                                <span class="stock-summary-badge" id="stockBadge">No variants</span>
                             </div>
 
-                            <div
-                                style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
-                                <h4 style="font-size: 0.9rem; font-weight: 600;">Manage Variants</h4>
-                                <button type="button" class="btn-add-variant" onclick="addVariantRow()">+ Add
-                                    Variant</button>
+                            <div class="variant-header">
+                                <h4 class="variant-header-title">
+                                    <i class="fas fa-layer-group"></i> Manage Variants
+                                    <span class="variant-required-tag">Required</span>
+                                </h4>
+                                <button type="button" class="btn-add-variant" onclick="addVariantRow()">
+                                    <i class="fas fa-plus"></i> Add Variant
+                                </button>
                             </div>
 
                             <table class="variants-table">
                                 <thead>
                                     <tr>
-                                        <th>Size</th>
-                                        <th>Stock</th>
+                                        <th><i class="fas fa-ruler"></i> Size</th>
+                                        <th><i class="fas fa-cubes"></i> Stock</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -189,9 +199,9 @@
                                                         required class="variant-input"></td>
                                                 <td><input type="number" name="variantStock[]"
                                                         value="<%= variant.quantity %>" min="0" required
-                                                        class="variant-input"></td>
-                                                <td><i class="fas fa-trash" style="color:red; cursor:pointer;"
-                                                        onclick="this.closest('tr').remove()"></i></td>
+                                                        class="variant-input" oninput="recalcTotalStock()"></td>
+                                                <td><i class="fas fa-trash variant-delete-btn"
+                                                        onclick="removeVariantRow(this)"></i></td>
                                             </tr>
                                             <% }) %>
                                                 <% } %>
@@ -276,10 +286,38 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
             <td><input type="text" name="variantSize[]" required class="variant-input"></td>
-            <td><input type="number" name="variantStock[]" value="0" min="0" required class="variant-input"></td>
-            <td><i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="this.closest('tr').remove()"></i></td>`;
+            <td><input type="number" name="variantStock[]" value="0" min="0" required class="variant-input" oninput="recalcTotalStock()"></td>
+            <td><i class="fas fa-trash variant-delete-btn" onclick="removeVariantRow(this)"></i></td>`;
                 tbody.appendChild(row);
+                recalcTotalStock();
             }
+
+            function removeVariantRow(icon) {
+                icon.closest('tr').remove();
+                recalcTotalStock();
+            }
+
+            function recalcTotalStock() {
+                const stockInputs = document.querySelectorAll('input[name="variantStock[]"]');
+                let total = 0;
+                stockInputs.forEach(input => {
+                    total += parseInt(input.value) || 0;
+                });
+                document.getElementById('totalStockDisplay').textContent = total;
+
+                const badge = document.getElementById('stockBadge');
+                const variantCount = stockInputs.length;
+                if (variantCount === 0) {
+                    badge.textContent = 'No variants';
+                    badge.className = 'stock-summary-badge';
+                } else {
+                    badge.textContent = `${variantCount} variant${variantCount > 1 ? 's' : ''}`;
+                    badge.className = 'stock-summary-badge badge-active';
+                }
+            }
+
+            // Calculate total stock on page load from existing variants
+            recalcTotalStock();
 
             document.getElementById('productForm').onsubmit = async (e) => {
                 e.preventDefault();
