@@ -17,7 +17,16 @@ const orderSchema = new mongoose.Schema({
       productImage: String,
       priceAtPurchase: Number,
       quantity: Number,
-      variantSize: String
+      variantSize: String,
+      itemStatus: {
+        type: String,
+        enum: ['Active', 'Cancelled', 'Return Requested', 'Return Approved', 'Picked Up', 'Returned'],
+        default: 'Active'
+      },
+      returnReason: {
+        type: String,
+        default: ''
+      }
     }
   ],
 

@@ -517,12 +517,16 @@
                                             <th>Product</th>
                                             <th>Price</th>
                                             <th>Qty</th>
+                                            <th>Status</th>
                                             <th style="text-align:right;">Subtotal</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <% order.items.forEach(item=> { %>
-                                            <tr>
+                                        <% order.items.forEach(item=> { 
+                                            const iStatus = item.itemStatus || 'Active';
+                                            const isCancelledItem = ['Cancelled', 'Return Requested', 'Return Approved', 'Picked Up', 'Returned'].includes(iStatus);
+                                        %>
+                                            <tr style="<%= isCancelledItem ? 'opacity:0.55;' : '' %>">
                                                 <td>
                                                     <div class="item-product-cell">
                                                         <img src="<%= item.productImage %>"
@@ -535,7 +539,7 @@
                                                                 <span class="item-variant-badge"><i
                                                                         class="fas fa-ruler"></i> Size: <%=
                                                                         item.displaySize %></span>
-                                                                <% } %>
+                                                            <% } %>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -543,12 +547,17 @@
                                                 </td>
                                                 <td>× <%= item.quantity %>
                                                 </td>
-                                                <td style="text-align:right; font-weight:600;">₹<%=
+                                                <td>
+                                                    <span class="status-badge <%= iStatus.toLowerCase().replace(/\s+/g, '-') %>" style="font-size:0.75rem;padding:4px 10px;">
+                                                        <%= iStatus %>
+                                                    </span>
+                                                </td>
+                                                <td style="text-align:right; font-weight:600;<%= isCancelledItem ? 'text-decoration:line-through;color:#aaa;' : '' %>">₹<%=
                                                         (item.priceAtPurchase * item.quantity).toLocaleString('en-IN')
                                                         %>
                                                 </td>
                                             </tr>
-                                            <% }) %>
+                                        <% }) %>
                                     </tbody>
                                 </table>
                             </div>
@@ -599,14 +608,25 @@
                                 <i class="fas fa-receipt"></i> Summary
                             </div>
                             <div class="section-card-body">
-                                <% let itemSubtotal=0; order.items.forEach(i=> { itemSubtotal += i.priceAtPurchase *
-                                    i.quantity; });
+                                <% 
+                                    const activeItems = order.items.filter(item => !['Cancelled', 'Return Requested', 'Return Approved', 'Picked Up', 'Returned'].includes(item.itemStatus));
+                                    let effectiveSubtotal = activeItems.reduce((acc, item) => acc + (item.quantity * item.priceAtPurchase), 0);
+                                    
+                                    // Original logic for display references
+                                    let itemSubtotal=0; order.items.forEach(i=> { itemSubtotal += i.priceAtPurchase * i.quantity; });
                                     const shipping = order.shippingCharge || 0;
                                     const discount = order.discountAmount || 0;
-                                    %>
+                                    
+                                    let effectiveTotal = effectiveSubtotal + shipping - discount;
+                                    if (effectiveTotal < 0) effectiveTotal = 0;
+                                %>
                                     <div class="info-row">
-                                        <span class="info-label">Subtotal</span>
-                                        <span class="info-value">₹<%= itemSubtotal.toLocaleString('en-IN') %></span>
+                                        <span class="info-label">Original Subtotal</span>
+                                        <span class="info-value" style="color:#888;font-size:0.85rem;">₹<%= itemSubtotal.toLocaleString('en-IN') %></span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Effective Subtotal</span>
+                                        <span class="info-value">₹<%= effectiveSubtotal.toLocaleString('en-IN') %></span>
                                     </div>
                                     <div class="info-row">
                                         <span class="info-label">Shipping</span>
@@ -625,9 +645,8 @@
                                             </div>
                                             <div class="info-row">
                                                 <span class="info-label"
-                                                    style="font-weight:700; color:var(--admin-text);">Total</span>
-                                                <span class="info-value highlight">₹<%=
-                                                        order.totalAmount.toLocaleString('en-IN') %></span>
+                                                    style="font-weight:700; color:var(--admin-text);">Effective Total</span>
+                                                <span class="info-value highlight">₹<%= effectiveTotal.toLocaleString('en-IN') %></span>
                                             </div>
                             </div>
                         </div>

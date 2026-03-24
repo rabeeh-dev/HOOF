@@ -812,6 +812,28 @@ exports.updateOrderStatus = async (req, res) => {
             });
         }
 
+        // Determine returning items (items in 'Return Requested' or 'Return Approved' state)
+        const returningItems = order.items.filter(i => ['Return Requested', 'Return Approved'].includes(i.itemStatus));
+
+        // Cascade status to returning items
+        if (returningItems.length > 0) {
+            let itemStatusUpdate = null;
+            if (status === 'Return Approved') itemStatusUpdate = 'Return Approved';
+            else if (status === 'Picked Up') itemStatusUpdate = 'Picked Up';
+            else if (status === 'Returned') itemStatusUpdate = 'Returned';
+
+            if (itemStatusUpdate) {
+                returningItems.forEach(item => {
+                    item.itemStatus = itemStatusUpdate;
+                });
+            }
+        } else if (status === 'CANCELLED') {
+            // Admin cancelled whole order
+            order.items.forEach(item => {
+                if (item.itemStatus === 'Active') item.itemStatus = 'Cancelled';
+            });
+        }
+
         order.status = status;
         order.statusHistory.push({
             status,
@@ -825,18 +847,61 @@ exports.updateOrderStatus = async (req, res) => {
             } else {
                 order.paymentStatus = 'Paid';
             }
+            order.items.forEach(item => {
+                if(item.itemStatus === 'Active') {
+                    // Mark as delivered at item level implicitly or explicitly if needed
+                }
+            })
         }
 
-        // Credit wallet when order is returned (refund)
-        if (status === 'Returned') {
+        // Handle Refunds and Stock Restoration for Items becoming "Returned"
+        if (status === 'Returned' && returningItems.length > 0) {
             const shortId = String(order._id).slice(-8).toUpperCase();
-            await walletService.creditWallet(
-                order.userId,
-                order.totalAmount,
-                `Refund for returned order #${shortId}`,
-                order._id
-            );
-            order.paymentStatus = 'Refunded';
+            let totalRefundAmount = 0;
+            const Product = require("../model/Product");
+
+            for (const item of returningItems) {
+                // Calculate partial refund
+                totalRefundAmount += (item.priceAtPurchase * item.quantity);
+
+                // Restore stock
+                const product = await Product.findById(item.productId);
+                if (product) {
+                    const variant = product.variants
+                        ? product.variants.find(v => String(v.size) === String(item.variantSize))
+                        : null;
+                    if (variant) {
+                        variant.quantity += item.quantity;
+                        variant.status = 'Available';
+                    }
+                    product.quantity += item.quantity;
+                    await product.save();
+                }
+            }
+
+            // Adjust order totals based on refunded items
+            order.subtotal -= totalRefundAmount;
+            order.totalAmount -= totalRefundAmount;
+            if (order.subtotal < 0) order.subtotal = 0;
+            if (order.totalAmount < 0) order.totalAmount = 0;
+
+            if (totalRefundAmount > 0) {
+                const walletService = require("../services/walletService");
+                await walletService.creditWallet(
+                    order.userId,
+                    totalRefundAmount,
+                    `Refund for returned items from order #${shortId}`,
+                    order._id
+                );
+            }
+
+            // If ALL items are now returned or cancelled, update payment status
+            const allResolved = order.items.every(i => ['Returned', 'Cancelled'].includes(i.itemStatus));
+            if (allResolved) {
+                order.paymentStatus = 'Refunded';
+            } else {
+                 order.paymentStatus = 'Partially Refunded';
+            }
         }
 
         await order.save();

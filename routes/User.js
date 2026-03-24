@@ -753,8 +753,15 @@ router.post('/referral/withdraw', isUser, userController.withdrawReferralPoints)
 
 router.get('/orders', isUser, userController.loadOrders);
 router.get('/orders/:id', isUser, userController.loadOrderDetails);
+
+// Whole order actions (legacy/fallback)
 router.put('/orders/cancel/:id', isUser, userController.cancelOrder);
 router.put('/orders/return/:id', isUser, userController.returnOrder);
+
+// Per-item actions
+router.put('/orders/:orderId/item/:itemId/cancel', isUser, userController.cancelOrderItem);
+router.put('/orders/:orderId/item/:itemId/return', isUser, userController.returnOrderItem);
+
 router.get('/orders/invoice/:id', isUser, userController.downloadInvoice);
 
 module.exports = router;
