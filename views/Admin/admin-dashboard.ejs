@@ -278,10 +278,35 @@
                         </td>
                         <td>₹<%= order.totalAmount ? order.totalAmount.toLocaleString('en-IN') : '0' %>
                         </td>
-                        <td><span
-                            class="status-badge <%= order.status ? order.status.toLowerCase().replace(/\s+/g, '-') : '' %>">
-                            <%= order.status %>
-                          </span></td>
+                        <td>
+                          <% 
+                            const itemStatuses = {};
+                            const oStatus = (order.status || '').toLowerCase();
+                            const oWasDelivered = ['delivered', 'returned', 'return requested', 'return approved', 'picked up', 'partially refunded'].includes(oStatus);
+                            
+                            if (order.items && order.items.length > 0) {
+                                order.items.forEach(item => {
+                                    const rawStat = item.itemStatus || 'Active';
+                                    let dispStat = (rawStat === 'Active' && oWasDelivered) ? 'Delivered' : rawStat;
+                                    if (rawStat === 'Active' && !oWasDelivered && ['pending', 'processing', 'shipped', 'out for delivery'].includes(oStatus)) {
+                                        dispStat = order.status;
+                                    } else if (rawStat === 'Active' && oStatus === 'cancelled') {
+                                        dispStat = 'Cancelled';
+                                    }
+                                    itemStatuses[dispStat] = (itemStatuses[dispStat] || 0) + 1;
+                                });
+                            } else {
+                                itemStatuses[order.status] = 1;
+                            }
+                          %>
+                          <div style="display: flex; flex-direction: column; gap: 4px;">
+                              <% for (const [stat, count] of Object.entries(itemStatuses)) { %>
+                                  <span class="status-badge <%= stat ? stat.toLowerCase().replace(/\s+/g, '-') : '' %>" style="font-size: 0.75rem; padding: 0.2rem 0.6rem; width: fit-content; display: inline-block;">
+                                      <%= count %> <%= stat %>
+                                  </span>
+                              <% } %>
+                          </div>
+                        </td>
                       </tr>
                       <% }); %>
                         <% } else { %>
