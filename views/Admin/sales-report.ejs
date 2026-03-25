@@ -112,13 +112,13 @@
 
     <div class="header">
         <h1>HOOF STORE</h1>
-        <p>123 Premium Kerala Street, Calicut, Kerala</p>
-        <p>Email: support@hoof.com | Phone: +91 98765 43210</p>
+        <p>Premium Kerala Footwear Company, Malappuram, Kerala</p>
+        <p>Email: hoofshoes@gmail.com | Phone: +91 98765 43210</p>
     </div>
 
     <div class="report-info">
         <div class="info-block">
-            <p><strong>Report:</strong> Comprehensive Sales Data</p>
+            <p><strong>Report:</strong> <%= typeof reportTitle !== 'undefined' ? reportTitle : 'Comprehensive Sales Data' %></p>
             <p><strong>Filter:</strong> <%= filter.toUpperCase() %></p>
             <p><strong>Generated On:</strong> <%= generatedDate %></p>
             <p><strong>Total Orders Processed:</strong> <%= totalSalesCount %></p>

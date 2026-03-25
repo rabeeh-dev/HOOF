@@ -1273,85 +1273,120 @@ exports.exportOrders = async (req, res) => {
             .populate('userId', 'fullName email')
             .sort({ createdAt: -1 });
 
-        const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' });
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=orders-report-${Date.now()}.pdf`);
-        doc.pipe(res);
+        let totalSalesCount = orders.length;
+        let totalGrossRevenue = 0;
+        let totalDiscounts = 0;
+        let totalRefunds = 0;
+        let totalNetProfit = 0;
 
-        // Title
-        doc.fontSize(22).font("Helvetica-Bold").text('HOOF — Orders Report', { align: 'center' });
-        doc.moveDown(0.3);
-        doc.fontSize(10).font("Helvetica").fillColor('#666')
-            .text(`Generated on: ${new Date().toLocaleString('en-IN')}`, { align: 'center' });
+        let statusCounts = {
+            Delivered: 0,
+            Cancelled: 0,
+            Returned: 0,
+            Processing: 0,
+            Shipped: 0,
+            Pending: 0
+        };
 
-        // Filter info
+        const enrichedOrders = orders.map(orderDoc => {
+            const order = orderDoc.toObject();
+            
+            const s = (order.status || 'Pending').toLowerCase();
+            if (s === 'delivered') statusCounts.Delivered++;
+            else if (s === 'cancelled') statusCounts.Cancelled++;
+            else if (['returned', 'return approved', 'return requested', 'picked up'].includes(s)) statusCounts.Returned++;
+            else if (s === 'processing') statusCounts.Processing++;
+            else if (['shipped', 'out for delivery'].includes(s)) statusCounts.Shipped++;
+            else statusCounts.Pending++;
+
+            const isPrepaid = ['Razorpay', 'Wallet'].includes(order.paymentMethod) && order.paymentStatus !== 'Failed';
+            
+            let orderGross = 0;
+            let orderRefund = 0;
+            let orderDiscount = order.discountAmount || order.discount || 0;
+            let shippingFee = order.shippingCharge || order.shippingFee || 0;
+            
+            if (order.items && order.items.length > 0) {
+                order.items.forEach(item => {
+                    const itemTotal = (item.priceAtPurchase || item.price || 0) * item.quantity;
+                    orderGross += itemTotal;
+                    
+                    const isItemRefunded = ['Cancelled', 'Returned'].includes(item.itemStatus);
+                    const isEntireOrderCancelled = order.status === 'CANCELLED';
+                    
+                    if (isEntireOrderCancelled) {
+                        if (isPrepaid) orderRefund += itemTotal;
+                    } else if (isItemRefunded) {
+                        if (isPrepaid || item.itemStatus === 'Returned') {
+                            orderRefund += itemTotal;
+                        }
+                    }
+                });
+            }
+
+            if (order.status === 'CANCELLED' && isPrepaid) {
+                orderRefund += shippingFee - orderDiscount;
+                if (orderRefund < 0) orderRefund = 0;
+            }
+
+            let orderNet = (orderGross + shippingFee) - orderDiscount - orderRefund;
+            if (orderNet < 0) orderNet = 0;
+
+            totalGrossRevenue += (orderGross + shippingFee);
+            totalDiscounts += orderDiscount;
+            totalRefunds += orderRefund;
+            totalNetProfit += orderNet;
+
+            order.calculatedGross = orderGross + shippingFee;
+            order.calculatedRefund = orderRefund;
+            order.calculatedNet = orderNet;
+            
+            return order;
+        });
+
+        const ejs = require('ejs');
+        const puppeteer = require('puppeteer');
+        const path = require('path');
+
         const filters = [];
         if (status) filters.push(`Status: ${status}`);
         if (payment) filters.push(`Payment: ${payment}`);
         if (search) filters.push(`Search: "${search}"`);
-        if (filters.length > 0) {
-            doc.text(`Filters: ${filters.join(' | ')}`, { align: 'center' });
-        }
-        doc.moveDown(0.5);
 
-        // Summary
-        const totalRevenue = orders.reduce((acc, o) => acc + (o.totalAmount || 0), 0);
-        const deliveredCount = orders.filter(o => o.status === 'DELIVERED').length;
-        const cancelledCount = orders.filter(o => o.status === 'CANCELLED').length;
-
-        doc.fontSize(10).font("Helvetica-Bold").fillColor('#333');
-        doc.text(`Total Orders: ${orders.length}   |   Delivered: ${deliveredCount}   |   Cancelled: ${cancelledCount}   |   Total Amount: INR ${totalRevenue.toLocaleString('en-IN')}`);
-        doc.moveDown(0.5);
-
-        // Table
-        const table = {
-            headers: [
-                { label: "Order ID", width: 70, align: 'center' },
-                { label: "Date", width: 85 },
-                { label: "Customer", width: 130 },
-                { label: "Items", width: 90, align: 'center' },
-                { label: "Amount", width: 80, align: 'right' },
-                { label: "Payment", width: 70, align: 'center' },
-                { label: "Pay Status", width: 70, align: 'center' },
-                { label: "Status", width: 90, align: 'center' }
-            ],
-            rows: orders.map(order => {
-                let pStatus = order.paymentStatus || 'Pending';
-                if (order.status === 'DELIVERED') pStatus = order.paymentMethod === 'COD' ? 'SUCCESS' : 'Paid';
-
-                const itemCount = order.items ? order.items.length : 0;
-                let itemLabel;
-                if (itemCount === 1) {
-                    const name = (order.items[0].productName || 'Item').substring(0, 14);
-                    const size = order.items[0].variantSize ? ` (${order.items[0].variantSize})` : '';
-                    itemLabel = name + size;
-                } else if (itemCount > 1) {
-                    itemLabel = `${itemCount} items`;
-                } else {
-                    itemLabel = 'N/A';
-                }
-
-                return [
-                    '#' + String(order._id).slice(-8).toUpperCase(),
-                    new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-                    order.userId ? order.userId.fullName : (order.shippingAddress?.fullName || 'Guest'),
-                    itemLabel,
-                    `INR ${order.totalAmount.toLocaleString('en-IN')}`,
-                    order.paymentMethod,
-                    pStatus,
-                    order.status
-                ];
-            })
-        };
-
-        await doc.table(table, {
-            prepareHeader: () => doc.font("Helvetica-Bold").fontSize(8),
-            prepareRow: (row, indexColumn, indexRow) => {
-                doc.font("Helvetica").fontSize(8);
-            },
+        const ejsTemplatePath = path.join(__dirname, '../views/Admin/sales-report.ejs');
+        const compiledHtml = await ejs.renderFile(ejsTemplatePath, {
+            reportTitle: 'Order Management Export',
+            orders: enrichedOrders,
+            totalSalesCount,
+            totalGrossRevenue,
+            totalDiscounts,
+            totalRefunds,
+            totalNetProfit,
+            statusCounts,
+            filter: filters.length > 0 ? filters.join(' | ') : 'ALL TIME',
+            generatedDate: new Date().toLocaleString('en-IN')
         });
 
-        doc.end();
+        const browser = await puppeteer.launch({ 
+            headless: "new", 
+            args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+        });
+        const page = await browser.newPage();
+        
+        await page.setContent(compiledHtml, { waitUntil: 'networkidle0' });
+        
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            landscape: true,
+            printBackground: true,
+            margin: { top: '30px', right: '30px', bottom: '30px', left: '30px' }
+        });
+        
+        await browser.close();
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=orders-report-${Date.now()}.pdf`);
+        res.send(pdfBuffer);
     } catch (error) {
         console.error("Export Orders Error:", error);
         res.status(500).send("Error generating orders report");
