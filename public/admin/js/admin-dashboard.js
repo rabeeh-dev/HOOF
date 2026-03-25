@@ -205,6 +205,8 @@ const fetchDashboardData = async (filter, start = null, end = null) => {
     if (result.stats) {
       const revenueEl = document.getElementById('statRevenue');
       const ordersEl = document.getElementById('statOrders');
+      const customersEl = document.getElementById('statCustomers');
+      const productsEl = document.getElementById('statProducts');
 
       if (revenueEl) {
         revenueEl.textContent = `₹${result.stats.totalRevenue.toLocaleString('en-IN', {
@@ -217,6 +219,16 @@ const fetchDashboardData = async (filter, start = null, end = null) => {
       if (ordersEl) {
         ordersEl.textContent = result.stats.totalOrders.toLocaleString();
         ordersEl.setAttribute('data-value', result.stats.totalOrders);
+      }
+
+      if (customersEl && result.stats.totalCustomers !== undefined) {
+        customersEl.textContent = result.stats.totalCustomers.toLocaleString();
+        customersEl.setAttribute('data-value', result.stats.totalCustomers);
+      }
+
+      if (productsEl && result.stats.totalProducts !== undefined) {
+        productsEl.textContent = result.stats.totalProducts.toLocaleString();
+        productsEl.setAttribute('data-value', result.stats.totalProducts);
       }
     }
 
@@ -231,6 +243,17 @@ const fetchDashboardData = async (filter, start = null, end = null) => {
   }
 };
 
+// ==========================================
+// Auto-Initialization
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Force the dropdown to 'daily' if it exists and automatically jumpstart the chart/stats fetches
+    const filterEl = document.getElementById('dashboardFilter');
+    if (filterEl && typeof fetchDashboardData === 'function') {
+        filterEl.value = 'daily';
+        fetchDashboardData('daily');
+    }
+});
 if (dashboardFilter) {
   dashboardFilter.addEventListener('change', handleFilterChange);
 }

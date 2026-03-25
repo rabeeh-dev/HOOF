@@ -145,8 +145,17 @@ exports.loadDashboard = async (req, res) => {
         const [orderCountResult] = await Order.aggregate(orderCountAggregation);
         const totalOrders = orderCountResult ? orderCountResult.total : 0;
 
-        const totalCustomers = await User.countDocuments({});
-        const totalProducts = await Product.countDocuments({ isBlocked: false });
+        let userQuery = {};
+        if (dateFilter && dateFilter.$match && dateFilter.$match.createdAt) {
+            userQuery.createdAt = dateFilter.$match.createdAt;
+        }
+        const totalCustomers = await User.countDocuments(userQuery);
+
+        let productQuery = { isBlocked: false };
+        if (dateFilter && dateFilter.$match && dateFilter.$match.createdAt) {
+            productQuery.createdAt = dateFilter.$match.createdAt;
+        }
+        const totalProducts = await Product.countDocuments(productQuery);
 
         // --- Chart Data Generation ---
         let chartData = [];
