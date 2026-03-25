@@ -79,9 +79,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // ==========================================
 // SESSION CONFIGURATION
 // ==========================================
-app.use(
-  session({
-    name: "hoof.sid",
+const sessionOptions = {
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -94,8 +92,25 @@ app.use(
       sameSite: "lax",
       secure: process.env.NODE_ENV === 'production',
     },
-  })
-);
+};
+
+const userSession = session({
+    ...sessionOptions,
+    name: "hoof.user.sid",
+});
+
+const adminSession = session({
+    ...sessionOptions,
+    name: "hoof.admin.sid",
+});
+
+app.use((req, res, next) => {
+    if (req.originalUrl.startsWith('/admin')) {
+        adminSession(req, res, next);
+    } else {
+        userSession(req, res, next);
+    }
+});
 
 // Proxy configuration if behind a load balancer
 app.set('trust proxy', 1);
