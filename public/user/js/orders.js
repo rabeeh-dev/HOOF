@@ -117,6 +117,109 @@ window.downloadInvoice = async function (orderId) {
   }
 };
 
+// Global: Retry Payment
+window.retryPayment = async function (orderId) {
+  const retryBtn = document.getElementById(`retry-btn-${orderId}`);
+  if (retryBtn) {
+    retryBtn.disabled = true;
+    const originalText = retryBtn.innerHTML;
+    retryBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing...';
+  }
+
+  showLoading("Re-initializing payment...");
+
+  try {
+    const response = await fetch("/user/checkout/retry-payment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      hideLoading();
+      const options = {
+        key: result.keyId,
+        amount: result.amount,
+        currency: result.currency,
+        name: "HOOF SHOES",
+        description: "Retry Order Payment",
+        image: "/user/images/home-images/logo.png",
+        order_id: result.razorpayOrderId,
+        handler: async function (response) {
+          try {
+            showLoading("Verifying your payment...");
+            const verifyBody = {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderId: result.orderId
+            };
+
+            const verifyRes = await fetch("/user/checkout/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(verifyBody)
+            });
+
+            const verifyResult = await verifyRes.json();
+            if (verifyResult.success) {
+              window.location.href = verifyResult.redirectUrl;
+            } else {
+              showToast(verifyResult.message || "Verification failed", "error");
+              if (retryBtn) {
+                retryBtn.disabled = false;
+                retryBtn.innerHTML = originalText;
+              }
+            }
+          } catch (err) {
+            console.error(err);
+            showToast("Verification error", "error");
+            if (retryBtn) {
+              retryBtn.disabled = false;
+              retryBtn.innerHTML = originalText;
+            }
+          } finally {
+            hideLoading();
+          }
+        },
+        prefill: {
+          name: result.user.name,
+          email: result.user.email
+        },
+        theme: { color: "#ff914d" },
+        modal: {
+          ondismiss: function () {
+            showToast("Payment cancelled", "info");
+            if (retryBtn) {
+              retryBtn.disabled = false;
+              retryBtn.innerHTML = originalText;
+            }
+          }
+        }
+      };
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } else {
+      showToast(result.message || "Failed to start payment", "error");
+      if (retryBtn) {
+        retryBtn.disabled = false;
+        retryBtn.innerHTML = originalText;
+      }
+      hideLoading();
+    }
+  } catch (err) {
+    console.error(err);
+    showToast("Something went wrong", "error");
+    if (retryBtn) {
+      retryBtn.disabled = false;
+      retryBtn.innerHTML = originalText;
+    }
+    hideLoading();
+  }
+};
+
 // Event Listeners (Tabs, Filters, Modals)
 document.addEventListener("DOMContentLoaded", () => {
 

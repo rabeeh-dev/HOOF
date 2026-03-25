@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sales Report</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #fff;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #7da8a8;
+        }
+        .header h1 {
+            color: #c41e3a;
+            margin: 0 0 10px;
+            font-size: 28px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .header p {
+            margin: 3px 0;
+            color: #555;
+            font-size: 13px;
+        }
+        .report-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #c41e3a;
+        }
+        .info-block p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .info-block strong {
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #2c3e50;
+            text-align: left;
+            padding: 12px 10px;
+            font-weight: 600;
+            border-bottom: 2px solid #cbd5e1;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .order-id {
+            color: #c41e3a;
+            font-weight: 600;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .text-sm {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge.delivered { background-color: #dcfce7; color: #166534; }
+        .badge.cancelled { background-color: #fee2e2; color: #991b1b; }
+        .badge.pending { background-color: #fef9c3; color: #854d0e; }
+        .badge.shipped { background-color: #e0e7ff; color: #3730a3; }
+        .badge.returned { background-color: #fff7ed; color: #9a3412; }
+        .badge.default { background-color: #f1f5f9; color: #475569; }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+        .total-amount {
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>HOOF STORE</h1>
+        <p>Premium Kerala Footwear Company, Malappuram, Kerala</p>
+        <p>Email: hoofshoes@gmail.com | Phone: +91 98765 43210</p>
+    </div>
+
+    <div class="report-info">
+        <div class="info-block">
+            <p><strong>Report:</strong> <%= typeof reportTitle !== 'undefined' ? reportTitle : 'Comprehensive Sales Data' %></p>
+            <p><strong>Filter:</strong> <%= filter.toUpperCase() %></p>
+            <p><strong>Generated On:</strong> <%= generatedDate %></p>
+            <p><strong>Total Orders Processed:</strong> <%= totalSalesCount %></p>
+            
+            <div style="margin-top: 15px;">
+                <p style="margin-bottom: 8px;"><strong>Status Breakdown:</strong></p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="badge delivered">Delivered: <%= statusCounts.Delivered %></span>
+                    <span class="badge cancelled">Cancelled: <%= statusCounts.Cancelled %></span>
+                    <span class="badge returned">Returned: <%= statusCounts.Returned %></span>
+                    <span class="badge shipped">Shipped: <%= statusCounts.Shipped %></span>
+                    <span class="badge pending">Processing: <%= statusCounts.Processing %></span>
+                    <span class="badge default">Pending: <%= statusCounts.Pending %></span>
+                </div>
+            </div>
+        </div>
+        <div class="info-block" style="text-align: right;">
+            <p><strong>Total Gross Sales:</strong> ₹<%= totalGrossRevenue.toLocaleString('en-IN') %></p>
+            <p><strong>Total Discounts Applied:</strong> <span style="color: #c41e3a;">-₹<%= totalDiscounts.toLocaleString('en-IN') %></span></p>
+            <p><strong>Amount Refunded (Wallet):</strong> <span style="color: #c41e3a;">-₹<%= totalRefunds.toLocaleString('en-IN') %></span></p>
+            <hr style="border: none; border-top: 1px solid #cbd5e1; margin: 8px 0;">
+            <p><strong>Net Profit (Revenue):</strong> <span style="font-size: 18px; font-weight: bold; color: #27ae60;">₹<%= totalNetProfit.toLocaleString('en-IN') %></span></p>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th width="15%">Order & Date</th>
+                <th width="25%">Customer Details</th>
+                <th width="25%">Items Purchased</th>
+                <th width="18%">Price Breakdown</th>
+                <th width="10%">Total</th>
+                <th width="7%">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (orders && orders.length > 0) { %>
+                <% orders.forEach(order => { %>
+                    <% 
+                        const oStatus = (order.status || '').toLowerCase();
+                        let badgeClass = 'default';
+                        if(oStatus === 'delivered') badgeClass = 'delivered';
+                        else if(oStatus === 'cancelled') badgeClass = 'cancelled';
+                        else if(['shipped', 'out for delivery'].includes(oStatus)) badgeClass = 'shipped';
+                        else if(['returned', 'return approved', 'return requested'].includes(oStatus)) badgeClass = 'returned';
+                        else if(['pending', 'processing'].includes(oStatus)) badgeClass = 'pending';
+                    %>
+                    <tr>
+                        <td>
+                            <div class="order-id">#<%= order._id.toString().slice(-8).toUpperCase() %></div>
+                            <div class="text-sm"><%= new Date(order.createdAt).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}) %></div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500;"><%= order.userId ? order.userId.fullName : (order.shippingAddress?.fullName || 'Guest') %></div>
+                            <div class="text-sm" style="line-height: 1.4;">
+                                <% if (order.shippingAddress) { %>
+                                    <%= order.shippingAddress.address %><br>
+                                    <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> <%= order.shippingAddress.pincode %>
+                                <% } else { %>
+                                    No shipping address provided
+                                <% } %>
+                            </div>
+                        </td>
+                        <td>
+                            <% if (order.items && order.items.length > 0) { %>
+                                <% order.items.forEach(item => { %>
+                                    <div style="margin-bottom: 4px; line-height: 1.3;">
+                                        <strong><%= item.productName %></strong><br>
+                                        <span class="text-sm">Size: <%= item.variantSize || 'N/A' %> | Qty: <%= item.quantity %> | ₹<%= item.price %></span>
+                                    </div>
+                                <% }); %>
+                            <% } else { %>
+                                <span class="text-sm">No items found</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <div class="text-sm">
+                                <div class="price-row"><span>Gross:</span> <span>₹<%= order.calculatedGross %></span></div>
+                                <div class="price-row" style="color: #c41e3a;"><span>Discount:</span> <span>-₹<%= order.discount || order.discountAmount || 0 %></span></div>
+                                <div class="price-row" style="color: #c41e3a;"><span>Refund:</span> <span>-₹<%= order.calculatedRefund %></span></div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="total-amount">₹<%= order.calculatedNet %></div>
+                            <div class="text-sm" style="margin-top: 5px;"><%= order.paymentMethod %></div>
+                            <div class="text-sm" style="color: #64748b;">(Paid: ₹<%= order.totalAmount || 0 %>)</div>
+                        </td>
+                        <td>
+                            <span class="badge <%= badgeClass %>"><%= order.status %></span>
+                        </td>
+                    </tr>
+                <% }); %>
+            <% } else { %>
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: #64748b;">No orders found for the selected criteria.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+
+</body>
+</html>

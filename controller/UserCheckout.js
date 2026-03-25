@@ -24,6 +24,10 @@ exports.loadCheckout = async (req, res) => {
         res.render('User/checkout', data);
     } catch (err) {
         console.error("Load checkout error:", err);
+        // If prepareCheckout throws a validation error, redirect to cart with unavailable flag
+        if (err.message.includes("no longer available") || err.message === "Cart is empty") {
+            return res.redirect('/user/cart?unavailable=1');
+        }
         res.redirect('/user/cart');
     }
 };
@@ -125,6 +129,9 @@ exports.verifyPayment = async (req, res) => {
         if (isVerified) {
             const order = await Order.findById(orderId);
             if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+            // Deduct stock now that payment is confirmed
+            await checkoutService.deductStockForOrder(orderId);
 
             order.paymentStatus = "SUCCESS";
             order.status = "Processing";

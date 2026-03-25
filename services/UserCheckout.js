@@ -11,7 +11,10 @@ const walletService = require('./Wallet');
  */
 exports.prepareCheckout = async (userId) => {
     const cart = await Cart.findOne({ userId })
-        .populate('items.productId');
+        .populate({
+            path: 'items.productId',
+            populate: { path: 'category' }
+        });
 
     if (!cart || cart.items.length === 0) {
         throw new Error("Cart is empty");
@@ -21,12 +24,22 @@ exports.prepareCheckout = async (userId) => {
 
     let subtotal = 0;
 
-    // Filter out blocked or unavailable products
-    const blockedProducts = cart.items
-        .filter(item => item.productId && item.productId.isBlocked)
-        .map(item => item.productId.productName);
+    // Check for ANY invalid items
+    const invalidItems = cart.items.filter(item => {
+        if (!item.productId) return true; // deleted product
+        const product = item.productId;
+        if (product.isBlocked) return true;
+        if (product.category && !product.category.isListed) return true;
+        const variant = product.variants ? product.variants.find(v => String(v.size) === String(item.size)) : null;
+        if (!variant || item.quantity > variant.quantity) return true;
+        return false;
+    });
 
-    const validItems = cart.items.filter(item => item.productId && !item.productId.isBlocked);
+    if (invalidItems.length > 0) {
+        throw new Error("Some items in your cart are no longer available. Please remove them to proceed.");
+    }
+
+    const validItems = cart.items.filter(item => item.productId);
 
     const cartItems = validItems.map(item => {
         const totalPrice = item.productId.salePrice * item.quantity;
@@ -45,8 +58,7 @@ exports.prepareCheckout = async (userId) => {
         addresses,
         subtotal,
         shippingCharge,
-        totalAmount,
-        blockedProducts
+        totalAmount
     };
 };
 
@@ -62,7 +74,10 @@ const Coupon = require('../model/Coupon');
  */
 exports.createOrder = async (userId, addressId, paymentMethod = "COD", couponCode = null) => {
     const cart = await Cart.findOne({ userId })
-        .populate('items.productId');
+        .populate({
+            path: 'items.productId',
+            populate: { path: 'category' }
+        });
 
     if (!cart || cart.items.length === 0) {
         throw new Error("Cart empty");
@@ -84,13 +99,17 @@ exports.createOrder = async (userId, addressId, paymentMethod = "COD", couponCod
             throw new Error("A product in your cart is no longer available.");
         }
 
-        if (product.isBlocked) {
-            throw new Error(`"${product.productName}" is currently blocked and cannot be purchased.`);
+        if (product.isBlocked || (product.category && !product.category.isListed)) {
+            throw new Error(`"${product.productName}" is currently unavailable and cannot be purchased.`);
         }
 
-        // Validate stock (simple version without variants)
-        if (product.quantity < item.quantity) {
-            throw new Error(`Insufficient stock for "${product.productName}". Available: ${product.quantity}`);
+        const variant = product.variants ? product.variants.find(v => String(v.size) === String(item.size)) : null;
+        if (!variant) {
+            throw new Error(`Size ${item.size} is no longer available for "${product.productName}".`);
+        }
+
+        if (variant.quantity < item.quantity) {
+            throw new Error(`Insufficient stock for "${product.productName}" (Size ${item.size}). Available: ${variant.quantity}`);
         }
 
         subtotal += product.salePrice * item.quantity;
@@ -104,9 +123,14 @@ exports.createOrder = async (userId, addressId, paymentMethod = "COD", couponCod
             variantSize: item.size || null
         });
 
-        // Deduct stock
-        product.quantity -= item.quantity;
-        await product.save();
+        // Deduct stock only for COD and wallet (payment is guaranteed)
+        // UPI orders: stock is deducted after payment verification
+        if (paymentMethod !== 'upi') {
+            variant.quantity -= item.quantity;
+            variant.status = variant.quantity > 0 ? 'Available' : 'Out of Stock';
+            product.quantity -= item.quantity;
+            await product.save();
+        }
     }
 
     let discountAmount = 0;
@@ -222,4 +246,54 @@ exports.verifyRazorpayPayment = (razorpayOrderId, razorpayPaymentId, signature) 
     hmac.update(razorpayOrderId + "|" + razorpayPaymentId);
     const generatedSignature = hmac.digest('hex');
     return generatedSignature === signature;
+};
+
+/**
+ * @desc    Deduct stock for a verified order (used after UPI payment success).
+ * @param   {string} orderId - The order ID.
+ */
+exports.deductStockForOrder = async (orderId) => {
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error('Order not found');
+
+    for (const item of order.items) {
+        const product = await Product.findById(item.productId);
+        if (!product) continue;
+
+        const variant = product.variants
+            ? product.variants.find(v => String(v.size) === String(item.variantSize))
+            : null;
+
+        if (variant) {
+            variant.quantity -= item.quantity;
+            variant.status = variant.quantity > 0 ? 'Available' : 'Out of Stock';
+        }
+        product.quantity -= item.quantity;
+        await product.save();
+    }
+};
+
+/**
+ * @desc    Restore stock when an order is cancelled.
+ * @param   {string} orderId - The order ID.
+ */
+exports.restoreStockForOrder = async (orderId) => {
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error('Order not found');
+
+    for (const item of order.items) {
+        const product = await Product.findById(item.productId);
+        if (!product) continue;
+
+        const variant = product.variants
+            ? product.variants.find(v => String(v.size) === String(item.variantSize))
+            : null;
+
+        if (variant) {
+            variant.quantity += item.quantity;
+            variant.status = 'Available';
+        }
+        product.quantity += item.quantity;
+        await product.save();
+    }
 };

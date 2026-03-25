@@ -29,11 +29,18 @@
             <div class="products-grid" id="wishlistGrid">
                 <% wishlistItems.forEach((item, index)=> { %>
                     <!-- Use product-card structure from Shop -->
-                    <div class="product-card" id="wishlist-item-<%= item.productId._id %>">
+                    <div class="product-card <%= item.productId.isBlocked ? 'product-unavailable' : '' %>" id="wishlist-item-<%= item.productId._id %>" data-product-id="<%= item.productId._id %>" data-category-id="<%= item.productId.category ? item.productId.category._id : '' %>">
                         <div class="product-image">
+                            <% if (item.productId.isBlocked) { %>
+                                <div class="unavailable-overlay">
+                                    <span class="unavailable-text">UNAVAILABLE</span>
+                                </div>
+                            <% } %>
                             <img src="<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>"
+                                <% if (!item.productId.isBlocked) { %>
                                 onclick="window.location.href='/user/product-details/<%= item.productId._id %>'"
-                                style="cursor:pointer;" />
+                                style="cursor:pointer;"
+                                <% } %> />
 
                             <!-- Wishlist Button (Always Active here) -->
                             <button class="wishlist-btn active"
@@ -43,49 +50,55 @@
                         </div>
                         <div class="product-info">
                             <h3 class="product-name"
+                                <% if (!item.productId.isBlocked) { %>
                                 onclick="window.location.href='/user/product-details/<%= item.productId._id %>'"
-                                style="cursor:pointer;">
+                                style="cursor:pointer;"
+                                <% } %>>
                                 <%= item.productId.productName %>
                             </h3>
                             <p class="product-category">
                                 <%= item.productId.category ? item.productId.category.name : 'Uncategorized' %>
                             </p>
                             <div class="product-footer">
-                                <!-- Variant Selection Dropdown -->
-                                <div class="wishlist-variant-selector" style="margin-bottom: 8px;">
-                                    <select id="variant-select-<%= item.productId._id %>" class="form-select"
-                                        style="width: 100%; padding: 4px; font-size: 0.85rem; border-radius: 4px; border: 1px solid #ddd;">
-                                        <option value="" disabled selected>Select Size</option>
-                                        <% if (item.productId.variants && item.productId.variants.length> 0) { %>
-                                            <% item.productId.variants.forEach(variant=> { %>
-                                                <option value="<%= variant.size %>" <%=variant.quantity===0 ? 'disabled'
-                                                    : '' %>>
-                                                    Size <%= variant.size %>
-                                                        <% if (variant.quantity> 0 && variant.quantity <= 5) { %>
-                                                                (Only <%= variant.quantity %> left)
-                                                                    <% } else if (variant.quantity===0) { %>
-                                                                        (Out of Stock)
-                                                                        <% } %>
-                                                </option>
-                                                <% }) %>
-                                                    <% } else { %>
-                                                        <option value="" disabled>No variants available</option>
-                                                        <% } %>
-                                    </select>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <p class="product-price" style="margin: 0;">
-                                        <% if (item.productId.salePrice < item.productId.regularPrice) { %>
-                                            <span class="old-price">₹<%= item.productId.regularPrice %></span>
-                                            <% } %>
-                                                ₹<%= item.productId.salePrice %>
-                                    </p>
-                                    <button class="add-to-cart-btn btn-icon-circle"
-                                        onclick="addToCartFromWishlist('<%= item.productId._id %>')"
-                                        <%=item.productId.quantity===0 ? 'disabled' : '' %>>
-                                        <i class="fas fa-arrow-right"></i>
-                                    </button>
-                                </div>
+                                <% if (item.productId.isBlocked) { %>
+                                    <p class="product-price unavailable-price">Unavailable</p>
+                                <% } else { %>
+                                    <!-- Variant Selection Dropdown -->
+                                    <div class="wishlist-variant-selector" style="margin-bottom: 8px;">
+                                        <select id="variant-select-<%= item.productId._id %>" class="form-select"
+                                            style="width: 100%; padding: 4px; font-size: 0.85rem; border-radius: 4px; border: 1px solid #ddd;">
+                                            <option value="" disabled selected>Select Size</option>
+                                            <% if (item.productId.variants && item.productId.variants.length> 0) { %>
+                                                <% item.productId.variants.forEach(variant=> { %>
+                                                    <option value="<%= variant.size %>" <%=variant.quantity===0 ? 'disabled'
+                                                        : '' %>>
+                                                        Size <%= variant.size %>
+                                                            <% if (variant.quantity> 0 && variant.quantity <= 5) { %>
+                                                                    (Only <%= variant.quantity %> left)
+                                                                        <% } else if (variant.quantity===0) { %>
+                                                                            (Out of Stock)
+                                                                            <% } %>
+                                                    </option>
+                                                    <% }) %>
+                                                        <% } else { %>
+                                                            <option value="" disabled>No variants available</option>
+                                                            <% } %>
+                                        </select>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <p class="product-price" style="margin: 0;">
+                                            <% if (item.productId.salePrice < item.productId.regularPrice) { %>
+                                                <span class="old-price">₹<%= item.productId.regularPrice %></span>
+                                                <% } %>
+                                                    ₹<%= item.productId.salePrice %>
+                                        </p>
+                                        <button class="add-to-cart-btn btn-icon-circle"
+                                            onclick="addToCartFromWishlist('<%= item.productId._id %>')"
+                                            <%=item.productId.quantity===0 ? 'disabled' : '' %>>
+                                            <i class="fas fa-arrow-right"></i>
+                                        </button>
+                                    </div>
+                                <% } %>
                             </div>
                         </div>
                     </div>

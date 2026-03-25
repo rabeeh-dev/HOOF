@@ -14,6 +14,10 @@ function openAddCouponModal() {
 
     title.innerText = 'Add New Coupon';
     modal.classList.add('show');
+    
+    // Trigger change to set correct visibility for default dropdown state
+    const dt = document.getElementById('discountType');
+    if (dt) dt.dispatchEvent(new Event('change'));
 }
 
 /**
@@ -44,6 +48,9 @@ async function openEditCouponModal(id) {
         document.getElementById('minPurchaseAmount').value = coupon.minPurchaseAmount;
         document.getElementById('maxDiscountAmount').value = coupon.maxDiscountAmount || '';
         document.getElementById('usageLimit').value = coupon.usageLimit;
+
+        // Dispatch change after setting discountType
+        document.getElementById('discountType').dispatchEvent(new Event('change'));
 
         // Format date for input[type="date"]
         if (coupon.expiryDate) {
@@ -170,3 +177,25 @@ function searchCoupons() {
         }
     });
 }
+
+// Auto-bind UX toggle
+document.addEventListener('DOMContentLoaded', () => {
+    const discountTypeEl = document.getElementById('discountType');
+    const maxDiscountGroup = document.getElementById('maxDiscountGroup');
+    const maxDiscountInput = document.getElementById('maxDiscountAmount');
+
+    if (discountTypeEl && maxDiscountGroup && maxDiscountInput) {
+        discountTypeEl.addEventListener('change', () => {
+            if (discountTypeEl.value === 'percentage') {
+                maxDiscountGroup.style.display = 'block';
+                maxDiscountInput.setAttribute('required', 'true');
+            } else {
+                maxDiscountGroup.style.display = 'none';
+                maxDiscountInput.removeAttribute('required');
+                maxDiscountInput.value = ''; // flat coupons don't use max discount
+            }
+        });
+        // Run once on initial load
+        discountTypeEl.dispatchEvent(new Event('change'));
+    }
+});

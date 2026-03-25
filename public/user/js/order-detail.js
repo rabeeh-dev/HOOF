@@ -22,8 +22,13 @@ function showToast(message, type = "success") {
     }, 3000);
 }
 
-// Cancel Order Action - Opens Modal
-function cancelOrderFromDetail(orderId) {
+let currentOrderId = null;
+let currentItemId = null;
+
+// Cancel Item Action - Opens Modal
+function cancelItemFromDetail(orderId, itemId) {
+    currentOrderId = orderId;
+    currentItemId = itemId;
     const modal = document.getElementById('cancelConfirmModal');
     if (modal) {
         modal.style.display = 'flex';
@@ -32,6 +37,8 @@ function cancelOrderFromDetail(orderId) {
 
 // Close Cancel Modal
 function closeCancelModal() {
+    currentOrderId = null;
+    currentItemId = null;
     const modal = document.getElementById('cancelConfirmModal');
     if (modal) {
         modal.style.display = 'none';
@@ -39,7 +46,9 @@ function closeCancelModal() {
 }
 
 // Confirm Cancel - Actual API Call
-async function confirmCancelAction(orderId) {
+async function confirmCancelAction() {
+    if (!currentOrderId || !currentItemId) return;
+
     const btn = document.getElementById('confirmCancelBtn');
     const originalText = btn.innerHTML;
 
@@ -49,17 +58,17 @@ async function confirmCancelAction(orderId) {
     }
 
     try {
-        const res = await fetch(`/user/orders/cancel/${orderId}`, {
+        const res = await fetch(`/user/orders/${currentOrderId}/item/${currentItemId}/cancel`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" }
         });
         const result = await res.json();
 
         if (result.success) {
-            showToast("Order cancelled successfully", "success");
+            showToast("Item cancelled successfully", "success");
             setTimeout(() => window.location.reload(), 1000);
         } else {
-            showToast(result.message || "Failed to cancel order", "error");
+            showToast(result.message || "Failed to cancel item", "error");
             closeCancelModal();
             if (btn) {
                 btn.disabled = false;
@@ -78,7 +87,9 @@ async function confirmCancelAction(orderId) {
 }
 
 // Request Return Action - Opens Modal
-function requestReturnFromDetail(orderId) {
+function requestReturnItemFromDetail(orderId, itemId) {
+    currentOrderId = orderId;
+    currentItemId = itemId;
     const modal = document.getElementById('returnConfirmModal');
     if (modal) {
         modal.style.display = 'flex';
@@ -87,9 +98,22 @@ function requestReturnFromDetail(orderId) {
 
 // Close Return Modal
 function closeReturnModal() {
+    currentOrderId = null;
+    currentItemId = null;
     const modal = document.getElementById('returnConfirmModal');
     if (modal) {
         modal.style.display = 'none';
+        
+        // Reset inputs
+        const reasonRadios = document.querySelectorAll('input[name="returnReason"]');
+        reasonRadios.forEach(r => r.checked = false);
+        const reasonText = document.getElementById('returnReasonText');
+        if (reasonText) {
+            reasonText.style.display = 'none';
+            reasonText.value = '';
+        }
+        const reasonError = document.getElementById('returnReasonError');
+        if (reasonError) reasonError.style.display = 'none';
     }
 }
 
@@ -118,7 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Confirm Return - Actual API Call
-async function confirmReturnAction(orderId) {
+async function confirmReturnAction() {
+    if (!currentOrderId || !currentItemId) return;
+
     const btn = document.getElementById('confirmReturnBtn');
     const reasonError = document.getElementById('returnReasonError');
     const selectedRadio = document.querySelector('input[name="returnReason"]:checked');
@@ -143,7 +169,7 @@ async function confirmReturnAction(orderId) {
     }
 
     try {
-        const res = await fetch(`/user/orders/return/${orderId}`, {
+        const res = await fetch(`/user/orders/${currentOrderId}/item/${currentItemId}/return`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ reason })
@@ -155,7 +181,6 @@ async function confirmReturnAction(orderId) {
             setTimeout(() => window.location.reload(), 1000);
         } else {
             showToast(result.message || "Failed to request return", "error");
-            closeReturnModal();
             if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
@@ -164,7 +189,6 @@ async function confirmReturnAction(orderId) {
     } catch (err) {
         console.error(err);
         showToast("Something went wrong", "error");
-        closeReturnModal();
         if (btn) {
             btn.disabled = false;
             btn.innerHTML = originalText;
@@ -228,14 +252,105 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("click", (e) => {
         if (e.target.classList.contains("modal-overlay")) {
             closeSupportModal();
-            // Handle cancel modal overlay too if generic class is used, 
-            // but specific closeCancelModal is safer for avoiding conflicts
             const cancelModal = document.getElementById('cancelConfirmModal');
             if (cancelModal && cancelModal.style.display === 'flex') {
                 closeCancelModal();
             }
         }
     });
+
+    // Retry Payment Logic
+    const retryBtn = document.getElementById("retryPaymentBtn");
+    if (retryBtn) {
+        retryBtn.addEventListener("click", async () => {
+            const orderId = retryBtn.getAttribute("data-order-id");
+            retryBtn.disabled = true;
+            const originalText = retryBtn.innerHTML;
+            retryBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing...';
+            showLoading("Re-initializing payment...");
+
+            try {
+                const response = await fetch("/user/checkout/retry-payment", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ orderId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    hideLoading();
+                    const options = {
+                        key: result.keyId,
+                        amount: result.amount,
+                        currency: result.currency,
+                        name: "HOOF SHOES",
+                        description: "Retry Order Payment",
+                        image: "/user/images/home-images/logo.png",
+                        order_id: result.razorpayOrderId,
+                        handler: async function (response) {
+                            try {
+                                showLoading("Verifying your payment...");
+                                const verifyBody = {
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    orderId: result.orderId
+                                };
+
+                                const verifyRes = await fetch("/user/checkout/verify-payment", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify(verifyBody)
+                                });
+
+                                const verifyResult = await verifyRes.json();
+                                if (verifyResult.success) {
+                                    window.location.href = verifyResult.redirectUrl;
+                                } else {
+                                    showToast(verifyResult.message || "Verification failed", "error");
+                                    retryBtn.disabled = false;
+                                    retryBtn.innerHTML = originalText;
+                                }
+                            } catch (err) {
+                                console.error(err);
+                                showToast("Verification error", "error");
+                                retryBtn.disabled = false;
+                                retryBtn.innerHTML = originalText;
+                            } finally {
+                                hideLoading();
+                            }
+                        },
+                        prefill: {
+                            name: result.user.name,
+                            email: result.user.email
+                        },
+                        theme: { color: "#ff914d" },
+                        modal: {
+                            ondismiss: function () {
+                                showToast("Payment cancelled", "info");
+                                retryBtn.disabled = false;
+                                retryBtn.innerHTML = originalText;
+                            }
+                        }
+                    };
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                } else {
+                    showToast(result.message || "Failed to start payment", "error");
+                    retryBtn.disabled = false;
+                    retryBtn.innerHTML = originalText;
+                    hideLoading();
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Something went wrong", "error");
+                retryBtn.disabled = false;
+                retryBtn.innerHTML = originalText;
+                hideLoading();
+            }
+        });
+    }
 });
 
 // Cache Buster

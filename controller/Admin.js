@@ -145,8 +145,17 @@ exports.loadDashboard = async (req, res) => {
         const [orderCountResult] = await Order.aggregate(orderCountAggregation);
         const totalOrders = orderCountResult ? orderCountResult.total : 0;
 
-        const totalCustomers = await User.countDocuments({});
-        const totalProducts = await Product.countDocuments({ isBlocked: false });
+        let userQuery = {};
+        if (dateFilter && dateFilter.$match && dateFilter.$match.createdAt) {
+            userQuery.createdAt = dateFilter.$match.createdAt;
+        }
+        const totalCustomers = await User.countDocuments(userQuery);
+
+        let productQuery = { isBlocked: false };
+        if (dateFilter && dateFilter.$match && dateFilter.$match.createdAt) {
+            productQuery.createdAt = dateFilter.$match.createdAt;
+        }
+        const totalProducts = await Product.countDocuments(productQuery);
 
         // --- Chart Data Generation ---
         let chartData = [];
@@ -413,6 +422,10 @@ exports.toggleUserStatus = async (req, res) => {
         );
 
         if (updatedUser) {
+            const io = req.app.get('io');
+            if (io) {
+                io.emit('user:statusChanged', { userId: id, isBlocked: blockStatus });
+            }
             res.json({ success: true });
         } else {
             res.json({ success: false, message: "User not found" });
@@ -618,6 +631,15 @@ exports.toggleCategoryStatus = async (req, res) => {
         category.isListed = !category.isListed;
         await category.save();
 
+        // Emit real-time event to all user clients
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('category:statusChanged', {
+                categoryId: category._id.toString(),
+                isListed: category.isListed
+            });
+        }
+
         res.json({ success: true, message: `Category ${category.isListed ? 'listed' : 'unlisted'} successfully` });
 
     } catch (error) {
@@ -782,7 +804,7 @@ exports.updateOrderStatus = async (req, res) => {
             'Processing': ['SHIPPED', 'Out for Delivery', 'DELIVERED', 'CANCELLED'],
             'SHIPPED': ['Out for Delivery', 'DELIVERED', 'CANCELLED'],
             'Out for Delivery': ['DELIVERED', 'CANCELLED'],
-            'DELIVERED': ['DELIVERED'], // Allow self-transition to trigger payment updates
+            'DELIVERED': ['DELIVERED', 'Return Requested', 'Return Approved', 'Returned'], // Allow return transitions for delivered orders
             'CANCELLED': ['CANCELLED'], // Allow self-transition
             'Return Requested': ['Return Approved', 'Returned', 'CANCELLED'],
             'Return Approved': ['Picked Up', 'Returned', 'CANCELLED'],
@@ -799,6 +821,28 @@ exports.updateOrderStatus = async (req, res) => {
             });
         }
 
+        // Determine returning items (items in 'Return Requested' or 'Return Approved' state)
+        const returningItems = order.items.filter(i => ['Return Requested', 'Return Approved'].includes(i.itemStatus));
+
+        // Cascade status to returning items
+        if (returningItems.length > 0) {
+            let itemStatusUpdate = null;
+            if (status === 'Return Approved') itemStatusUpdate = 'Return Approved';
+            else if (status === 'Picked Up') itemStatusUpdate = 'Picked Up';
+            else if (status === 'Returned') itemStatusUpdate = 'Returned';
+
+            if (itemStatusUpdate) {
+                returningItems.forEach(item => {
+                    item.itemStatus = itemStatusUpdate;
+                });
+            }
+        } else if (status === 'CANCELLED') {
+            // Admin cancelled whole order
+            order.items.forEach(item => {
+                if (item.itemStatus === 'Active') item.itemStatus = 'Cancelled';
+            });
+        }
+
         order.status = status;
         order.statusHistory.push({
             status,
@@ -812,23 +856,200 @@ exports.updateOrderStatus = async (req, res) => {
             } else {
                 order.paymentStatus = 'Paid';
             }
+            order.items.forEach(item => {
+                if(item.itemStatus === 'Active') {
+                    // Mark as delivered at item level implicitly or explicitly if needed
+                }
+            })
         }
 
-        // Credit wallet when order is returned (refund)
-        if (status === 'Returned') {
+        // Handle Refunds and Stock Restoration for Items becoming "Returned"
+        if (status === 'Returned' && returningItems.length > 0) {
             const shortId = String(order._id).slice(-8).toUpperCase();
-            await walletService.creditWallet(
-                order.userId,
-                order.totalAmount,
-                `Refund for returned order #${shortId}`,
-                order._id
-            );
-            order.paymentStatus = 'Refunded';
+            let totalRefundAmount = 0;
+            const Product = require("../model/Product");
+
+            for (const item of returningItems) {
+                // Calculate partial refund
+                totalRefundAmount += (item.priceAtPurchase * item.quantity);
+
+                // Restore stock
+                const product = await Product.findById(item.productId);
+                if (product) {
+                    const variant = product.variants
+                        ? product.variants.find(v => String(v.size) === String(item.variantSize))
+                        : null;
+                    if (variant) {
+                        variant.quantity += item.quantity;
+                        variant.status = 'Available';
+                    }
+                    product.quantity += item.quantity;
+                    await product.save();
+                }
+            }
+
+            // Adjust order totals based on refunded items
+            order.subtotal -= totalRefundAmount;
+            order.totalAmount -= totalRefundAmount;
+            if (order.subtotal < 0) order.subtotal = 0;
+            if (order.totalAmount < 0) order.totalAmount = 0;
+
+            if (totalRefundAmount > 0) {
+                const walletService = require("../services/Wallet");
+                await walletService.creditWallet(
+                    order.userId,
+                    totalRefundAmount,
+                    `Refund for returned items from order #${shortId}`,
+                    order._id
+                );
+            }
+
+            // If ALL items are now returned or cancelled, update payment status
+            const allResolved = order.items.every(i => ['Returned', 'Cancelled'].includes(i.itemStatus));
+            if (allResolved) {
+                order.paymentStatus = 'Refunded';
+            } else {
+                 order.paymentStatus = 'Partially Refunded';
+            }
         }
 
         await order.save();
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('order:statusChanged', { orderId: order._id, userId: order.userId, status: status });
+        }
+
         res.json({ success: true, message: "Status updated successfully" });
     } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * @desc    Update individual item status (for per-item return management).
+ * @route   PATCH /admin/orders/:orderId/item/:itemId/status
+ * @access  Private (Admin Only)
+ */
+exports.updateItemStatus = async (req, res) => {
+    try {
+        const { orderId, itemId } = req.params;
+        const { status } = req.body;
+
+        const order = await Order.findById(orderId);
+        if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+        const item = order.items.id(itemId);
+        if (!item) return res.status(404).json({ success: false, message: "Item not found" });
+
+        // Define allowed item-level transitions
+        const allowedItemTransitions = {
+            'Return Requested': ['Return Approved', 'Active'],  // Approve or Reject
+            'Return Approved': ['Picked Up', 'Returned'],
+            'Picked Up': ['Returned']
+        };
+
+        const allowed = allowedItemTransitions[item.itemStatus] || [];
+        if (!allowed.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Cannot change item status from "${item.itemStatus}" to "${status}".`
+            });
+        }
+
+        const previousStatus = item.itemStatus;
+        item.itemStatus = status;
+
+        // If rejecting (setting back to Active), clear return reason
+        if (status === 'Active') {
+            item.returnReason = '';
+            order.statusHistory.push({
+                status: 'Item Return Rejected',
+                note: `Return rejected for "${item.productName}" by admin`
+            });
+        } else {
+            order.statusHistory.push({
+                status: `Item ${status}`,
+                note: `"${item.productName}" status updated to ${status} by admin`
+            });
+        }
+
+        // Handle stock restoration and refund when item becomes "Returned"
+        if (status === 'Returned') {
+            const shortId = String(order._id).slice(-8).toUpperCase();
+            const refundAmount = item.priceAtPurchase * item.quantity;
+
+            // Restore stock
+            const product = await Product.findById(item.productId);
+            if (product) {
+                const variant = product.variants
+                    ? product.variants.find(v => String(v.size) === String(item.variantSize))
+                    : null;
+                if (variant) {
+                    variant.quantity += item.quantity;
+                    variant.status = 'Available';
+                }
+                product.quantity += item.quantity;
+                await product.save();
+            }
+
+            // Refund to wallet
+            if (refundAmount > 0) {
+                const walletSvc = require("../services/Wallet");
+                await walletSvc.creditWallet(
+                    order.userId,
+                    refundAmount,
+                    `Refund for returned item "${item.productName}" from order #${shortId}`,
+                    order._id
+                );
+            }
+
+            // Adjust order totals
+            order.subtotal -= refundAmount;
+            order.totalAmount -= refundAmount;
+            if (order.subtotal < 0) order.subtotal = 0;
+            if (order.totalAmount < 0) order.totalAmount = 0;
+        }
+
+        // Update order-level status based on all item statuses
+        const allItemStatuses = order.items.map(i => i.itemStatus);
+        const allResolved = allItemStatuses.every(s => ['Returned', 'Cancelled'].includes(s));
+        const anyReturning = allItemStatuses.some(s => ['Return Requested', 'Return Approved', 'Picked Up'].includes(s));
+        const anyReturned = allItemStatuses.some(s => s === 'Returned');
+
+        if (allResolved) {
+            order.status = 'Returned';
+            order.paymentStatus = 'Refunded';
+        } else if (anyReturned && !anyReturning) {
+            // Some returned, rest are active — partial refund
+            order.paymentStatus = 'Partially Refunded';
+        } else if (anyReturning) {
+            // Determine highest return state among returning items
+            const hasPickedUp = allItemStatuses.includes('Picked Up');
+            const hasApproved = allItemStatuses.includes('Return Approved');
+            const hasRequested = allItemStatuses.includes('Return Requested');
+
+            if (hasPickedUp) order.status = 'Picked Up';
+            else if (hasApproved) order.status = 'Return Approved';
+            else if (hasRequested) order.status = 'Return Requested';
+        } else if (status === 'Active') {
+            // All items back to active (rejection), restore DELIVERED
+            const allActive = allItemStatuses.every(s => s === 'Active' || s === 'Cancelled');
+            if (allActive) {
+                order.status = 'DELIVERED';
+            }
+        }
+
+        await order.save();
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('order:statusChanged', { orderId: order._id, userId: order.userId, status: order.status });
+        }
+
+        res.json({ success: true, message: `Item status updated to "${status}" successfully` });
+    } catch (error) {
+        console.error("Update Item Status Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -857,6 +1078,13 @@ exports.cancelOrderAdmin = async (req, res) => {
             note: 'Cancelled by administrator'
         });
 
+        // Restore stock (only if stock was deducted — skip for UPI orders that never paid)
+        const stockWasDeducted = order.paymentMethod !== 'upi' || order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'Paid';
+        if (stockWasDeducted) {
+            const checkoutService = require("../services/UserCheckout");
+            await checkoutService.restoreStockForOrder(order._id);
+        }
+
         // Refund to wallet if payment was already made
         if (order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'Paid') {
             const shortId = String(order._id).slice(-8).toUpperCase();
@@ -870,6 +1098,12 @@ exports.cancelOrderAdmin = async (req, res) => {
         }
 
         await order.save();
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('order:statusChanged', { orderId: order._id, userId: order.userId, status: 'CANCELLED' });
+        }
+
         res.json({ success: true, message: "Order cancelled successfully" });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -883,10 +1117,8 @@ exports.cancelOrderAdmin = async (req, res) => {
  */
 exports.exportSalesReport = async (req, res) => {
     try {
-        const { filter, startDate, endDate } = req.query;
-        let matchStage = {
-            status: { $in: ['DELIVERED', 'SHIPPED', 'Processing'] }
-        };
+        const { filter, startDate, endDate, type } = req.query;
+        let matchStage = {}; // Fetch all statuses as requested
 
         const now = new Date();
         if (filter === 'daily') {
@@ -908,45 +1140,116 @@ exports.exportSalesReport = async (req, res) => {
             };
         }
 
-        const orders = await Order.find(matchStage).populate('userId', 'fullName').sort({ createdAt: -1 });
+        const orders = await Order.find(matchStage).populate('userId', 'fullName email').sort({ createdAt: -1 });
 
-        const totalRevenue = orders.reduce((acc, order) => acc + (order.status === 'DELIVERED' ? order.totalAmount : 0), 0);
-        const totalSalesCount = orders.length;
+        let totalSalesCount = orders.length;
+        let totalGrossRevenue = 0;
+        let totalDiscounts = 0;
+        let totalRefunds = 0;
+        let totalNetProfit = 0;
 
-        const doc = new PDFDocument({ margin: 30, size: 'A4' });
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=sales-report-${Date.now()}.pdf`);
-
-        doc.pipe(res);
-
-        doc.fontSize(20).text('HOOF Sales Report', { align: 'center' });
-        doc.moveDown();
-        doc.fontSize(12).text(`Generated on: ${new Date().toLocaleString()}`);
-        doc.text(`Filter: ${filter || 'All'}`);
-        doc.moveDown();
-
-        const table = {
-            title: "Orders Summary",
-            headers: ["Order ID", "Date", "Customer", "Amount", "Status"],
-            rows: orders.map(order => [
-                order._id.toString().slice(-8).toUpperCase(),
-                order.createdAt.toLocaleDateString(),
-                order.userId ? order.userId.fullName : 'Guest',
-                `INR ${order.totalAmount}`,
-                order.status
-            ])
+        let statusCounts = {
+            Delivered: 0,
+            Cancelled: 0,
+            Returned: 0,
+            Processing: 0,
+            Shipped: 0,
+            Pending: 0
         };
 
-        await doc.table(table, {
-            prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10),
-            prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => doc.font("Helvetica").fontSize(9),
+        const enrichedOrders = orders.map(orderDoc => {
+            const order = orderDoc.toObject();
+            
+            const s = (order.status || 'Pending').toLowerCase();
+            if (s === 'delivered') statusCounts.Delivered++;
+            else if (s === 'cancelled') statusCounts.Cancelled++;
+            else if (['returned', 'return approved', 'return requested', 'picked up'].includes(s)) statusCounts.Returned++;
+            else if (s === 'processing') statusCounts.Processing++;
+            else if (['shipped', 'out for delivery'].includes(s)) statusCounts.Shipped++;
+            else statusCounts.Pending++;
+
+            const isPrepaid = ['Razorpay', 'Wallet'].includes(order.paymentMethod) && order.paymentStatus !== 'Failed';
+            
+            let orderGross = 0;
+            let orderRefund = 0;
+            let orderDiscount = order.discountAmount || order.discount || 0;
+            let shippingFee = order.shippingCharge || order.shippingFee || 0;
+            
+            if (order.items && order.items.length > 0) {
+                order.items.forEach(item => {
+                    const itemTotal = (item.priceAtPurchase || item.price || 0) * item.quantity;
+                    orderGross += itemTotal;
+                    
+                    const isItemRefunded = ['Cancelled', 'Returned'].includes(item.itemStatus);
+                    const isEntireOrderCancelled = order.status === 'CANCELLED';
+                    
+                    if (isEntireOrderCancelled) {
+                        if (isPrepaid) orderRefund += itemTotal;
+                    } else if (isItemRefunded) {
+                        if (isPrepaid || item.itemStatus === 'Returned') {
+                            orderRefund += itemTotal;
+                        }
+                    }
+                });
+            }
+
+            if (order.status === 'CANCELLED' && isPrepaid) {
+                orderRefund += shippingFee - orderDiscount;
+                if (orderRefund < 0) orderRefund = 0;
+            }
+
+            let orderNet = (orderGross + shippingFee) - orderDiscount - orderRefund;
+            if (orderNet < 0) orderNet = 0;
+
+            totalGrossRevenue += (orderGross + shippingFee);
+            totalDiscounts += orderDiscount;
+            totalRefunds += orderRefund;
+            totalNetProfit += orderNet;
+
+            order.calculatedGross = orderGross + shippingFee;
+            order.calculatedRefund = orderRefund;
+            order.calculatedNet = orderNet;
+            
+            return order;
         });
 
-        doc.moveDown();
-        doc.fontSize(12).font("Helvetica-Bold").text(`Total Orders: ${totalSalesCount}`);
-        doc.text(`Total Revenue (Delivered): INR ${totalRevenue}`);
+        const ejs = require('ejs');
+        const puppeteer = require('puppeteer');
+        const path = require('path');
 
-        doc.end();
+        const ejsTemplatePath = path.join(__dirname, '../views/Admin/sales-report.ejs');
+        const compiledHtml = await ejs.renderFile(ejsTemplatePath, {
+            orders: enrichedOrders,
+            totalSalesCount,
+            totalGrossRevenue,
+            totalDiscounts,
+            totalRefunds,
+            totalNetProfit,
+            statusCounts,
+            filter: filter || 'ALL TIME',
+            generatedDate: new Date().toLocaleString('en-IN')
+        });
+
+        const browser = await puppeteer.launch({ 
+            headless: "new", 
+            args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+        });
+        const page = await browser.newPage();
+        
+        await page.setContent(compiledHtml, { waitUntil: 'networkidle0' });
+        
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            landscape: true,
+            printBackground: true,
+            margin: { top: '30px', right: '30px', bottom: '30px', left: '30px' }
+        });
+        
+        await browser.close();
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=sales-report-${Date.now()}.pdf`);
+        res.send(pdfBuffer);
 
     } catch (error) {
         console.error("Export Report Error:", error);
@@ -979,85 +1282,120 @@ exports.exportOrders = async (req, res) => {
             .populate('userId', 'fullName email')
             .sort({ createdAt: -1 });
 
-        const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' });
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=orders-report-${Date.now()}.pdf`);
-        doc.pipe(res);
+        let totalSalesCount = orders.length;
+        let totalGrossRevenue = 0;
+        let totalDiscounts = 0;
+        let totalRefunds = 0;
+        let totalNetProfit = 0;
 
-        // Title
-        doc.fontSize(22).font("Helvetica-Bold").text('HOOF — Orders Report', { align: 'center' });
-        doc.moveDown(0.3);
-        doc.fontSize(10).font("Helvetica").fillColor('#666')
-            .text(`Generated on: ${new Date().toLocaleString('en-IN')}`, { align: 'center' });
+        let statusCounts = {
+            Delivered: 0,
+            Cancelled: 0,
+            Returned: 0,
+            Processing: 0,
+            Shipped: 0,
+            Pending: 0
+        };
 
-        // Filter info
+        const enrichedOrders = orders.map(orderDoc => {
+            const order = orderDoc.toObject();
+            
+            const s = (order.status || 'Pending').toLowerCase();
+            if (s === 'delivered') statusCounts.Delivered++;
+            else if (s === 'cancelled') statusCounts.Cancelled++;
+            else if (['returned', 'return approved', 'return requested', 'picked up'].includes(s)) statusCounts.Returned++;
+            else if (s === 'processing') statusCounts.Processing++;
+            else if (['shipped', 'out for delivery'].includes(s)) statusCounts.Shipped++;
+            else statusCounts.Pending++;
+
+            const isPrepaid = ['Razorpay', 'Wallet'].includes(order.paymentMethod) && order.paymentStatus !== 'Failed';
+            
+            let orderGross = 0;
+            let orderRefund = 0;
+            let orderDiscount = order.discountAmount || order.discount || 0;
+            let shippingFee = order.shippingCharge || order.shippingFee || 0;
+            
+            if (order.items && order.items.length > 0) {
+                order.items.forEach(item => {
+                    const itemTotal = (item.priceAtPurchase || item.price || 0) * item.quantity;
+                    orderGross += itemTotal;
+                    
+                    const isItemRefunded = ['Cancelled', 'Returned'].includes(item.itemStatus);
+                    const isEntireOrderCancelled = order.status === 'CANCELLED';
+                    
+                    if (isEntireOrderCancelled) {
+                        if (isPrepaid) orderRefund += itemTotal;
+                    } else if (isItemRefunded) {
+                        if (isPrepaid || item.itemStatus === 'Returned') {
+                            orderRefund += itemTotal;
+                        }
+                    }
+                });
+            }
+
+            if (order.status === 'CANCELLED' && isPrepaid) {
+                orderRefund += shippingFee - orderDiscount;
+                if (orderRefund < 0) orderRefund = 0;
+            }
+
+            let orderNet = (orderGross + shippingFee) - orderDiscount - orderRefund;
+            if (orderNet < 0) orderNet = 0;
+
+            totalGrossRevenue += (orderGross + shippingFee);
+            totalDiscounts += orderDiscount;
+            totalRefunds += orderRefund;
+            totalNetProfit += orderNet;
+
+            order.calculatedGross = orderGross + shippingFee;
+            order.calculatedRefund = orderRefund;
+            order.calculatedNet = orderNet;
+            
+            return order;
+        });
+
+        const ejs = require('ejs');
+        const puppeteer = require('puppeteer');
+        const path = require('path');
+
         const filters = [];
         if (status) filters.push(`Status: ${status}`);
         if (payment) filters.push(`Payment: ${payment}`);
         if (search) filters.push(`Search: "${search}"`);
-        if (filters.length > 0) {
-            doc.text(`Filters: ${filters.join(' | ')}`, { align: 'center' });
-        }
-        doc.moveDown(0.5);
 
-        // Summary
-        const totalRevenue = orders.reduce((acc, o) => acc + (o.totalAmount || 0), 0);
-        const deliveredCount = orders.filter(o => o.status === 'DELIVERED').length;
-        const cancelledCount = orders.filter(o => o.status === 'CANCELLED').length;
-
-        doc.fontSize(10).font("Helvetica-Bold").fillColor('#333');
-        doc.text(`Total Orders: ${orders.length}   |   Delivered: ${deliveredCount}   |   Cancelled: ${cancelledCount}   |   Total Amount: INR ${totalRevenue.toLocaleString('en-IN')}`);
-        doc.moveDown(0.5);
-
-        // Table
-        const table = {
-            headers: [
-                { label: "Order ID", width: 70, align: 'center' },
-                { label: "Date", width: 85 },
-                { label: "Customer", width: 130 },
-                { label: "Items", width: 90, align: 'center' },
-                { label: "Amount", width: 80, align: 'right' },
-                { label: "Payment", width: 70, align: 'center' },
-                { label: "Pay Status", width: 70, align: 'center' },
-                { label: "Status", width: 90, align: 'center' }
-            ],
-            rows: orders.map(order => {
-                let pStatus = order.paymentStatus || 'Pending';
-                if (order.status === 'DELIVERED') pStatus = order.paymentMethod === 'COD' ? 'SUCCESS' : 'Paid';
-
-                const itemCount = order.items ? order.items.length : 0;
-                let itemLabel;
-                if (itemCount === 1) {
-                    const name = (order.items[0].productName || 'Item').substring(0, 14);
-                    const size = order.items[0].variantSize ? ` (${order.items[0].variantSize})` : '';
-                    itemLabel = name + size;
-                } else if (itemCount > 1) {
-                    itemLabel = `${itemCount} items`;
-                } else {
-                    itemLabel = 'N/A';
-                }
-
-                return [
-                    '#' + String(order._id).slice(-8).toUpperCase(),
-                    new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-                    order.userId ? order.userId.fullName : (order.shippingAddress?.fullName || 'Guest'),
-                    itemLabel,
-                    `INR ${order.totalAmount.toLocaleString('en-IN')}`,
-                    order.paymentMethod,
-                    pStatus,
-                    order.status
-                ];
-            })
-        };
-
-        await doc.table(table, {
-            prepareHeader: () => doc.font("Helvetica-Bold").fontSize(8),
-            prepareRow: (row, indexColumn, indexRow) => {
-                doc.font("Helvetica").fontSize(8);
-            },
+        const ejsTemplatePath = path.join(__dirname, '../views/Admin/sales-report.ejs');
+        const compiledHtml = await ejs.renderFile(ejsTemplatePath, {
+            reportTitle: 'Order Management Export',
+            orders: enrichedOrders,
+            totalSalesCount,
+            totalGrossRevenue,
+            totalDiscounts,
+            totalRefunds,
+            totalNetProfit,
+            statusCounts,
+            filter: filters.length > 0 ? filters.join(' | ') : 'ALL TIME',
+            generatedDate: new Date().toLocaleString('en-IN')
         });
 
-        doc.end();
+        const browser = await puppeteer.launch({ 
+            headless: "new", 
+            args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+        });
+        const page = await browser.newPage();
+        
+        await page.setContent(compiledHtml, { waitUntil: 'networkidle0' });
+        
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            landscape: true,
+            printBackground: true,
+            margin: { top: '30px', right: '30px', bottom: '30px', left: '30px' }
+        });
+        
+        await browser.close();
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=orders-report-${Date.now()}.pdf`);
+        res.send(pdfBuffer);
     } catch (error) {
         console.error("Export Orders Error:", error);
         res.status(500).send("Error generating orders report");

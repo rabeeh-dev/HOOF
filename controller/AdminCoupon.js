@@ -86,6 +86,15 @@ exports.updateCoupon = async (req, res) => {
             return res.status(404).json({ success: false, message: "Coupon not found" });
         }
 
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('coupon:statusChanged', { 
+                couponCode: updatedCoupon.couponCode, 
+                isBlocked: updatedCoupon.isBlocked,
+                expiryDate: updatedCoupon.expiryDate 
+            });
+        }
+
         res.status(200).json({ success: true, message: "Coupon updated successfully" });
     } catch (err) {
         console.error("Update coupon error:", err);
@@ -109,6 +118,15 @@ exports.toggleCouponStatus = async (req, res) => {
 
         coupon.isBlocked = !coupon.isBlocked;
         await coupon.save();
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('coupon:statusChanged', { 
+                couponCode: coupon.couponCode, 
+                isBlocked: coupon.isBlocked,
+                expiryDate: coupon.expiryDate
+            });
+        }
 
         res.status(200).json({
             success: true,

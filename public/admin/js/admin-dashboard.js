@@ -7,12 +7,22 @@
 const logoutBtn = document.querySelector('.logout-btn');
 if (logoutBtn) {
   logoutBtn.addEventListener('click', () => {
-    if (confirm('Are you sure you want to logout?')) {
-      showToast('Logging out...', 'info');
-      setTimeout(() => {
-        window.location.href = '/admin/logout';
-      }, 500);
-    }
+    Swal.fire({
+      title: 'Logout?',
+      text: 'Are you sure you want to logout?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, logout'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        showToast('Logging out...', 'info');
+        setTimeout(() => {
+          window.location.href = '/admin/logout';
+        }, 500);
+      }
+    });
   });
 }
 
@@ -195,6 +205,8 @@ const fetchDashboardData = async (filter, start = null, end = null) => {
     if (result.stats) {
       const revenueEl = document.getElementById('statRevenue');
       const ordersEl = document.getElementById('statOrders');
+      const customersEl = document.getElementById('statCustomers');
+      const productsEl = document.getElementById('statProducts');
 
       if (revenueEl) {
         revenueEl.textContent = `₹${result.stats.totalRevenue.toLocaleString('en-IN', {
@@ -207,6 +219,16 @@ const fetchDashboardData = async (filter, start = null, end = null) => {
       if (ordersEl) {
         ordersEl.textContent = result.stats.totalOrders.toLocaleString();
         ordersEl.setAttribute('data-value', result.stats.totalOrders);
+      }
+
+      if (customersEl && result.stats.totalCustomers !== undefined) {
+        customersEl.textContent = result.stats.totalCustomers.toLocaleString();
+        customersEl.setAttribute('data-value', result.stats.totalCustomers);
+      }
+
+      if (productsEl && result.stats.totalProducts !== undefined) {
+        productsEl.textContent = result.stats.totalProducts.toLocaleString();
+        productsEl.setAttribute('data-value', result.stats.totalProducts);
       }
     }
 
@@ -221,6 +243,17 @@ const fetchDashboardData = async (filter, start = null, end = null) => {
   }
 };
 
+// ==========================================
+// Auto-Initialization
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Force the dropdown to 'daily' if it exists and automatically jumpstart the chart/stats fetches
+    const filterEl = document.getElementById('dashboardFilter');
+    if (filterEl && typeof fetchDashboardData === 'function') {
+        filterEl.value = 'daily';
+        fetchDashboardData('daily');
+    }
+});
 if (dashboardFilter) {
   dashboardFilter.addEventListener('change', handleFilterChange);
 }

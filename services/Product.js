@@ -24,24 +24,15 @@ class ProductService {
         const { category, sort, page = 1, search, minPrice, maxPrice, size } = query;
         const skip = (page - 1) * limit;
 
-        // 1. Get all listed categories first to ensure we only show products from them
-        const listedCategories = await Category.find({ isListed: true }).select('_id');
-        const listedCategoryIds = listedCategories.map(cat => cat._id);
-
-        // 2. Build Filter Object (blocked products included — shown as unavailable in UI)
+        // 1. We no longer strictly filter by listed categories because we want them to show as "Unavailable" in UI.
+        
+        // 2. Build Filter Object (blocked products and unlisted categories included — shown as unavailable in UI)
         let filter = {
-            status: "Available",
-            category: { $in: listedCategoryIds }
+            status: "Available"
         };
 
         if (category) {
-            // If a specific category is requested, double check it's in the listed ones
-            if (listedCategoryIds.some(id => String(id) === String(category))) {
-                filter.category = category;
-            } else {
-                // If it's not listed, return empty
-                return { products: [], totalCount: 0, totalPages: 0, currentPage: parseInt(page) };
-            }
+            filter.category = category;
         }
 
         if (search) filter.productName = { $regex: search, $options: 'i' };

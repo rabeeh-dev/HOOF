@@ -829,6 +829,13 @@ exports.cancelOrder = async (req, res) => {
       note: "Cancelled by user"
     });
 
+    // Restore stock (only if stock was deducted — skip for UPI orders that never paid)
+    const stockWasDeducted = order.paymentMethod !== 'upi' || order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'Paid';
+    if (stockWasDeducted) {
+      const checkoutService = require("../services/UserCheckout");
+      await checkoutService.restoreStockForOrder(order._id);
+    }
+
     // Refund to wallet if payment was already made (UPI or Wallet)
     if (order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'Paid') {
       const shortId = String(order._id).slice(-8).toUpperCase();
@@ -947,19 +954,33 @@ exports.downloadInvoice = async (req, res) => {
 
     // Table Content
     let y = tableTop + 30;
-    order.items.forEach(item => {
-      doc.fontSize(10).text(item.productName || (item.productId ? item.productId.productName : 'Product'), 50, y);
-      doc.text(item.quantity.toString(), 300, y);
-      doc.text(`₹${item.priceAtPurchase.toLocaleString()}`, 400, y);
-      doc.text(`₹${(item.quantity * item.priceAtPurchase).toLocaleString()}`, 500, y);
-      y += 20;
-    });
+    
+    // Filter out cancelled or returned items
+    const activeItems = order.items.filter(item => !['Cancelled', 'Return Requested', 'Return Approved', 'Picked Up', 'Returned'].includes(item.itemStatus));
+    
+    if (activeItems.length === 0) {
+      doc.fontSize(12).text('All items in this order have been cancelled or returned.', 50, y);
+      y += 30;
+    } else {
+      activeItems.forEach(item => {
+        doc.fontSize(10).text(item.productName || (item.productId ? item.productId.productName : 'Product'), 50, y);
+        doc.text(item.quantity.toString(), 300, y);
+        doc.text(`₹${item.priceAtPurchase.toLocaleString()}`, 400, y);
+        doc.text(`₹${(item.quantity * item.priceAtPurchase).toLocaleString()}`, 500, y);
+        y += 20;
+      });
+    }
+
+    // Calculate Effective Total
+    let effectiveSubtotal = activeItems.reduce((acc, item) => acc + (item.quantity * item.priceAtPurchase), 0);
+    let effectiveTotal = effectiveSubtotal + (order.shippingCharge || 0) - (order.discountAmount || 0);
+    if (effectiveTotal < 0) effectiveTotal = 0;
 
     // Summary
     doc.moveTo(50, y + 10).lineTo(550, y + 10).stroke();
     y += 25;
     doc.fontSize(12).text('Grand Total:', 400, y);
-    doc.text(`₹${order.totalAmount.toLocaleString()}`, 500, y);
+    doc.text(`₹${effectiveTotal.toLocaleString()}`, 500, y);
 
     // Footer
     doc.fontSize(10).text('Thank you for shopping with HOOF!', 50, 700, { align: 'center' });
@@ -969,6 +990,138 @@ exports.downloadInvoice = async (req, res) => {
   } catch (err) {
     console.error("Invoice Error:", err);
     res.status(500).send("Error generating invoice");
+  }
+};
+
+// ==========================================
+// PER-ITEM CANCEL & RETURN
+// ==========================================
+
+exports.cancelOrderItem = async (req, res) => {
+  try {
+    const { orderId, itemId } = req.params;
+    const userId = req.session.userId;
+
+    const order = await Order.findOne({ _id: orderId, userId });
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+    // Order must be in a cancellable state
+    if (!["Pending", "Processing", "PLACED", "CONFIRMED"].includes(order.status)) {
+      return res.status(400).json({ success: false, message: "Items cannot be cancelled at this stage." });
+    }
+
+    const item = order.items.id(itemId);
+    if (!item) return res.status(404).json({ success: false, message: "Item not found" });
+    if (item.itemStatus !== 'Active') {
+      return res.status(400).json({ success: false, message: "This item is already " + item.itemStatus });
+    }
+
+    // Mark item as cancelled
+    item.itemStatus = 'Cancelled';
+
+    // Restore stock for this item
+    const checkoutService = require("../services/UserCheckout");
+    const Product = require("../model/Product");
+    const product = await Product.findById(item.productId);
+    if (product) {
+      const variant = product.variants
+        ? product.variants.find(v => String(v.size) === String(item.variantSize))
+        : null;
+      if (variant) {
+        variant.quantity += item.quantity;
+        variant.status = 'Available';
+      }
+      product.quantity += item.quantity;
+      await product.save();
+    }
+
+    // Partial refund if payment was already made
+    const refundAmount = item.priceAtPurchase * item.quantity;
+    if (order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'Paid') {
+      const shortId = String(order._id).slice(-8).toUpperCase();
+      await walletService.creditWallet(
+        userId,
+        refundAmount,
+        `Refund for cancelled item "${item.productName}" from order #${shortId}`,
+        order._id
+      );
+    }
+
+    // Add to status history
+    order.statusHistory.push({
+      status: 'Item Cancelled',
+      note: `"${item.productName}" (Size: ${item.variantSize || 'N/A'}) cancelled by user`
+    });
+
+    // Adjust order totals
+    order.subtotal -= refundAmount;
+    order.totalAmount -= refundAmount;
+    if (order.subtotal < 0) order.subtotal = 0;
+    if (order.totalAmount < 0) order.totalAmount = 0;
+
+    // If ALL items are cancelled, cancel the whole order
+    const allCancelled = order.items.every(i => i.itemStatus === 'Cancelled');
+    if (allCancelled) {
+      order.status = 'CANCELLED';
+      order.statusHistory.push({ status: 'CANCELLED', note: 'All items cancelled by user' });
+      if (order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'Paid') {
+        order.paymentStatus = 'Refunded';
+      }
+    }
+
+    await order.save();
+    res.json({ success: true, message: `"${item.productName}" cancelled successfully` });
+
+  } catch (err) {
+    console.error("Cancel Item Error:", err);
+    res.status(500).json({ success: false, message: "Failed to cancel item" });
+  }
+};
+
+exports.returnOrderItem = async (req, res) => {
+  try {
+    const { orderId, itemId } = req.params;
+    const { reason } = req.body;
+    const userId = req.session.userId;
+
+    if (!reason || reason.trim() === '') {
+      return res.status(400).json({ success: false, message: "Return reason is required" });
+    }
+
+    const order = await Order.findOne({ _id: orderId, userId });
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+    if (order.status !== 'DELIVERED') {
+      return res.status(400).json({ success: false, message: "Can only return delivered items" });
+    }
+
+    const item = order.items.id(itemId);
+    if (!item) return res.status(404).json({ success: false, message: "Item not found" });
+    if (item.itemStatus !== 'Active') {
+      return res.status(400).json({ success: false, message: "This item is already " + item.itemStatus });
+    }
+
+    item.itemStatus = 'Return Requested';
+    item.returnReason = reason;
+
+    order.statusHistory.push({
+      status: 'Item Return Requested',
+      note: `Return requested for "${item.productName}" - Reason: ${reason}`
+    });
+
+    // If all items are now in a return state, update the overall order status
+    const allReturning = order.items.every(i => ['Return Requested', 'Return Approved', 'Picked Up', 'Returned', 'Cancelled'].includes(i.itemStatus));
+    if (allReturning && !['Return Requested', 'Return Approved', 'Picked Up', 'Returned', 'CANCELLED'].includes(order.status)) {
+      order.status = 'Return Requested';
+      order.statusHistory.push({ status: 'Return Requested', note: 'Return requested for all active items' });
+    }
+
+    await order.save();
+    res.json({ success: true, message: `Return requested for "${item.productName}"` });
+
+  } catch (err) {
+    console.error("Return Item Error:", err);
+    res.status(500).json({ success: false, message: "Failed to request return" });
   }
 };
 

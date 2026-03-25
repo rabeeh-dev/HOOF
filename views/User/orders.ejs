@@ -134,10 +134,46 @@
                             </span>
                           </div>
                         </div>
-                        <span class="order-status-badge status-<%= statusClass %>">
-                          <span class="status-dot"></span>
-                          <%= order.status %>
-                        </span>
+                        <% 
+                            const itemStatuses = {};
+                            const oStatus = (order.status || '').toLowerCase();
+                            const oWasDelivered = ['delivered', 'returned', 'return requested', 'return approved', 'picked up', 'partially refunded'].includes(oStatus);
+                            
+                            if (order.items && order.items.length > 0) {
+                                order.items.forEach(item => {
+                                    const rawStat = item.itemStatus || 'Active';
+                                    let dispStat = (rawStat === 'Active' && oWasDelivered) ? 'Delivered' : rawStat;
+                                    if (rawStat === 'Active' && !oWasDelivered && ['pending', 'processing', 'shipped', 'out for delivery'].includes(oStatus)) {
+                                        dispStat = order.status;
+                                    } else if (rawStat === 'Active' && oStatus === 'cancelled') {
+                                        dispStat = 'Cancelled';
+                                    }
+                                    itemStatuses[dispStat] = (itemStatuses[dispStat] || 0) + 1;
+                                });
+                            } else {
+                                itemStatuses[order.status || 'Pending'] = 1;
+                            }
+                            const statusKeys = Object.keys(itemStatuses);
+                        %>
+                        <% if (statusKeys.length <= 1) { 
+                            const singleStatus = statusKeys.length === 1 ? statusKeys[0] : order.status;
+                            const singleClass = singleStatus.toLowerCase().replace(/\s+/g, '-');
+                        %>
+                            <span class="order-status-badge status-<%= singleClass %>">
+                                <span class="status-dot"></span>
+                                <%= singleStatus %>
+                            </span>
+                        <% } else { %>
+                            <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
+                                <% Object.entries(itemStatuses).forEach(([s, count]) => { 
+                                    const sClass = s.toLowerCase().replace(/\s+/g, '-');
+                                %>
+                                    <span class="order-status-badge status-<%= sClass %>" style="padding: 3px 8px; font-size: 0.72rem; border-radius: 4px;">
+                                        <%= count %> <%= s %>
+                                    </span>
+                                <% }) %>
+                            </div>
+                        <% } %>
                       </div>
 
                       <!-- CARD BODY -->
@@ -203,6 +239,14 @@
                               <i class="fas fa-times"></i> Cancel
                             </button>
                             <% } %>
+                              <% if (order.paymentStatus==='Failed' || (order.paymentStatus==='Pending' &&
+                                order.paymentMethod==='Razorpay' )) { %>
+                                <button class="order-action-btn retry-btn" id="retry-btn-<%= order._id %>"
+                                  onclick="retryPayment('<%= order._id %>')"
+                                  style="background:rgba(102, 126, 234, 0.1);color:#667eea;border:1px solid rgba(102, 126, 234, 0.3);">
+                                  <i class="fas fa-redo"></i> Pay Now
+                                </button>
+                                <% } %>
                               <% if (normalizedStatus==='delivered' ) { %>
                                 <button class="order-action-btn return-btn" onclick="requestReturn('<%= order._id %>')">
                                   <i class="fas fa-undo"></i> Return
@@ -327,4 +371,5 @@
   </div>
 </div>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="/user/js/orders.js" defer></script>

@@ -152,6 +152,18 @@
     box-shadow: 0 8px 20px rgba(74, 144, 217, 0.3);
 }
 
+.action-btn-retry {
+    border-color: rgba(102, 126, 234, 0.2);
+    color: #667eea;
+}
+
+.action-btn-retry:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
 /* STATES */
 .cancelled-block {
     background: rgba(220, 53, 69, 0.05);

@@ -369,6 +369,81 @@
             margin-top: 0.15rem;
         }
 
+        /* RETURN REASON BOX */
+        .return-reason-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-top: 6px;
+            padding: 6px 10px;
+            background: rgba(243, 156, 18, 0.08);
+            border-left: 3px solid #f39c12;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.78rem;
+            color: #856404;
+            line-height: 1.4;
+        }
+
+        .return-reason-box i {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        /* ITEM ACTION BUTTONS */
+        .item-action-btns {
+            display: flex;
+            gap: 5px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .item-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid;
+            font-family: inherit;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+        }
+
+        .item-action-btn.approve {
+            border-color: #27ae60;
+            color: #27ae60;
+        }
+        .item-action-btn.approve:hover {
+            background: #27ae60;
+            color: white;
+        }
+
+        .item-action-btn.reject {
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+        .item-action-btn.reject:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .item-action-btn.process {
+            border-color: #3498db;
+            color: #3498db;
+        }
+        .item-action-btn.process:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .item-action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         /* RESPONSIVE */
         @media (max-width: 992px) {
             .detail-grid {
@@ -517,12 +592,23 @@
                                             <th>Product</th>
                                             <th>Price</th>
                                             <th>Qty</th>
+                                            <th>Status</th>
                                             <th style="text-align:right;">Subtotal</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <% order.items.forEach(item=> { %>
-                                            <tr>
+                                        <% 
+                                        const currentStatus = (order.status || '').toLowerCase();
+                                        const isDelivered = currentStatus === 'delivered';
+                                        const wasDelivered = isDelivered || ['returned', 'return requested', 'return approved', 'picked up', 'partially refunded'].includes(currentStatus);
+                                        
+                                        order.items.forEach(item=> { 
+                                            const rawStatus = item.itemStatus || 'Active';
+                                            const iStatus = (rawStatus === 'Active' && wasDelivered) ? 'Delivered' : rawStatus;
+                                            const isCancelledItem = ['Cancelled', 'Returned'].includes(rawStatus);
+                                            const isReturnRelated = ['Return Requested', 'Return Approved', 'Picked Up'].includes(rawStatus);
+                                        %>
+                                            <tr style="<%= isCancelledItem ? 'opacity:0.55;' : '' %>">
                                                 <td>
                                                     <div class="item-product-cell">
                                                         <img src="<%= item.productImage %>"
@@ -535,7 +621,13 @@
                                                                 <span class="item-variant-badge"><i
                                                                         class="fas fa-ruler"></i> Size: <%=
                                                                         item.displaySize %></span>
-                                                                <% } %>
+                                                            <% } %>
+                                                            <% if (item.returnReason && isReturnRelated) { %>
+                                                                <div class="return-reason-box">
+                                                                    <i class="fas fa-comment-dots"></i>
+                                                                    <span><strong>Return Reason:</strong> <%= item.returnReason %></span>
+                                                                </div>
+                                                            <% } %>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -543,19 +635,53 @@
                                                 </td>
                                                 <td>× <%= item.quantity %>
                                                 </td>
-                                                <td style="text-align:right; font-weight:600;">₹<%=
+                                                <td>
+                                                    <span class="status-badge <%= iStatus.toLowerCase().replace(/\s+/g, '-') %>" style="font-size:0.75rem;padding:4px 10px;">
+                                                        <%= iStatus %>
+                                                    </span>
+                                                    <% if (iStatus === 'Return Requested') { %>
+                                                        <div class="item-action-btns">
+                                                            <button class="item-action-btn approve" onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'Return Approved')">
+                                                                <i class="fas fa-check"></i> Approve
+                                                            </button>
+                                                            <button class="item-action-btn reject" onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'Active')">
+                                                                <i class="fas fa-times"></i> Reject
+                                                            </button>
+                                                        </div>
+                                                    <% } else if (iStatus === 'Return Approved') { %>
+                                                        <div class="item-action-btns">
+                                                            <button class="item-action-btn process" onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'Picked Up')">
+                                                                <i class="fas fa-box"></i> Picked Up
+                                                            </button>
+                                                            <button class="item-action-btn approve" onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'Returned')">
+                                                                <i class="fas fa-reply"></i> Mark Returned
+                                                            </button>
+                                                        </div>
+                                                    <% } else if (iStatus === 'Picked Up') { %>
+                                                        <div class="item-action-btns">
+                                                            <button class="item-action-btn approve" onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'Returned')">
+                                                                <i class="fas fa-reply"></i> Mark Returned
+                                                            </button>
+                                                        </div>
+                                                    <% } %>
+                                                </td>
+                                                <td style="text-align:right; font-weight:600;<%= (isCancelledItem || iStatus === 'Returned') ? 'text-decoration:line-through;color:#aaa;' : '' %>">₹<%=
                                                         (item.priceAtPurchase * item.quantity).toLocaleString('en-IN')
                                                         %>
                                                 </td>
                                             </tr>
-                                            <% }) %>
+                                        <% }) %>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
 
                         <!-- Status Update Section -->
-                        <% if (!['DELIVERED', 'CANCELLED' , 'Returned' ].includes(order.status)) { %>
+                        <% 
+                            const hasReturningItems = order.items.some(i => ['Return Requested', 'Return Approved', 'Picked Up'].includes(i.itemStatus));
+                            const showStatusUpdate = !['CANCELLED', 'Returned'].includes(order.status) && (order.status !== 'DELIVERED' || hasReturningItems);
+                        %>
+                        <% if (showStatusUpdate) { %>
                             <div class="section-card">
                                 <div class="section-card-header">
                                     <i class="fas fa-edit"></i> Update Status
@@ -599,14 +725,25 @@
                                 <i class="fas fa-receipt"></i> Summary
                             </div>
                             <div class="section-card-body">
-                                <% let itemSubtotal=0; order.items.forEach(i=> { itemSubtotal += i.priceAtPurchase *
-                                    i.quantity; });
+                                <% 
+                                    const activeItems = order.items.filter(item => !['Cancelled', 'Return Requested', 'Return Approved', 'Picked Up', 'Returned'].includes(item.itemStatus));
+                                    let effectiveSubtotal = activeItems.reduce((acc, item) => acc + (item.quantity * item.priceAtPurchase), 0);
+                                    
+                                    // Original logic for display references
+                                    let itemSubtotal=0; order.items.forEach(i=> { itemSubtotal += i.priceAtPurchase * i.quantity; });
                                     const shipping = order.shippingCharge || 0;
                                     const discount = order.discountAmount || 0;
-                                    %>
+                                    
+                                    let effectiveTotal = effectiveSubtotal + shipping - discount;
+                                    if (effectiveTotal < 0) effectiveTotal = 0;
+                                %>
                                     <div class="info-row">
-                                        <span class="info-label">Subtotal</span>
-                                        <span class="info-value">₹<%= itemSubtotal.toLocaleString('en-IN') %></span>
+                                        <span class="info-label">Original Subtotal</span>
+                                        <span class="info-value" style="color:#888;font-size:0.85rem;">₹<%= itemSubtotal.toLocaleString('en-IN') %></span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Effective Subtotal</span>
+                                        <span class="info-value">₹<%= effectiveSubtotal.toLocaleString('en-IN') %></span>
                                     </div>
                                     <div class="info-row">
                                         <span class="info-label">Shipping</span>
@@ -625,9 +762,8 @@
                                             </div>
                                             <div class="info-row">
                                                 <span class="info-label"
-                                                    style="font-weight:700; color:var(--admin-text);">Total</span>
-                                                <span class="info-value highlight">₹<%=
-                                                        order.totalAmount.toLocaleString('en-IN') %></span>
+                                                    style="font-weight:700; color:var(--admin-text);">Effective Total</span>
+                                                <span class="info-value highlight">₹<%= effectiveTotal.toLocaleString('en-IN') %></span>
                                             </div>
                             </div>
                         </div>
@@ -877,6 +1013,50 @@
                 document.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') { closeConfirmModal(); closeAlertModal(); }
                 });
+
+                /* ---- Per-Item Return Status Update ---- */
+                async function updateItemStatus(orderId, itemId, newStatus) {
+                    const actionLabels = {
+                        'Return Approved': 'Approve Return',
+                        'Active': 'Reject Return',
+                        'Picked Up': 'Mark as Picked Up',
+                        'Returned': 'Mark as Returned'
+                    };
+                    const label = actionLabels[newStatus] || newStatus;
+                    const isReject = newStatus === 'Active';
+                    const btnColor = isReject ? '#e74c3c' : '#27ae60';
+
+                    showConfirmModal(
+                        `${label}?`,
+                        isReject
+                            ? 'This will reject the return request and restore the item to active status.'
+                            : newStatus === 'Returned'
+                                ? 'This will mark the item as returned, restore stock, and process the refund to the customer\'s wallet.'
+                                : `This will update the item status to "${newStatus}".`,
+                        `Yes, ${label}`,
+                        btnColor,
+                        async () => {
+                            showLoading('Updating item status...');
+                            try {
+                                const res = await fetch(`/admin/orders/${orderId}/item/${itemId}/status`, {
+                                    method: 'PATCH',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ status: newStatus })
+                                });
+                                const data = await res.json();
+                                if (data.success) {
+                                    window.location.reload();
+                                } else {
+                                    hideLoading();
+                                    showAlertModal('Update Failed', data.message || 'Could not update item status.', 'error');
+                                }
+                            } catch (err) {
+                                hideLoading();
+                                showAlertModal('Connection Error', 'Unable to reach the server. Please try again.', 'error');
+                            }
+                        }
+                    );
+                }
             </script>
 </body>
 

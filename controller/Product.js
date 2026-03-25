@@ -64,11 +64,11 @@ exports.addReview = async (req, res) => {
             return res.status(401).json({ success: false, message: "Please login to write a review" });
         }
 
-        // Check if user has purchased and received this product
+        const deliveredStatuses = ['DELIVERED', 'Return Requested', 'Return Approved', 'Picked Up', 'Returned', 'Partially Refunded'];
         const hasPurchased = await Order.exists({
             userId,
             'items.productId': productId,
-            status: 'DELIVERED'
+            status: { $in: deliveredStatuses }
         });
 
         if (!hasPurchased) {
@@ -130,11 +130,11 @@ exports.loadProductDetails = async (req, res) => {
                 wishlistProductIds = wishlist.products.map(id => id.toString());
             }
 
-            // Check if user bought and received this product
+            const deliveredStatuses = ['DELIVERED', 'Return Requested', 'Return Approved', 'Picked Up', 'Returned', 'Partially Refunded'];
             hasPurchased = !!(await Order.exists({
                 userId: req.session.userId,
                 'items.productId': productId,
-                status: 'DELIVERED'
+                status: { $in: deliveredStatuses }
             }));
 
             // Check if user already reviewed this product

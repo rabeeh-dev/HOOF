@@ -20,7 +20,51 @@
         backdrop-filter: blur(10px);
         border: 1px border;
     }
+
+    /* Loading Overlay Styles */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 21, 20, 0.65);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+    }
+
+    .spinner-main {
+        width: 80px;
+        height: 80px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top: 4px solid #ff4b2b;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    .loading-text {
+        color: white;
+        font-family: sans-serif;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
 </style>
+
+<!-- Global Loading Overlay -->
+<div id="global-loading-overlay" class="loading-overlay">
+    <div style="text-align: center;">
+        <div class="spinner-main"></div>
+        <p class="loading-text">Processing your request...</p>
+    </div>
+</div>
 
 <section class="order-success-page">
     <div class="bg-shapes" aria-hidden="true">

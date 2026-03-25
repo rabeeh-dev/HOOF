@@ -254,12 +254,11 @@
                         </div>
                         <div class="form-group">
                             <label for="minPurchaseAmount">Min. Purchase (₹)</label>
-                            <input type="number" id="minPurchaseAmount" name="minPurchaseAmount" min="0" value="0">
+                            <input type="number" id="minPurchaseAmount" name="minPurchaseAmount" min="0" value="0" required>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="maxDiscountGroup">
                             <label for="maxDiscountAmount">Max Discount (₹)</label>
-                            <input type="number" id="maxDiscountAmount" name="maxDiscountAmount" min="0"
-                                placeholder="Optional">
+                            <input type="number" id="maxDiscountAmount" name="maxDiscountAmount" min="0" placeholder="Required for %">
                         </div>
                         <div class="form-group">
                             <label for="expiryDate">Expiry Date</label>
@@ -267,7 +266,7 @@
                         </div>
                         <div class="form-group" style="grid-column: span 2;">
                             <label for="usageLimit">Usage Limit (Total)</label>
-                            <input type="number" id="usageLimit" name="usageLimit" min="1" value="1">
+                            <input type="number" id="usageLimit" name="usageLimit" min="1" value="1" required>
                         </div>
                     </div>
                     <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 2rem;">
