@@ -280,10 +280,42 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <span
-                                                class="status-badge <%= order.status.toLowerCase().replace(/\s+/g, '-') %>">
-                                                <%= order.status %>
-                                            </span>
+                                            <% 
+                                                const itemStatuses = {};
+                                                const oStatus = (order.status || '').toLowerCase();
+                                                const oWasDelivered = ['delivered', 'returned', 'return requested', 'return approved', 'picked up', 'partially refunded'].includes(oStatus);
+                                                
+                                                if (order.items && order.items.length > 0) {
+                                                    order.items.forEach(item => {
+                                                        const rawStat = item.itemStatus || 'Active';
+                                                        let dispStat = (rawStat === 'Active' && oWasDelivered) ? 'Delivered' : rawStat;
+                                                        if (rawStat === 'Active' && !oWasDelivered && ['pending', 'processing', 'shipped', 'out for delivery'].includes(oStatus)) {
+                                                            dispStat = order.status; // inherit main order status if active & not delivered
+                                                        } else if (rawStat === 'Active' && oStatus === 'cancelled') {
+                                                            dispStat = 'Cancelled';
+                                                        }
+                                                        itemStatuses[dispStat] = (itemStatuses[dispStat] || 0) + 1;
+                                                    });
+                                                } else {
+                                                    itemStatuses[order.status] = 1;
+                                                }
+                                                const statusKeys = Object.keys(itemStatuses);
+                                            %>
+                                            <% if (statusKeys.length <= 1) { 
+                                                const singleStatus = statusKeys.length === 1 ? statusKeys[0] : order.status;
+                                            %>
+                                                <span class="status-badge <%= singleStatus.toLowerCase().replace(/\s+/g, '-') %>">
+                                                    <%= singleStatus %>
+                                                </span>
+                                            <% } else { %>
+                                                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                                                    <% Object.entries(itemStatuses).forEach(([s, count]) => { %>
+                                                        <span class="status-badge <%= s.toLowerCase().replace(/\s+/g, '-') %>" style="font-size: 0.7rem; padding: 3px 8px; font-weight: 600;">
+                                                            <%= count %> <%= s %>
+                                                        </span>
+                                                    <% }) %>
+                                                </div>
+                                            <% } %>
                                         </td>
                                         <td>
                                             <div class="action-buttons">

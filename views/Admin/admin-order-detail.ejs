@@ -597,10 +597,16 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <% order.items.forEach(item=> { 
-                                            const iStatus = item.itemStatus || 'Active';
-                                            const isCancelledItem = ['Cancelled', 'Returned'].includes(iStatus);
-                                            const isReturnRelated = ['Return Requested', 'Return Approved', 'Picked Up'].includes(iStatus);
+                                        <% 
+                                        const currentStatus = (order.status || '').toLowerCase();
+                                        const isDelivered = currentStatus === 'delivered';
+                                        const wasDelivered = isDelivered || ['returned', 'return requested', 'return approved', 'picked up', 'partially refunded'].includes(currentStatus);
+                                        
+                                        order.items.forEach(item=> { 
+                                            const rawStatus = item.itemStatus || 'Active';
+                                            const iStatus = (rawStatus === 'Active' && wasDelivered) ? 'Delivered' : rawStatus;
+                                            const isCancelledItem = ['Cancelled', 'Returned'].includes(rawStatus);
+                                            const isReturnRelated = ['Return Requested', 'Return Approved', 'Picked Up'].includes(rawStatus);
                                         %>
                                             <tr style="<%= isCancelledItem ? 'opacity:0.55;' : '' %>">
                                                 <td>
