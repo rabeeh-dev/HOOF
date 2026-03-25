@@ -1108,10 +1108,8 @@ exports.cancelOrderAdmin = async (req, res) => {
  */
 exports.exportSalesReport = async (req, res) => {
     try {
-        const { filter, startDate, endDate } = req.query;
-        let matchStage = {
-            status: { $in: ['DELIVERED', 'SHIPPED', 'Processing'] }
-        };
+        const { filter, startDate, endDate, type } = req.query;
+        let matchStage = {}; // Fetch all statuses as requested
 
         const now = new Date();
         if (filter === 'daily') {
@@ -1133,45 +1131,116 @@ exports.exportSalesReport = async (req, res) => {
             };
         }
 
-        const orders = await Order.find(matchStage).populate('userId', 'fullName').sort({ createdAt: -1 });
+        const orders = await Order.find(matchStage).populate('userId', 'fullName email').sort({ createdAt: -1 });
 
-        const totalRevenue = orders.reduce((acc, order) => acc + (order.status === 'DELIVERED' ? order.totalAmount : 0), 0);
-        const totalSalesCount = orders.length;
+        let totalSalesCount = orders.length;
+        let totalGrossRevenue = 0;
+        let totalDiscounts = 0;
+        let totalRefunds = 0;
+        let totalNetProfit = 0;
 
-        const doc = new PDFDocument({ margin: 30, size: 'A4' });
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=sales-report-${Date.now()}.pdf`);
-
-        doc.pipe(res);
-
-        doc.fontSize(20).text('HOOF Sales Report', { align: 'center' });
-        doc.moveDown();
-        doc.fontSize(12).text(`Generated on: ${new Date().toLocaleString()}`);
-        doc.text(`Filter: ${filter || 'All'}`);
-        doc.moveDown();
-
-        const table = {
-            title: "Orders Summary",
-            headers: ["Order ID", "Date", "Customer", "Amount", "Status"],
-            rows: orders.map(order => [
-                order._id.toString().slice(-8).toUpperCase(),
-                order.createdAt.toLocaleDateString(),
-                order.userId ? order.userId.fullName : 'Guest',
-                `INR ${order.totalAmount}`,
-                order.status
-            ])
+        let statusCounts = {
+            Delivered: 0,
+            Cancelled: 0,
+            Returned: 0,
+            Processing: 0,
+            Shipped: 0,
+            Pending: 0
         };
 
-        await doc.table(table, {
-            prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10),
-            prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => doc.font("Helvetica").fontSize(9),
+        const enrichedOrders = orders.map(orderDoc => {
+            const order = orderDoc.toObject();
+            
+            const s = (order.status || 'Pending').toLowerCase();
+            if (s === 'delivered') statusCounts.Delivered++;
+            else if (s === 'cancelled') statusCounts.Cancelled++;
+            else if (['returned', 'return approved', 'return requested', 'picked up'].includes(s)) statusCounts.Returned++;
+            else if (s === 'processing') statusCounts.Processing++;
+            else if (['shipped', 'out for delivery'].includes(s)) statusCounts.Shipped++;
+            else statusCounts.Pending++;
+
+            const isPrepaid = ['Razorpay', 'Wallet'].includes(order.paymentMethod) && order.paymentStatus !== 'Failed';
+            
+            let orderGross = 0;
+            let orderRefund = 0;
+            let orderDiscount = order.discountAmount || order.discount || 0;
+            let shippingFee = order.shippingCharge || order.shippingFee || 0;
+            
+            if (order.items && order.items.length > 0) {
+                order.items.forEach(item => {
+                    const itemTotal = (item.priceAtPurchase || item.price || 0) * item.quantity;
+                    orderGross += itemTotal;
+                    
+                    const isItemRefunded = ['Cancelled', 'Returned'].includes(item.itemStatus);
+                    const isEntireOrderCancelled = order.status === 'CANCELLED';
+                    
+                    if (isEntireOrderCancelled) {
+                        if (isPrepaid) orderRefund += itemTotal;
+                    } else if (isItemRefunded) {
+                        if (isPrepaid || item.itemStatus === 'Returned') {
+                            orderRefund += itemTotal;
+                        }
+                    }
+                });
+            }
+
+            if (order.status === 'CANCELLED' && isPrepaid) {
+                orderRefund += shippingFee - orderDiscount;
+                if (orderRefund < 0) orderRefund = 0;
+            }
+
+            let orderNet = (orderGross + shippingFee) - orderDiscount - orderRefund;
+            if (orderNet < 0) orderNet = 0;
+
+            totalGrossRevenue += (orderGross + shippingFee);
+            totalDiscounts += orderDiscount;
+            totalRefunds += orderRefund;
+            totalNetProfit += orderNet;
+
+            order.calculatedGross = orderGross + shippingFee;
+            order.calculatedRefund = orderRefund;
+            order.calculatedNet = orderNet;
+            
+            return order;
         });
 
-        doc.moveDown();
-        doc.fontSize(12).font("Helvetica-Bold").text(`Total Orders: ${totalSalesCount}`);
-        doc.text(`Total Revenue (Delivered): INR ${totalRevenue}`);
+        const ejs = require('ejs');
+        const puppeteer = require('puppeteer');
+        const path = require('path');
 
-        doc.end();
+        const ejsTemplatePath = path.join(__dirname, '../views/Admin/sales-report.ejs');
+        const compiledHtml = await ejs.renderFile(ejsTemplatePath, {
+            orders: enrichedOrders,
+            totalSalesCount,
+            totalGrossRevenue,
+            totalDiscounts,
+            totalRefunds,
+            totalNetProfit,
+            statusCounts,
+            filter: filter || 'ALL TIME',
+            generatedDate: new Date().toLocaleString('en-IN')
+        });
+
+        const browser = await puppeteer.launch({ 
+            headless: "new", 
+            args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+        });
+        const page = await browser.newPage();
+        
+        await page.setContent(compiledHtml, { waitUntil: 'networkidle0' });
+        
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            landscape: true,
+            printBackground: true,
+            margin: { top: '30px', right: '30px', bottom: '30px', left: '30px' }
+        });
+        
+        await browser.close();
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=sales-report-${Date.now()}.pdf`);
+        res.send(pdfBuffer);
 
     } catch (error) {
         console.error("Export Report Error:", error);

@@ -31,6 +31,7 @@
     "passport-google-oauth20": "^2.0.0",
     "pdfkit": "^0.17.2",
     "pdfkit-table": "^0.1.99",
+    "puppeteer": "^24.40.0",
     "qs": "^6.14.2",
     "razorpay": "^2.9.6",
     "socket.io": "^4.8.3"
