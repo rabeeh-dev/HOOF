@@ -207,11 +207,41 @@
                 <% } %>
           </div>
         </div>
+
+        <!-- LOW STOCK ALERTS -->
+        <div class="card low-stock">
+          <div class="card-header">
+            <h3><i class="fas fa-exclamation-triangle chart-icon warning-icon"></i> Low Stock Alerts</h3>
+            <a href="/admin/products" class="view-all">View All</a>
+          </div>
+          <div class="card-body">
+            <% if (lowStockProducts && lowStockProducts.length> 0) { %>
+              <% lowStockProducts.forEach(item=> { %>
+                <div class="stock-item">
+                  <div class="stock-info">
+                    <h4>
+                      <%= item.productName %>
+                    </h4>
+                    <p>Size: <%= item.variantSize %>
+                    </p>
+                  </div>
+                  <span class="stock-badge <%= item.variantQty <= 2 ? 'critical' : 'warning' %>">
+                    <%= item.variantQty %> left
+                  </span>
+                </div>
+                <% }); %>
+                  <% } else { %>
+                    <div class="empty-state">
+                      <i class="fas fa-check-circle"></i>
+                      <p>All products are well stocked</p>
+                    </div>
+                    <% } %>
+          </div>
+        </div>
       </div>
 
-      <!-- CONTENT GRID -->
-      <div class="content-grid">
-        <!-- RECENT ORDERS -->
+      <!-- RECENT ORDERS -->
+      <div class="charts-grid-full">
         <div class="card recent-orders">
           <div class="card-header">
             <h3><i class="fas fa-clock chart-icon"></i> Recent Orders</h3>
@@ -264,40 +294,11 @@
             </div>
           </div>
         </div>
-
-        <!-- LOW STOCK ALERTS -->
-        <div class="card low-stock">
-          <div class="card-header">
-            <h3><i class="fas fa-exclamation-triangle chart-icon warning-icon"></i> Low Stock Alerts</h3>
-            <a href="/admin/products" class="view-all">View All</a>
-          </div>
-          <div class="card-body">
-            <% if (lowStockProducts && lowStockProducts.length> 0) { %>
-              <% lowStockProducts.forEach(item=> { %>
-                <div class="stock-item">
-                  <div class="stock-info">
-                    <h4>
-                      <%= item.productName %>
-                    </h4>
-                    <p>Size: <%= item.variantSize %>
-                    </p>
-                  </div>
-                  <span class="stock-badge <%= item.variantQty <= 2 ? 'critical' : 'warning' %>">
-                    <%= item.variantQty %> left
-                  </span>
-                </div>
-                <% }); %>
-                  <% } else { %>
-                    <div class="empty-state">
-                      <i class="fas fa-check-circle"></i>
-                      <p>All products are well stocked</p>
-                    </div>
-                    <% } %>
-          </div>
-        </div>
       </div>
     </main>
 
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 

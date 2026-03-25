@@ -7,12 +7,22 @@
 const logoutBtn = document.querySelector('.logout-btn');
 if (logoutBtn) {
   logoutBtn.addEventListener('click', () => {
-    if (confirm('Are you sure you want to logout?')) {
-      showToast('Logging out...', 'info');
-      setTimeout(() => {
-        window.location.href = '/admin/logout';
-      }, 500);
-    }
+    Swal.fire({
+      title: 'Logout?',
+      text: 'Are you sure you want to logout?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, logout'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        showToast('Logging out...', 'info');
+        setTimeout(() => {
+          window.location.href = '/admin/logout';
+        }, 500);
+      }
+    });
   });
 }
 
