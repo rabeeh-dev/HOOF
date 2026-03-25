@@ -795,7 +795,7 @@ exports.updateOrderStatus = async (req, res) => {
             'Processing': ['SHIPPED', 'Out for Delivery', 'DELIVERED', 'CANCELLED'],
             'SHIPPED': ['Out for Delivery', 'DELIVERED', 'CANCELLED'],
             'Out for Delivery': ['DELIVERED', 'CANCELLED'],
-            'DELIVERED': ['DELIVERED'], // Allow self-transition to trigger payment updates
+            'DELIVERED': ['DELIVERED', 'Return Requested', 'Return Approved', 'Returned'], // Allow return transitions for delivered orders
             'CANCELLED': ['CANCELLED'], // Allow self-transition
             'Return Requested': ['Return Approved', 'Returned', 'CANCELLED'],
             'Return Approved': ['Picked Up', 'Returned', 'CANCELLED'],
@@ -886,7 +886,7 @@ exports.updateOrderStatus = async (req, res) => {
             if (order.totalAmount < 0) order.totalAmount = 0;
 
             if (totalRefundAmount > 0) {
-                const walletService = require("../services/walletService");
+                const walletService = require("../services/Wallet");
                 await walletService.creditWallet(
                     order.userId,
                     totalRefundAmount,
@@ -913,6 +913,134 @@ exports.updateOrderStatus = async (req, res) => {
 
         res.json({ success: true, message: "Status updated successfully" });
     } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * @desc    Update individual item status (for per-item return management).
+ * @route   PATCH /admin/orders/:orderId/item/:itemId/status
+ * @access  Private (Admin Only)
+ */
+exports.updateItemStatus = async (req, res) => {
+    try {
+        const { orderId, itemId } = req.params;
+        const { status } = req.body;
+
+        const order = await Order.findById(orderId);
+        if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+        const item = order.items.id(itemId);
+        if (!item) return res.status(404).json({ success: false, message: "Item not found" });
+
+        // Define allowed item-level transitions
+        const allowedItemTransitions = {
+            'Return Requested': ['Return Approved', 'Active'],  // Approve or Reject
+            'Return Approved': ['Picked Up', 'Returned'],
+            'Picked Up': ['Returned']
+        };
+
+        const allowed = allowedItemTransitions[item.itemStatus] || [];
+        if (!allowed.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Cannot change item status from "${item.itemStatus}" to "${status}".`
+            });
+        }
+
+        const previousStatus = item.itemStatus;
+        item.itemStatus = status;
+
+        // If rejecting (setting back to Active), clear return reason
+        if (status === 'Active') {
+            item.returnReason = '';
+            order.statusHistory.push({
+                status: 'Item Return Rejected',
+                note: `Return rejected for "${item.productName}" by admin`
+            });
+        } else {
+            order.statusHistory.push({
+                status: `Item ${status}`,
+                note: `"${item.productName}" status updated to ${status} by admin`
+            });
+        }
+
+        // Handle stock restoration and refund when item becomes "Returned"
+        if (status === 'Returned') {
+            const shortId = String(order._id).slice(-8).toUpperCase();
+            const refundAmount = item.priceAtPurchase * item.quantity;
+
+            // Restore stock
+            const product = await Product.findById(item.productId);
+            if (product) {
+                const variant = product.variants
+                    ? product.variants.find(v => String(v.size) === String(item.variantSize))
+                    : null;
+                if (variant) {
+                    variant.quantity += item.quantity;
+                    variant.status = 'Available';
+                }
+                product.quantity += item.quantity;
+                await product.save();
+            }
+
+            // Refund to wallet
+            if (refundAmount > 0) {
+                const walletSvc = require("../services/Wallet");
+                await walletSvc.creditWallet(
+                    order.userId,
+                    refundAmount,
+                    `Refund for returned item "${item.productName}" from order #${shortId}`,
+                    order._id
+                );
+            }
+
+            // Adjust order totals
+            order.subtotal -= refundAmount;
+            order.totalAmount -= refundAmount;
+            if (order.subtotal < 0) order.subtotal = 0;
+            if (order.totalAmount < 0) order.totalAmount = 0;
+        }
+
+        // Update order-level status based on all item statuses
+        const allItemStatuses = order.items.map(i => i.itemStatus);
+        const allResolved = allItemStatuses.every(s => ['Returned', 'Cancelled'].includes(s));
+        const anyReturning = allItemStatuses.some(s => ['Return Requested', 'Return Approved', 'Picked Up'].includes(s));
+        const anyReturned = allItemStatuses.some(s => s === 'Returned');
+
+        if (allResolved) {
+            order.status = 'Returned';
+            order.paymentStatus = 'Refunded';
+        } else if (anyReturned && !anyReturning) {
+            // Some returned, rest are active — partial refund
+            order.paymentStatus = 'Partially Refunded';
+        } else if (anyReturning) {
+            // Determine highest return state among returning items
+            const hasPickedUp = allItemStatuses.includes('Picked Up');
+            const hasApproved = allItemStatuses.includes('Return Approved');
+            const hasRequested = allItemStatuses.includes('Return Requested');
+
+            if (hasPickedUp) order.status = 'Picked Up';
+            else if (hasApproved) order.status = 'Return Approved';
+            else if (hasRequested) order.status = 'Return Requested';
+        } else if (status === 'Active') {
+            // All items back to active (rejection), restore DELIVERED
+            const allActive = allItemStatuses.every(s => s === 'Active' || s === 'Cancelled');
+            if (allActive) {
+                order.status = 'DELIVERED';
+            }
+        }
+
+        await order.save();
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('order:statusChanged', { orderId: order._id, userId: order.userId, status: order.status });
+        }
+
+        res.json({ success: true, message: `Item status updated to "${status}" successfully` });
+    } catch (error) {
+        console.error("Update Item Status Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };

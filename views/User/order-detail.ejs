@@ -2,7 +2,7 @@
     Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric' , month: 'short' , year: 'numeric' }); const
     statusClass=order.status.toLowerCase().replace(/\s+/g, '-' ); /* Logic helpers */ const
     canCancel=['pending', 'processing' , 'placed' , 'confirmed' ].includes(order.status.toLowerCase()); const
-    canReturn=order.status.toLowerCase()==='delivered' ; const canReview=order.status.toLowerCase()==='delivered' ;
+    canReturn=['delivered', 'return requested', 'return approved', 'picked up'].includes(order.status.toLowerCase()); const canReview=['delivered', 'return requested', 'return approved', 'picked up', 'returned'].includes(order.status.toLowerCase());
     const isDelivered=order.status.toLowerCase()==='delivered' ; const
     isCancelled=order.status.toLowerCase()==='cancelled' ; const isReturned=['returned', 'return requested'
     ].includes(order.status.toLowerCase()); /* Stepper logic */ const steps=[ { label: "Confirmed" , icon: "fa-check" ,
@@ -260,9 +260,18 @@
                             </div>
 
                             <div class="order-detail-block-body">
-                                <% order.items.forEach((item, index)=> { %>
+                                <% order.items.forEach((item, index)=> { 
+                                    /* Determine display status: show "Delivered" instead of "Active" for delivered orders.
+                                       Order may have moved from DELIVERED to Return Requested/Approved etc, so check return states too */
+                                    const rawStatus = item.itemStatus || 'Active';
+                                    const wasDelivered = isDelivered || ['returned', 'return requested', 'return approved', 'picked up', 'partially refunded'].includes(currentStatus);
+                                    const displayStatus = (rawStatus === 'Active' && wasDelivered) ? 'Delivered' : rawStatus;
+                                    const displayStatusClass = displayStatus.toLowerCase().replace(/\s+/g, '-');
+                                    const isItemReturned = ['Returned', 'Cancelled'].includes(rawStatus);
+                                    const isItemReturning = ['Return Requested', 'Return Approved', 'Picked Up'].includes(rawStatus);
+                                %>
                                     <div class="detail-item-row"
-                                        style="animation: fadeIn 0.4s ease backwards; animation-delay: <%= index * 0.08 %>s;">
+                                        style="animation: fadeIn 0.4s ease backwards; animation-delay: <%= index * 0.08 %>s;<%= isItemReturned ? 'opacity:0.55;' : '' %>">
                                         <img src="<%= item.product.productImage ? item.product.productImage[0] : '/user/images/placeholder.jpg' %>"
                                             alt="<%= item.product.productName %>" class="detail-item-image"
                                             onclick="window.location.href='/user/product-details/<%= item.product._id %>'" />
@@ -278,29 +287,33 @@
                                                 style="font-size:0.75rem;color:#999;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;display:block;">
                                                 <%= item.product.category ? item.product.category.name : 'Sneakers' %>
                                             </span>
-                                            <% if (item.itemStatus) { %>
-                                                <span
-                                                    class="order-status-badge status-<%= item.itemStatus.toLowerCase().replace(/\s+/g, '-') %>"
-                                                    style="padding:2px 10px;font-size:0.72rem;margin-top:6px;display:inline-block;">
-                                                    <span class="status-dot"></span>
-                                                    <%= item.itemStatus %>
-                                                </span>
-                                                <% } %>
+                                            <span
+                                                class="order-status-badge status-<%= displayStatusClass %>"
+                                                style="padding:2px 10px;font-size:0.72rem;margin-top:6px;display:inline-block;">
+                                                <span class="status-dot"></span>
+                                                <%= displayStatus %>
+                                            </span>
+                                            <% if (item.returnReason && (isItemReturning || rawStatus === 'Returned')) { %>
+                                                <div style="display:flex;align-items:flex-start;gap:0.4rem;margin-top:6px;padding:5px 8px;background:rgba(243,156,18,0.08);border-left:3px solid #f39c12;border-radius:0 6px 6px 0;font-size:0.75rem;color:#856404;line-height:1.4;">
+                                                    <i class="fas fa-comment-dots" style="margin-top:2px;flex-shrink:0;"></i>
+                                                    <span><strong>Reason:</strong> <%= item.returnReason %></span>
+                                                </div>
+                                            <% } %>
                                         </div>
 
                                         <div class="detail-item-pricing">
                                             <div style="font-size:0.85rem;color:#888;margin-bottom:0.3rem;">Qty: <%= item.quantity %>
                                             </div>
-                                            <div style="font-size:1.1rem;font-weight:800;color:var(--accent);">₹<%= (item.product.salePrice || 0).toLocaleString('en-IN') %>
+                                            <div style="font-size:1.1rem;font-weight:800;color:<%= isItemReturned ? '#aaa' : 'var(--accent)' %>;<%= isItemReturned ? 'text-decoration:line-through;' : '' %>">₹<%= (item.product.salePrice || 0).toLocaleString('en-IN') %>
                                             </div>
-                                            <% if (item.product.regularPrice > item.product.salePrice) { %>
+                                            <% if (item.product.regularPrice > item.product.salePrice && !isItemReturned) { %>
                                                 <span style="text-decoration:line-through;color:#bbb;font-size:0.85rem;display:block;">
                                                     ₹<%= item.product.regularPrice.toLocaleString('en-IN') %>
                                                 </span>
                                             <% } %>
 
                                             <div style="display:flex;flex-direction:column;gap:5px;margin-top:0.5rem;align-items:flex-end;">
-                                                <% if (canReview) { %>
+                                                <% if (canReview && rawStatus === 'Active') { %>
                                                     <button class="btn small-btn"
                                                         onclick="window.location.href='/user/product-details/<%= item.product._id %>#reviews'"
                                                         style="padding:4px 10px;font-size:0.75rem;background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:4px;cursor:pointer;">
@@ -326,7 +339,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <% }) %>
+                                <% }) %>
                             </div>
 
                             <div class="order-detail-block-footer">

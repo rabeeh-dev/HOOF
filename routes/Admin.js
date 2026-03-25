@@ -187,6 +187,13 @@ router.patch('/orders/:id/status', adminAuth.isLogin, adminController.updateOrde
  */
 router.patch('/orders/:id/cancel', adminAuth.isLogin, adminController.cancelOrderAdmin);
 
+/**
+ * @desc    Update individual item status (for per-item return management).
+ * @route   PATCH /admin/orders/:orderId/item/:itemId/status
+ * @access  Private (Admin Only)
+ */
+router.patch('/orders/:orderId/item/:itemId/status', adminAuth.isLogin, adminController.updateItemStatus);
+
 // ==========================================
 // COUPON MANAGEMENT SECTION
 // ==========================================
