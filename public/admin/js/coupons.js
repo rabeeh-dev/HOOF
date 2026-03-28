@@ -91,6 +91,21 @@ async function submitCouponForm(e) {
     payload.maxDiscountAmount = payload.maxDiscountAmount ? parseFloat(payload.maxDiscountAmount) : undefined;
     payload.usageLimit = parseInt(payload.usageLimit);
 
+    // Confirmation for 100% discount
+    if (payload.discountType === 'percentage' && payload.discountValue === 100) {
+        const result = await Swal.fire({
+            title: '100% Discount Detected!',
+            text: 'You have given percentage 100. Are you sure you want to proceed with this free offer?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Proceed',
+            cancelButtonText: 'No, Cancel',
+            confirmButtonColor: '#ff914d',
+            cancelButtonColor: '#d33'
+        });
+        if (!result.isConfirmed) return; // User cancelled
+    }
+
     const url = id ? `/admin/coupons/edit/${id}` : '/admin/coupons/add';
     const method = id ? 'PATCH' : 'POST';
     showLoading(id ? "Updating coupon..." : "Creating new coupon...");
@@ -103,6 +118,7 @@ async function submitCouponForm(e) {
         });
 
         const data = await response.json();
+        hideLoading();
 
         if (data.success) {
             Swal.fire({
@@ -114,8 +130,10 @@ async function submitCouponForm(e) {
         } else {
             Swal.fire('Error', data.message || 'Operation failed', 'error');
         }
-    } finally {
+    } catch (err) {
+        console.error("Submit coupon error:", err);
         hideLoading();
+        Swal.fire('Error', 'Something went wrong', 'error');
     }
 }
 
