@@ -125,8 +125,8 @@
                     <td><span class="contact-text">
                         <%= user.email %>
                       </span></td>
-                    <td><span class="order-count">0</span></td>
-                    <td><span class="total-spent">$0.00</span></td>
+                    <td><span class="order-count"><%= user.totalOrders || 0 %></span></td>
+                    <td><span class="total-spent">₹<%= (user.totalSpend || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span></td>
                     <td>
                       <span class="status-badge <%= user.isBlocked ? 'blocked' : 'active' %>">
                         <%= user.isBlocked ? 'Blocked' : 'Active' %>

@@ -383,11 +383,43 @@ exports.loadCustomers = async (req, res) => {
 
         const totalUsers = await User.countDocuments({});
 
-        const users = await User.find({})
-            .select("-password")
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
+        const users = await User.aggregate([
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit },
+            {
+                $lookup: {
+                    from: "orders",
+                    localField: "_id",
+                    foreignField: "userId",
+                    as: "orders"
+                }
+            },
+            {
+                $addFields: {
+                    totalOrders: { $size: "$orders" },
+                    totalSpend: {
+                        $reduce: {
+                            input: "$orders",
+                            initialValue: 0,
+                            in: {
+                                $cond: [
+                                    { $ne: ["$$this.status", "CANCELLED"] },
+                                    { $add: ["$$value", { $ifNull: ["$$this.totalAmount", 0] }] },
+                                    "$$value"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    password: 0,
+                    orders: 0
+                }
+            }
+        ]);
 
         res.render('Admin/user-management', {
             users,
