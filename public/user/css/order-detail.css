@@ -241,6 +241,184 @@
 }
 
 /* ==========================================
+   ORDER SUMMARY SECTION
+   ========================================== */
+
+/* Per-item list */
+.summary-items-list {
+    padding: 16px 20px 8px;
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
+}
+
+.summary-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    transition: opacity 0.3s ease;
+}
+
+.summary-item-row:last-child {
+    border-bottom: none;
+}
+
+.summary-item-row.item-struck {
+    opacity: 0.5;
+}
+
+.summary-item-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+}
+
+.summary-item-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.summary-item-meta {
+    font-size: 0.78rem;
+    color: #999;
+    letter-spacing: 0.02em;
+}
+
+.summary-item-price {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+    flex-shrink: 0;
+    margin-left: 1rem;
+}
+
+.summary-item-price.struck {
+    text-decoration: line-through;
+    color: #ccc;
+}
+
+/* Price breakdown */
+.summary-breakdown {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+}
+
+.summary-label {
+    font-size: 0.88rem;
+    color: #777;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.summary-value {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.summary-discount .summary-label {
+    color: #28a745;
+}
+
+.coupon-badge {
+    display: inline-block;
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 1px dashed rgba(40, 167, 69, 0.3);
+}
+
+.summary-row.summary-total {
+    margin-top: 8px;
+    padding-top: 14px;
+    border-top: 2px solid rgba(0, 0, 0, 0.08);
+}
+
+.summary-total .summary-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.summary-total .summary-value {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--accent);
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Payment strip */
+.summary-payment-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: rgba(0, 0, 0, 0.015);
+}
+
+.payment-method-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.payment-icon-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.payment-method-name {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.payment-method-sub {
+    display: block;
+    font-size: 0.78rem;
+    color: #999;
+    margin-top: 1px;
+}
+
+.payment-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+/* ==========================================
    RESPONSIVE OVERHAUL (From Scratch)
    ========================================== */
 
@@ -273,6 +451,12 @@
         align-self: flex-start;
         margin-top: 0.5rem;
     }
+
+    .summary-payment-strip {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
 }
 
 /* Standard Mobile (max-width: 480px) */
@@ -303,6 +487,26 @@
 
     .detail-item-info h4 {
         font-size: 0.9rem !important;
+    }
+
+    .summary-items-list {
+        padding: 12px 14px 6px;
+    }
+
+    .summary-breakdown {
+        padding: 12px 14px;
+    }
+
+    .summary-payment-strip {
+        padding: 12px 14px;
+    }
+
+    .summary-item-name {
+        font-size: 0.82rem;
+    }
+
+    .summary-total .summary-value {
+        font-size: 1.1rem;
     }
 }
 

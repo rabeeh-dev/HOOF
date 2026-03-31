@@ -397,63 +397,126 @@
                             </div>
                         </div>
 
-                        <!-- BLOCK 4: PAYMENT INFO -->
+                        <!-- BLOCK 4: ORDER & PAYMENT SUMMARY -->
                         <div class="order-detail-block">
                             <div class="order-detail-block-header">
                                 <div style="display:flex;align-items:center;gap:14px;">
                                     <div class="order-icon-box" style="background:rgba(102,126,234,0.1);color:#667eea;">
-                                        <i class="fas fa-credit-card"></i>
+                                        <i class="fas fa-receipt"></i>
                                     </div>
-                                    <h4 style="font-size:1rem;font-weight:600;margin:0;">Payment Information</h4>
+                                    <h4 style="font-size:1rem;font-weight:600;margin:0;">Order Summary</h4>
                                 </div>
                             </div>
 
-                            <div class="order-detail-block-body">
-                                <div class="payment-pills-grid">
-                                    <div class="payment-pill">
-                                        <span class="payment-pill-label">Payment Method</span>
-                                        <span class="payment-pill-value">
-                                            <%= order.paymentMethod %>
-                                        </span>
-                                        <% if (order.paymentMethod==='UPI' ) { %>
-                                            <div
-                                                style="font-size:0.82rem;color:#888;margin-top:0.8rem;text-align:center;">
-                                                <i class="fas fa-mobile-alt"></i> UPI
+                            <div class="order-detail-block-body" style="padding:0;">
+
+                                <!-- Per-item price breakdown -->
+                                <div class="summary-items-list">
+                                    <% order.items.forEach((item, index) => {
+                                        const isItemReturned = ['Returned', 'Cancelled'].includes(item.itemStatus || 'Active');
+                                        const itemTotal = (item.product.salePrice || item.priceAtPurchase || 0) * item.quantity;
+                                    %>
+                                        <div class="summary-item-row <%= isItemReturned ? 'item-struck' : '' %>">
+                                            <div class="summary-item-left">
+                                                <span class="summary-item-name"><%= item.product.productName %></span>
+                                                <span class="summary-item-meta">
+                                                    <% if (item.variantSize) { %>Size: <%= item.variantSize %> · <% } %>
+                                                    Qty: <%= item.quantity %>
+                                                    <% if (isItemReturned) { %> · <span style="color:#dc3545;font-weight:600;"><%= item.itemStatus || 'Active' %></span><% } %>
+                                                </span>
                                             </div>
-                                            <% } else if (order.paymentMethod==='COD' ) { %>
-                                                <div
-                                                    style="font-size:0.82rem;color:#888;margin-top:0.8rem;text-align:center;">
-                                                    <i class="fas fa-money-bill-wave"></i> Cash
-                                                </div>
-                                                <% } else { %>
-                                                    <div
-                                                        style="font-size:0.82rem;color:#888;margin-top:0.8rem;text-align:center;">
-                                                        <i class="fas fa-credit-card"></i> Card
-                                                    </div>
-                                                    <% } %>
-                                    </div>
-                                    <% const paidColor=order.paymentStatus==='Paid' ? '#28a745' :
-                                        (order.paymentStatus==='Refunded' ? '#4a90d9' : (order.paymentStatus==='Failed'
-                                        ? '#dc3545' : 'var(--accent)' )); %>
-                                        <div class="payment-pill">
-                                            <span class="payment-pill-label">Payment Status</span>
-                                            <span class="payment-pill-value" style="color:<%= paidColor %>">
-                                                <%= order.paymentStatus %>
-                                            </span>
+                                            <div class="summary-item-price <%= isItemReturned ? 'struck' : '' %>">
+                                                ₹<%= itemTotal.toLocaleString('en-IN') %>
+                                            </div>
                                         </div>
-                                        <div class="payment-pill">
-                                            <span class="payment-pill-label">Order Date</span>
-                                            <span class="payment-pill-value">
-                                                <%= orderDate %>
-                                            </span>
-                                        </div>
-                                        <div class="payment-pill">
-                                            <span class="payment-pill-label">Total Paid</span>
-                                            <span class="payment-pill-value"
-                                                style="font-family:silver;font-size:1.2rem;color:var(--accent);">₹<%=
-                                                    order.totalAmount.toLocaleString('en-IN') %></span>
-                                        </div>
+                                    <% }) %>
                                 </div>
+
+                                <!-- Price breakdown -->
+                                <div class="summary-breakdown">
+                                    <div class="summary-row">
+                                        <span class="summary-label">Subtotal</span>
+                                        <span class="summary-value">₹<%= (order.subtotal || order.totalAmount).toLocaleString('en-IN') %></span>
+                                    </div>
+
+                                    <% if (order.discountAmount && order.discountAmount > 0) { %>
+                                        <div class="summary-row summary-discount">
+                                            <span class="summary-label">
+                                                <i class="fas fa-tag" style="margin-right:6px;"></i>Coupon Discount
+                                                <% if (order.couponCode) { %>
+                                                    <span class="coupon-badge"><%= order.couponCode %></span>
+                                                <% } %>
+                                            </span>
+                                            <span class="summary-value" style="color:#28a745;">−₹<%= order.discountAmount.toLocaleString('en-IN') %></span>
+                                        </div>
+                                    <% } %>
+
+                                    <div class="summary-row">
+                                        <span class="summary-label">
+                                            <i class="fas fa-shipping-fast" style="margin-right:6px;"></i>Shipping
+                                        </span>
+                                        <span class="summary-value">
+                                            <% if (order.shippingCharge && order.shippingCharge > 0) { %>
+                                                ₹<%= order.shippingCharge.toLocaleString('en-IN') %>
+                                            <% } else { %>
+                                                <span style="color:#28a745;font-weight:600;">FREE</span>
+                                            <% } %>
+                                        </span>
+                                    </div>
+
+                                    <!-- Grand Total -->
+                                    <div class="summary-row summary-total">
+                                        <span class="summary-label">Total Amount</span>
+                                        <span class="summary-value">₹<%= order.totalAmount.toLocaleString('en-IN') %></span>
+                                    </div>
+                                </div>
+
+                                <!-- Payment method & status -->
+                                <div class="summary-payment-strip">
+                                    <div class="payment-method-info">
+                                        <% if (order.paymentMethod === 'COD') { %>
+                                            <div class="payment-icon-circle" style="background:rgba(40,167,69,0.1);color:#28a745;">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                            </div>
+                                            <div>
+                                                <span class="payment-method-name">Cash on Delivery</span>
+                                                <span class="payment-method-sub">Pay when you receive</span>
+                                            </div>
+                                        <% } else if (order.paymentMethod === 'Razorpay') { %>
+                                            <div class="payment-icon-circle" style="background:rgba(102,126,234,0.1);color:#667eea;">
+                                                <i class="fas fa-credit-card"></i>
+                                            </div>
+                                            <div>
+                                                <span class="payment-method-name">Razorpay</span>
+                                                <span class="payment-method-sub">Online Payment</span>
+                                            </div>
+                                        <% } else if (order.paymentMethod === 'Wallet') { %>
+                                            <div class="payment-icon-circle" style="background:rgba(255,145,77,0.1);color:var(--accent);">
+                                                <i class="fas fa-wallet"></i>
+                                            </div>
+                                            <div>
+                                                <span class="payment-method-name">Wallet</span>
+                                                <span class="payment-method-sub">Paid from wallet balance</span>
+                                            </div>
+                                        <% } else { %>
+                                            <div class="payment-icon-circle" style="background:rgba(102,126,234,0.1);color:#667eea;">
+                                                <i class="fas fa-credit-card"></i>
+                                            </div>
+                                            <div>
+                                                <span class="payment-method-name"><%= order.paymentMethod %></span>
+                                                <span class="payment-method-sub">Online Payment</span>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                    <% const paidColor = order.paymentStatus === 'Paid' ? '#28a745' :
+                                        (order.paymentStatus === 'Refunded' ? '#4a90d9' :
+                                        (order.paymentStatus === 'Failed' ? '#dc3545' : 'var(--accent)')); %>
+                                    <div class="payment-status-chip" style="background:<%= paidColor %>15;color:<%= paidColor %>;border:1px solid <%= paidColor %>30;">
+                                        <span style="width:7px;height:7px;border-radius:50%;background:<%= paidColor %>;display:inline-block;"></span>
+                                        <%= order.paymentStatus %>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 
