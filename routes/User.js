@@ -262,6 +262,7 @@ router.get('/contact', (req, res) => {
  * @access  Public
  */
 const { sendContactEmail } = require("../utils/sendEmail");
+const { appendContactLead } = require("../utils/googleSheets");
 
 router.post('/contact', async (req, res) => {
   try {
@@ -271,7 +272,12 @@ router.post('/contact', async (req, res) => {
       return res.status(400).json({ success: false, message: 'All fields are required.' });
     }
 
+    // Send email (primary action)
     await sendContactEmail(name, email, subject, message);
+
+    // Log to Google Sheet for lead generation (non-blocking)
+    appendContactLead(name, email, subject, message);
+
     res.json({ success: true, message: 'Message received! We will get back to you soon.' });
   } catch (err) {
     console.error('Contact form error:', err);

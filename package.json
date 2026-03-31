@@ -20,6 +20,7 @@
     "express-ejs-layouts": "^2.5.1",
     "express-rate-limit": "^8.2.1",
     "express-session": "^1.18.2",
+    "googleapis": "^171.4.0",
     "heic-convert": "^2.1.0",
     "helmet": "^8.1.0",
     "mongoose": "^9.0.2",
