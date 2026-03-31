@@ -234,6 +234,24 @@ router.patch('/coupons/edit/:id', adminAuth.isLogin, adminCouponController.updat
 router.patch('/coupons/toggle-status/:id', adminAuth.isLogin, adminCouponController.toggleCouponStatus);
 
 // ==========================================
+// REFERRAL SETTINGS SECTION
+// ==========================================
+
+/**
+ * @desc    Load referral settings page.
+ * @route   GET /admin/referral
+ * @access  Private (Admin Only)
+ */
+router.get('/referral', adminAuth.isLogin, adminController.loadReferralSettings);
+
+/**
+ * @desc    Update referral configuration.
+ * @route   PATCH /admin/referral
+ * @access  Private (Admin Only)
+ */
+router.patch('/referral', adminAuth.isLogin, adminController.updateReferralSettings);
+
+// ==========================================
 
 /**
  * @desc    Destroy admin session and redirect to login.

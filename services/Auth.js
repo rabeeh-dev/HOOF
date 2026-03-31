@@ -5,6 +5,7 @@
 
 const User = require("../model/User");
 const Otp = require("../model/Otp");
+const ReferralConfig = require("../model/ReferralConfig");
 const bcrypt = require("bcrypt");
 const { generateOtp } = require("../utils/generateOtp");
 const { sendOtpEmail } = require("../utils/sendEmail");
@@ -112,9 +113,12 @@ class AuthService {
                 const referrer = await User.findOne({ referralCode: pendingUserData.referralCode });
                 if (referrer) {
                     newUserData.referredBy = referrer._id;
-                    // Credit 10 referral points to the referrer
-                    referrer.referralPoints = (referrer.referralPoints || 0) + 10;
-                    await referrer.save();
+                    // Credit referral points from config (defaults to 10)
+                    const refConfig = await ReferralConfig.getConfig();
+                    if (refConfig.isActive && refConfig.pointsPerReferral > 0) {
+                        referrer.referralPoints = (referrer.referralPoints || 0) + refConfig.pointsPerReferral;
+                        await referrer.save();
+                    }
                 }
             }
 

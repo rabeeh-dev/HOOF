@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/admin/css/admin-dashboard.css" />
+    <link rel="stylesheet" href="/admin/css/category-management.css" />
+    <link rel="stylesheet" href="/admin/css/referral-settings.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="icon" type="image/x-icon" href="/user/images/home-images/favicon.ico">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <%- include('../partials/admin/overlay') %>
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">HOOF</div>
+                <p class="admin-label">Admin</p>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="/admin/dashboard" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/admin/products" class="nav-item">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="/admin/categories" class="nav-item">
+                    <i class="fas fa-tags"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="/admin/orders" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="/admin/customers" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Customers</span>
+                </a>
+                <a href="/admin/coupons" class="nav-item">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Coupons</span>
+                </a>
+                <a href="/admin/referral" class="nav-item active">
+                    <i class="fas fa-share-alt"></i>
+                    <span>Referral</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="admin-profile">
+                    <div class="admin-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="admin-info">
+                        <h4>Admin User</h4>
+                        <p>View Profile</p>
+                    </div>
+                    <button class="logout-btn" onclick="window.location.href='/admin/logout'">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <header class="page-header">
+                <div>
+                    <h1>Referral Program Settings</h1>
+                    <p style="color: var(--admin-text-light); font-size: 0.9rem; margin-top: 4px;">
+                        Configure how the referral reward system works for your customers
+                    </p>
+                </div>
+                <div class="header-actions">
+                </div>
+            </header>
+
+            <!-- STATS STRIP -->
+            <div class="ref-stats-strip">
+                <div class="ref-stat-card">
+                    <div class="ref-stat-icon" style="background: rgba(196, 30, 58, 0.1); color: var(--admin-primary);">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <div class="ref-stat-value"><%= stats.totalReferrals %></div>
+                        <div class="ref-stat-label">Total Referrals</div>
+                    </div>
+                </div>
+                <div class="ref-stat-card">
+                    <div class="ref-stat-icon" style="background: rgba(39, 174, 96, 0.1); color: #27ae60;">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div>
+                        <div class="ref-stat-value"><%= stats.totalPointsDistributed.toLocaleString() %></div>
+                        <div class="ref-stat-label">Points in Circulation</div>
+                    </div>
+                </div>
+                <div class="ref-stat-card">
+                    <div class="ref-stat-icon" style="background: rgba(52, 152, 219, 0.1); color: #3498db;">
+                        <i class="fas fa-rupee-sign"></i>
+                    </div>
+                    <div>
+                        <div class="ref-stat-value">₹<%= (stats.totalPointsDistributed / (config.pointsPerRupee || 100)).toFixed(2) %></div>
+                        <div class="ref-stat-label">Equivalent Value</div>
+                    </div>
+                </div>
+                <div class="ref-stat-card">
+                    <div class="ref-stat-icon" style="background: rgba(142, 68, 173, 0.1); color: #8e44ad;">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div>
+                        <div class="ref-stat-value"><%= config.pointsPerReferral %> pts</div>
+                        <div class="ref-stat-label">Per Referral</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS FORM CARD -->
+            <div class="ref-settings-grid">
+                <div class="ref-settings-card">
+                    <div class="ref-card-header">
+                        <i class="fas fa-cog"></i>
+                        <h3>Reward Rules</h3>
+                    </div>
+                    <form id="referralSettingsForm">
+                        <div class="ref-form-grid">
+                            <div class="ref-form-group">
+                                <label for="pointsPerReferral">
+                                    <i class="fas fa-gift"></i>
+                                    Points Per Referral
+                                </label>
+                                <div class="ref-input-wrapper">
+                                    <input type="number" id="pointsPerReferral" name="pointsPerReferral"
+                                        value="<%= config.pointsPerReferral %>" min="0" required>
+                                    <span class="ref-input-suffix">points</span>
+                                </div>
+                                <small class="ref-form-hint">Points awarded to referrer when a friend signs up using their code</small>
+                            </div>
+
+                            <div class="ref-form-group">
+                                <label for="pointsPerRupee">
+                                    <i class="fas fa-exchange-alt"></i>
+                                    Points Per Rupee
+                                </label>
+                                <div class="ref-input-wrapper">
+                                    <input type="number" id="pointsPerRupee" name="pointsPerRupee"
+                                        value="<%= config.pointsPerRupee %>" min="1" required>
+                                    <span class="ref-input-suffix">pts = ₹1</span>
+                                </div>
+                                <small class="ref-form-hint">Conversion rate: how many points equal ₹1 when withdrawing</small>
+                            </div>
+
+                            <div class="ref-form-group">
+                                <label for="minWithdrawPoints">
+                                    <i class="fas fa-wallet"></i>
+                                    Minimum Withdrawal
+                                </label>
+                                <div class="ref-input-wrapper">
+                                    <input type="number" id="minWithdrawPoints" name="minWithdrawPoints"
+                                        value="<%= config.minWithdrawPoints %>" min="1" required>
+                                    <span class="ref-input-suffix">points</span>
+                                </div>
+                                <small class="ref-form-hint">Minimum points a user needs to have before they can withdraw to wallet</small>
+                            </div>
+
+                            <div class="ref-form-group">
+                                <label>
+                                    <i class="fas fa-calculator"></i>
+                                    Preview: Conversion
+                                </label>
+                                <div class="ref-conversion-preview" id="conversionPreview">
+                                    <div class="preview-item">
+                                        <span class="preview-label">1 Referral =</span>
+                                        <span class="preview-value" id="previewReferralValue"><%= config.pointsPerReferral %> pts</span>
+                                    </div>
+                                    <div class="preview-item">
+                                        <span class="preview-label"><span id="previewPtsPerRupee"><%= config.pointsPerRupee %></span> pts =</span>
+                                        <span class="preview-value">₹1.00</span>
+                                    </div>
+                                    <div class="preview-item highlight">
+                                        <span class="preview-label">1 Referral =</span>
+                                        <span class="preview-value" id="previewRupeeValue">₹<%= (config.pointsPerReferral / (config.pointsPerRupee || 100)).toFixed(2) %></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ref-form-actions">
+                            <button type="submit" class="btn-save-ref" id="saveBtn">
+                                <i class="fas fa-save"></i>
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- TOP REFERRERS -->
+                <div class="ref-settings-card ref-leaderboard">
+                    <div class="ref-card-header">
+                        <i class="fas fa-trophy"></i>
+                        <h3>Top Referrers</h3>
+                    </div>
+                    <div class="ref-leaderboard-list">
+                        <% if (stats.topReferrers && stats.topReferrers.length > 0) { %>
+                            <% stats.topReferrers.forEach((user, index) => { %>
+                                <div class="ref-leaderboard-item">
+                                    <div class="ref-rank"><%= index + 1 %></div>
+                                    <div class="ref-user-info">
+                                        <span class="ref-user-name"><%= user.fullName %></span>
+                                        <span class="ref-user-email"><%= user.email %></span>
+                                    </div>
+                                    <div class="ref-user-stats">
+                                        <span class="ref-user-referrals"><%= user.referralCount %> referrals</span>
+                                        <span class="ref-user-points"><%= user.referralPoints || 0 %> pts</span>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="ref-empty-state">
+                                <i class="fas fa-users"></i>
+                                <p>No referrals yet</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <%- include('../partials/admin/overlay-scripts') %>
+        <script src="/admin/js/referral-settings.js"></script>
+</body>
+
+</html>

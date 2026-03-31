@@ -18,6 +18,7 @@ const userService = require("../services/User");
 const Order = require('../model/Order');
 const PDFDocument = require('pdfkit');
 const walletService = require('../services/Wallet');
+const ReferralConfig = require('../model/ReferralConfig');
 
 
 // ==========================================
@@ -1205,9 +1206,13 @@ exports.loadReferralPage = async (req, res) => {
     // Count how many users this person has referred
     const referredCount = await User.countDocuments({ referredBy: userId });
 
+    // Get referral config for dynamic display
+    const referralConfig = await ReferralConfig.getConfig();
+
     res.render('User/referral', {
       user,
       referredCount,
+      referralConfig,
       title: 'Referral Program | HOOF',
       layout: 'layouts/user'
     });
@@ -1231,17 +1236,22 @@ exports.withdrawReferralPoints = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
+    // Get referral config for dynamic conversion
+    const refConfig = await ReferralConfig.getConfig();
+    const pointsPerRupee = refConfig.pointsPerRupee || 100;
+    const minWithdraw = refConfig.minWithdrawPoints || 100;
+
     const points = user.referralPoints || 0;
-    if (points < 100) {
+    if (points < minWithdraw) {
       return res.status(400).json({
         success: false,
-        message: "Minimum 100 points required to withdraw"
+        message: `Minimum ${minWithdraw} points required to withdraw`
       });
     }
 
-    // Convert all eligible points (multiples of 100) to rupees
-    const withdrawablePoints = Math.floor(points / 100) * 100;
-    const amountInRupees = withdrawablePoints / 100;
+    // Convert all eligible points (multiples of pointsPerRupee) to rupees
+    const withdrawablePoints = Math.floor(points / pointsPerRupee) * pointsPerRupee;
+    const amountInRupees = withdrawablePoints / pointsPerRupee;
 
     // Credit wallet
     await walletService.creditWallet(

@@ -8,6 +8,7 @@ const User = require("../model/User");
 const Category = require("../model/Category");
 const Order = require("../model/Order");
 const Product = require("../model/Product");
+const ReferralConfig = require("../model/ReferralConfig");
 
 const PDFDocument = require('pdfkit-table');
 const bcrypt = require("bcrypt");
@@ -1431,5 +1432,90 @@ exports.exportOrders = async (req, res) => {
     } catch (error) {
         console.error("Export Orders Error:", error);
         res.status(500).send("Error generating orders report");
+    }
+};
+
+// ==========================================
+// REFERRAL SETTINGS SECTION
+// ==========================================
+
+/**
+ * @desc    Load the referral settings admin page.
+ * @route   GET /admin/referral
+ * @access  Private (Admin Only)
+ */
+exports.loadReferralSettings = async (req, res) => {
+    try {
+        const config = await ReferralConfig.getConfig();
+
+        // Compute stats
+        const totalReferrals = await User.countDocuments({ referredBy: { $ne: null } });
+        const pointsResult = await User.aggregate([
+            { $group: { _id: null, total: { $sum: '$referralPoints' } } }
+        ]);
+        const totalPointsDistributed = pointsResult[0]?.total || 0;
+        const topReferrers = await User.aggregate([
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: '_id',
+                    foreignField: 'referredBy',
+                    as: 'referrals'
+                }
+            },
+            { $addFields: { referralCount: { $size: '$referrals' } } },
+            { $match: { referralCount: { $gt: 0 } } },
+            { $sort: { referralCount: -1 } },
+            { $limit: 5 },
+            { $project: { fullName: 1, email: 1, referralCode: 1, referralPoints: 1, referralCount: 1 } }
+        ]);
+
+        res.render('Admin/referral-settings', {
+            config,
+            stats: {
+                totalReferrals,
+                totalPointsDistributed,
+                topReferrers
+            },
+            title: "Referral Settings | HOOF Admin",
+            layout: false
+        });
+    } catch (error) {
+        console.error("Load Referral Settings Error:", error.message);
+        res.redirect('/admin/dashboard');
+    }
+};
+
+/**
+ * @desc    Update referral configuration.
+ * @route   PATCH /admin/referral
+ * @access  Private (Admin Only)
+ */
+exports.updateReferralSettings = async (req, res) => {
+    try {
+        const { pointsPerReferral, pointsPerRupee, minWithdrawPoints, isActive } = req.body;
+
+        // Validation
+        if (pointsPerReferral < 0) {
+            return res.status(400).json({ success: false, message: "Points per referral cannot be negative" });
+        }
+        if (pointsPerRupee < 1) {
+            return res.status(400).json({ success: false, message: "Points per rupee must be at least 1" });
+        }
+        if (minWithdrawPoints < 1) {
+            return res.status(400).json({ success: false, message: "Minimum withdrawal must be at least 1 point" });
+        }
+
+        const config = await ReferralConfig.getConfig();
+        config.pointsPerReferral = Number(pointsPerReferral);
+        config.pointsPerRupee = Number(pointsPerRupee);
+        config.minWithdrawPoints = Number(minWithdrawPoints);
+        config.isActive = isActive === true || isActive === 'true';
+        await config.save();
+
+        res.json({ success: true, message: "Referral settings updated successfully" });
+    } catch (error) {
+        console.error("Update Referral Settings Error:", error.message);
+        res.status(500).json({ success: false, message: "Failed to update settings" });
     }
 };
