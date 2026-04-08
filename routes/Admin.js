@@ -102,6 +102,20 @@ router.patch('/categories/edit/:id', adminAuth.isLogin, adminController.updateCa
  */
 router.patch('/categories/toggle-status/:id', adminAuth.isLogin, adminController.toggleCategoryStatus);
 
+/**
+ * @desc    Apply an offer percentage to a category.
+ * @route   POST /admin/categories/offer/:id
+ * @access  Private (Admin)
+ */
+router.post('/categories/offer/:id', adminAuth.isLogin, adminController.applyCategoryOffer);
+
+/**
+ * @desc    Remove an offer from a category.
+ * @route   POST /admin/categories/remove-offer/:id
+ * @access  Private (Admin)
+ */
+router.post('/categories/remove-offer/:id', adminAuth.isLogin, adminController.removeCategoryOffer);
+
 // ==========================================
 // PRODUCT MANAGEMENT SECTION
 // ==========================================

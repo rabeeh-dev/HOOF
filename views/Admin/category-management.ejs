@@ -133,6 +133,7 @@
                             <tr>
                                 <th>Category Name</th>
                                 <th>Description</th>
+                                <th>Offer</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -152,12 +153,32 @@
                                             </p>
                                         </td>
                                         <td>
+                                            <% if (category.categoryOffer > 0) { %>
+                                                <span class="status-badge" style="background-color: #e8f5e9; color: #27ae60; border: 1px solid #27ae60;">
+                                                    <%= category.categoryOffer %>% OFF
+                                                </span>
+                                            <% } else { %>
+                                                <span style="color: #888; font-size: 0.9rem;">No Offer</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
                                             <span class="status-badge <%= category.isListed ? 'listed' : 'unlisted' %>">
                                                 <%= category.isListed ? 'Listed' : 'Unlisted' %>
                                             </span>
                                         </td>
                                         <td>
                                             <div class="action-buttons">
+                                                <% if (category.categoryOffer > 0) { %>
+                                                    <button class="action-btn" style="color: #e74c3c;"
+                                                        onclick="removeOffer('<%= category._id %>')" title="Remove Offer">
+                                                        <i class="fas fa-times-circle"></i>
+                                                    </button>
+                                                <% } else { %>
+                                                    <button class="action-btn" style="color: #27ae60;"
+                                                        onclick="addOffer('<%= category._id %>')" title="Add Offer">
+                                                        <i class="fas fa-tags"></i>
+                                                    </button>
+                                                <% } %>
                                                 <button class="action-btn edit"
                                                     onclick="openEditModal('<%= category._id %>', '<%= category.name %>', '<%= category.description %>')"
                                                     title="Edit">
@@ -176,7 +197,7 @@
                                     <% }) %>
                                         <% } else { %>
                                             <tr>
-                                                <td colspan="4" style="text-align: center; padding: 2rem;">No categories
+                                                <td colspan="5" style="text-align: center; padding: 2rem;">No categories
                                                     found.</td>
                                             </tr>
                                             <% } %>
@@ -378,6 +399,66 @@
                         } else {
                             rows[i].style.display = "none";
                         }
+                    }
+                }
+            }
+
+            async function addOffer(id) {
+                const { value: percentage } = await Swal.fire({
+                    title: 'Apply Category Offer',
+                    input: 'number',
+                    inputLabel: 'Discount Percentage (%)',
+                    inputPlaceholder: 'Enter a number (1-99)',
+                    showCancelButton: true,
+                    confirmButtonColor: '#c41e3a',
+                    inputValidator: (value) => {
+                        if (!value || isNaN(value) || value < 1 || value > 99) {
+                            return 'Please enter a valid percentage between 1 and 99!'
+                        }
+                    }
+                });
+
+                if (percentage) {
+                    try {
+                        const response = await fetch(`/admin/categories/offer/${id}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ offerPercentage: percentage })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            Swal.fire('Success!', data.message, 'success').then(() => window.location.reload());
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    } catch (err) {
+                        Swal.fire('Error', 'Failed to apply offer', 'error');
+                    }
+                }
+            }
+
+            async function removeOffer(id) {
+                const result = await Swal.fire({
+                    title: 'Remove Category Offer?',
+                    text: "Product prices inside this category will revert to their normal values.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#c41e3a',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, remove it!'
+                });
+
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/admin/categories/remove-offer/${id}`, { method: 'POST' });
+                        const data = await response.json();
+                        if (data.success) {
+                            Swal.fire('Removed!', data.message, 'success').then(() => window.location.reload());
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    } catch (err) {
+                        Swal.fire('Error', 'Failed to remove offer', 'error');
                     }
                 }
             }

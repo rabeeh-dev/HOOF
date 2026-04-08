@@ -674,10 +674,88 @@ exports.toggleCategoryStatus = async (req, res) => {
         }
 
         res.json({ success: true, message: `Category ${category.isListed ? 'listed' : 'unlisted'} successfully` });
-
     } catch (error) {
         console.error("Toggle Category Status Error:", error);
-        res.status(500).json({ success: false, message: "Internal Server Error" });
+        res.status(500).json({ success: false, message: "Error toggling category status", error: error.message });
+    }
+};
+
+/**
+ * @desc    Apply an offer percentage to a category and update all its products.
+ * @route   POST /admin/categories/offer/:id
+ * @access  Private (Admin Only)
+ */
+exports.applyCategoryOffer = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { offerPercentage } = req.body;
+
+        const percentage = parseInt(offerPercentage);
+        if (isNaN(percentage) || percentage < 1 || percentage > 99) {
+            return res.status(400).json({ success: false, message: "Invalid offer percentage (1-99)" });
+        }
+
+        const category = await Category.findById(id);
+        if (!category) return res.status(404).json({ success: false, message: "Category not found" });
+
+        category.categoryOffer = percentage;
+        await category.save();
+
+        // Update all products in this category
+        const products = await Product.find({ category: category._id });
+        
+        for (let product of products) {
+            // Find effective offer (Product's own offer vs Category's offer)
+            const effectiveOffer = Math.max(product.productOffer || 0, category.categoryOffer);
+            
+            // Recalculate sale price based on regularPrice
+            const discountAmount = (product.regularPrice * effectiveOffer) / 100;
+            product.salePrice = Math.round(product.regularPrice - discountAmount);
+            
+            await product.save();
+        }
+
+        res.json({ 
+            success: true, 
+            message: `Applied ${percentage}% offer to ${category.name} and updated ${products.length} products.` 
+        });
+    } catch (error) {
+        console.error("Apply Category Offer Error:", error);
+        res.status(500).json({ success: false, message: "Error applying category offer", error: error.message });
+    }
+};
+
+/**
+ * @desc    Remove an offer from a category and restore product prices.
+ * @route   POST /admin/categories/remove-offer/:id
+ * @access  Private (Admin Only)
+ */
+exports.removeCategoryOffer = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const category = await Category.findById(id);
+        if (!category) return res.status(404).json({ success: false, message: "Category not found" });
+
+        category.categoryOffer = 0;
+        await category.save();
+
+        const products = await Product.find({ category: category._id });
+        
+        for (let product of products) {
+            // Revert back to the product's own individual offer (if any)
+            const effectiveOffer = product.productOffer || 0;
+            const discountAmount = (product.regularPrice * effectiveOffer) / 100;
+            product.salePrice = Math.round(product.regularPrice - discountAmount);
+            await product.save();
+        }
+
+        res.json({ 
+            success: true, 
+            message: `Removed offer from ${category.name} and updated ${products.length} products.` 
+        });
+    } catch (error) {
+        console.error("Remove Category Offer Error:", error);
+        res.status(500).json({ success: false, message: "Error removing category offer", error: error.message });
     }
 };
 

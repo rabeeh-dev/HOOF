@@ -54,6 +54,12 @@ const productSchema = new mongoose.Schema({
         type: String,
         enum: ["Available", "Out of Stock", "Discontinued"],
         default: "Available"
+    },
+    productOffer: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100
     }
 }, { timestamps: true });
 

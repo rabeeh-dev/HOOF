@@ -101,13 +101,29 @@ async function addProduct(productData, files) {
     // Auto-calculate total quantity from variant stocks
     const totalQuantity = variants.reduce((sum, v) => sum + v.quantity, 0);
 
+    // 3. Calculate Offers
+    const regPrice = parseFloat(productData.regularPrice);
+    const inputSalePrice = parseFloat(productData.salePrice);
+    
+    // Implicitly determine the product-specific offer percentage from the input prices
+    const productOffer = Math.round(100 - (inputSalePrice / regPrice * 100));
+    
+    // Check if category has a better offer
+    const categoryDoc = await Category.findById(productData.category);
+    const categoryOffer = categoryDoc ? (categoryDoc.categoryOffer || 0) : 0;
+    
+    // Best offer wins
+    const effectiveOffer = Math.max(productOffer, categoryOffer);
+    const finalSalePrice = Math.round(regPrice - (regPrice * effectiveOffer / 100));
+
     const newProduct = new Product({
         productName: productData.productName,
         description: productData.description,
         brand: productData.brand,
         category: productData.category,
-        regularPrice: parseFloat(productData.regularPrice),
-        salePrice: parseFloat(productData.salePrice),
+        regularPrice: regPrice,
+        salePrice: finalSalePrice,
+        productOffer: productOffer, // Save the manual discount percentage 
         quantity: totalQuantity,
         productImage: imagePaths,
         variants: variants
@@ -252,14 +268,24 @@ async function updateProduct(id, productData, files) {
     // Auto-calculate total quantity from variant stocks
     const totalQuantity = variants.reduce((sum, v) => sum + v.quantity, 0);
 
-    // 4. Update Database
+    // 4. Calculate Offers
+    const productOffer = Math.round(100 - (salePrice / regPrice * 100));
+    
+    const categoryDoc = await Category.findById(productData.category);
+    const categoryOffer = categoryDoc ? (categoryDoc.categoryOffer || 0) : 0;
+    
+    const effectiveOffer = Math.max(productOffer, categoryOffer);
+    const finalSalePrice = Math.round(regPrice - (regPrice * effectiveOffer / 100));
+
+    // 5. Update Database
     const updateFields = {
         productName: productData.productName,
         description: productData.description,
         brand: productData.brand,
         category: productData.category,
-        regularPrice: parseFloat(productData.regularPrice),
-        salePrice: parseFloat(productData.salePrice),
+        regularPrice: regPrice,
+        salePrice: finalSalePrice,
+        productOffer: productOffer,
         quantity: totalQuantity,
         productImage: finalImages,
         variants: variants
