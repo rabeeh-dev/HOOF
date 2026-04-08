@@ -197,9 +197,9 @@
                                     <% if (product.variants && product.variants.length> 0) { %>
                                         <% product.variants.forEach((variant, index)=> { %>
                                             <tr>
-                                                <td><input type="text" name="variantSize[]" value="<%= variant.size %>"
+                                                <td><input type="text" name="variantSize" value="<%= variant.size %>"
                                                         required class="variant-input"></td>
-                                                <td><input type="number" name="variantStock[]"
+                                                <td><input type="number" name="variantStock"
                                                         value="<%= variant.quantity %>" min="0" required
                                                         class="variant-input" oninput="recalcTotalStock()"></td>
                                                 <td><i class="fas fa-trash variant-delete-btn"
@@ -287,8 +287,8 @@
                 const tbody = document.getElementById('variantBody');
                 const row = document.createElement('tr');
                 row.innerHTML = `
-            <td><input type="text" name="variantSize[]" required class="variant-input"></td>
-            <td><input type="number" name="variantStock[]" value="0" min="0" required class="variant-input" oninput="recalcTotalStock()"></td>
+            <td><input type="text" name="variantSize" required class="variant-input"></td>
+            <td><input type="number" name="variantStock" value="0" min="0" required class="variant-input" oninput="recalcTotalStock()"></td>
             <td><i class="fas fa-trash variant-delete-btn" onclick="removeVariantRow(this)"></i></td>`;
                 tbody.appendChild(row);
                 recalcTotalStock();
@@ -300,7 +300,7 @@
             }
 
             function recalcTotalStock() {
-                const stockInputs = document.querySelectorAll('input[name="variantStock[]"]');
+                const stockInputs = document.querySelectorAll('input[name="variantStock"]');
                 let total = 0;
                 stockInputs.forEach(input => {
                     total += parseInt(input.value) || 0;
@@ -368,8 +368,8 @@
                 const formData = new FormData(e.target);
 
                 // Validation for variants
-                const sizes = formData.getAll('variantSize[]');
-                const stocks = formData.getAll('variantStock[]');
+                const sizes = formData.getAll('variantSize');
+                const stocks = formData.getAll('variantStock');
 
                 if (sizes.length === 0 || sizes.every(s => !s.trim())) {
                     Swal.fire('Error', 'At least one variant (Size & Stock) is required.', 'error');

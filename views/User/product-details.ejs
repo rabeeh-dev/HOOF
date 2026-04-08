@@ -61,16 +61,22 @@
                 <div class="product-variants">
                     <label class="variant-label"><i class="fas fa-ruler"></i> Select Size:</label>
                     <div class="size-selector">
-                        <% const sizes=[6, 7, 8, 9]; %>
-                            <% sizes.forEach(size=> {
-                                const variant = product.variants.find(v => v.size == size);
-                                const stock = variant ? variant.quantity : 0;
-                                %>
-                                <div class="size-option" data-size="<%= size %>" data-stock="<%= stock %>"
-                                    onclick="selectSize(this)">
-                                    <%= size %>
-                                </div>
-                                <% }) %>
+                        <%
+                            const defaultSizes = ['6', '7', '8', '9', '10'];
+                            const extraSizes = (product.variants || [])
+                                .map(v => String(v.size))
+                                .filter(s => !defaultSizes.includes(s));
+                            const allSizes = [...defaultSizes, ...extraSizes];
+                        %>
+                        <% allSizes.forEach(size => {
+                            const variant = (product.variants || []).find(v => String(v.size) === size);
+                            const stock = variant ? variant.quantity : 0;
+                        %>
+                            <div class="size-option" data-size="<%= size %>" data-stock="<%= stock %>"
+                                onclick="selectSize(this)">
+                                <%= size %>
+                            </div>
+                        <% }) %>
                     </div>
                     <p id="stockStatus" class="stock-status">Select a size to see availability</p>
                 </div>
