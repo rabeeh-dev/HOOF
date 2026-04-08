@@ -90,9 +90,9 @@
                 <!-- SEARCH BAR -->
                 <div class="search-bar">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search products by name or brand and press Enter..."
+                    <input type="text" placeholder="Search products globally by name or brand..."
                         id="productSearch" value="<%= typeof search !== 'undefined' ? search : '' %>"
-                        onkeypress="handleSearch(event)" />
+                        oninput="handleSearch(event)" onkeydown="if(event.key === 'Enter') handleSearch(event)" />
                 </div>
 
                 <div class="table-container">
@@ -212,13 +212,27 @@
                 }
             }
 
-            // Server-side search handler
+            // Real-time Global Server-side search handler (debounced)
+            let searchTimeout;
             function handleSearch(event) {
-                if (event.key === 'Enter') {
-                    const searchValue = document.getElementById('productSearch').value;
-                    showLoading('Searching products...');
-                    window.location.href = `/admin/products?page=1&search=${encodeURIComponent(searchValue)}`;
+                // If it's an Enter key press, execute immediately
+                if (event && event.key === 'Enter') {
+                    clearTimeout(searchTimeout);
+                    executeSearch();
+                    return;
                 }
+                
+                // Otherwise debounce typing
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    executeSearch();
+                }, 800); // 800ms delay after typing stops
+            }
+            
+            function executeSearch() {
+                const searchValue = document.getElementById('productSearch').value;
+                showLoading('Searching globally...');
+                window.location.href = `/admin/products?page=1&search=${encodeURIComponent(searchValue)}`;
             }
 
             // Add loading to pagination links
