@@ -703,7 +703,7 @@ exports.loadOrders = async (req, res) => {
         };
 
         if (status) query.status = status;
-        if (payment) query.paymentMethod = payment;
+        if (payment) query.paymentMethod = { $regex: new RegExp(`^${payment}$`, 'i') };
         if (search) {
             const cleanSearch = search.replace('#', '').trim();
             const searchRegex = new RegExp(cleanSearch, 'i');
@@ -890,7 +890,7 @@ exports.updateOrderStatus = async (req, res) => {
                 order.paymentStatus = 'Paid';
             }
             order.items.forEach(item => {
-                if(item.itemStatus === 'Active') {
+                if (item.itemStatus === 'Active') {
                     // Mark as delivered at item level implicitly or explicitly if needed
                 }
             })
@@ -957,7 +957,7 @@ exports.updateOrderStatus = async (req, res) => {
             if (allResolved) {
                 order.paymentStatus = 'Refunded';
             } else {
-                 order.paymentStatus = 'Partially Refunded';
+                order.paymentStatus = 'Partially Refunded';
             }
         }
 
@@ -1028,13 +1028,12 @@ exports.updateItemStatus = async (req, res) => {
             const itemTotal = item.priceAtPurchase * item.quantity;
             const couponDiscount = order.discountAmount || 0;
 
-            // Calculate equal share of coupon discount per item
-            const totalItemCount = order.items.length;
-            let perItemDiscount = 0;
-            if (couponDiscount > 0 && totalItemCount > 0) {
-                perItemDiscount = Math.round(couponDiscount / totalItemCount);
+            // Calculate proportional coupon discount for this item
+            let proportionalDiscount = 0;
+            if (couponDiscount > 0 && order.subtotal > 0) {
+                proportionalDiscount = Math.round((itemTotal / order.subtotal) * couponDiscount);
             }
-            const refundAmount = itemTotal - perItemDiscount;
+            const refundAmount = itemTotal - proportionalDiscount;
 
             // Restore stock
             const product = await Product.findById(item.productId);
@@ -1064,9 +1063,9 @@ exports.updateItemStatus = async (req, res) => {
             // Adjust order totals
             order.subtotal -= itemTotal;
             order.totalAmount -= refundAmount;
-            // Reduce remaining discount
+            // Reduce remaining discount proportionally
             if (couponDiscount > 0) {
-                order.discountAmount = Math.max(0, couponDiscount - perItemDiscount);
+                order.discountAmount = Math.max(0, couponDiscount - proportionalDiscount);
             }
             if (order.subtotal < 0) order.subtotal = 0;
             if (order.totalAmount < 0) order.totalAmount = 0;
@@ -1220,7 +1219,7 @@ exports.exportSalesReport = async (req, res) => {
 
         const enrichedOrders = orders.map(orderDoc => {
             const order = orderDoc.toObject();
-            
+
             const s = (order.status || 'Pending').toLowerCase();
             if (s === 'delivered') statusCounts.Delivered++;
             else if (s === 'cancelled') statusCounts.Cancelled++;
@@ -1230,20 +1229,20 @@ exports.exportSalesReport = async (req, res) => {
             else statusCounts.Pending++;
 
             const isPrepaid = ['Razorpay', 'Wallet'].includes(order.paymentMethod) && order.paymentStatus !== 'Failed';
-            
+
             let orderGross = 0;
             let orderRefund = 0;
             let orderDiscount = order.discountAmount || order.discount || 0;
             let shippingFee = order.shippingCharge || order.shippingFee || 0;
-            
+
             if (order.items && order.items.length > 0) {
                 order.items.forEach(item => {
                     const itemTotal = (item.priceAtPurchase || item.price || 0) * item.quantity;
                     orderGross += itemTotal;
-                    
+
                     const isItemRefunded = ['Cancelled', 'Returned'].includes(item.itemStatus);
                     const isEntireOrderCancelled = order.status === 'CANCELLED';
-                    
+
                     if (isEntireOrderCancelled) {
                         if (isPrepaid) orderRefund += itemTotal;
                     } else if (isItemRefunded) {
@@ -1270,7 +1269,7 @@ exports.exportSalesReport = async (req, res) => {
             order.calculatedGross = orderGross + shippingFee;
             order.calculatedRefund = orderRefund;
             order.calculatedNet = orderNet;
-            
+
             return order;
         });
 
@@ -1291,21 +1290,21 @@ exports.exportSalesReport = async (req, res) => {
             generatedDate: new Date().toLocaleString('en-IN')
         });
 
-        const browser = await puppeteer.launch({ 
-            headless: "new", 
-            args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+        const browser = await puppeteer.launch({
+            headless: "new",
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
         const page = await browser.newPage();
-        
+
         await page.setContent(compiledHtml, { waitUntil: 'networkidle0' });
-        
+
         const pdfBuffer = await page.pdf({
             format: 'A4',
             landscape: true,
             printBackground: true,
             margin: { top: '30px', right: '30px', bottom: '30px', left: '30px' }
         });
-        
+
         await browser.close();
 
         res.setHeader('Content-Type', 'application/pdf');
@@ -1360,7 +1359,7 @@ exports.exportOrders = async (req, res) => {
 
         const enrichedOrders = orders.map(orderDoc => {
             const order = orderDoc.toObject();
-            
+
             const s = (order.status || 'Pending').toLowerCase();
             if (s === 'delivered') statusCounts.Delivered++;
             else if (s === 'cancelled') statusCounts.Cancelled++;
@@ -1370,20 +1369,20 @@ exports.exportOrders = async (req, res) => {
             else statusCounts.Pending++;
 
             const isPrepaid = ['Razorpay', 'Wallet'].includes(order.paymentMethod) && order.paymentStatus !== 'Failed';
-            
+
             let orderGross = 0;
             let orderRefund = 0;
             let orderDiscount = order.discountAmount || order.discount || 0;
             let shippingFee = order.shippingCharge || order.shippingFee || 0;
-            
+
             if (order.items && order.items.length > 0) {
                 order.items.forEach(item => {
                     const itemTotal = (item.priceAtPurchase || item.price || 0) * item.quantity;
                     orderGross += itemTotal;
-                    
+
                     const isItemRefunded = ['Cancelled', 'Returned'].includes(item.itemStatus);
                     const isEntireOrderCancelled = order.status === 'CANCELLED';
-                    
+
                     if (isEntireOrderCancelled) {
                         if (isPrepaid) orderRefund += itemTotal;
                     } else if (isItemRefunded) {
@@ -1410,7 +1409,7 @@ exports.exportOrders = async (req, res) => {
             order.calculatedGross = orderGross + shippingFee;
             order.calculatedRefund = orderRefund;
             order.calculatedNet = orderNet;
-            
+
             return order;
         });
 
@@ -1437,21 +1436,21 @@ exports.exportOrders = async (req, res) => {
             generatedDate: new Date().toLocaleString('en-IN')
         });
 
-        const browser = await puppeteer.launch({ 
-            headless: "new", 
-            args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+        const browser = await puppeteer.launch({
+            headless: "new",
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
         const page = await browser.newPage();
-        
+
         await page.setContent(compiledHtml, { waitUntil: 'networkidle0' });
-        
+
         const pdfBuffer = await page.pdf({
             format: 'A4',
             landscape: true,
             printBackground: true,
             margin: { top: '30px', right: '30px', bottom: '30px', left: '30px' }
         });
-        
+
         await browser.close();
 
         res.setHeader('Content-Type', 'application/pdf');

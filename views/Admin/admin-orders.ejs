@@ -183,9 +183,9 @@
                         <label class="filter-label">Payment Method</label>
                         <select id="paymentFilter" class="filter-select">
                             <option value="">All Methods</option>
-                            <option value="UPI" <%=selectedPayment==='UPI' ? 'selected' : '' %>>UPI</option>
-                            <option value="Card" <%=selectedPayment==='Card' ? 'selected' : '' %>>Card</option>
                             <option value="COD" <%=selectedPayment==='COD' ? 'selected' : '' %>>COD</option>
+                            <option value="upi" <%=selectedPayment==='upi' ? 'selected' : '' %>>UPI (Razorpay)</option>
+                            <option value="wallet" <%=selectedPayment==='wallet' ? 'selected' : '' %>>Wallet</option>
                         </select>
                     </div>
                     <div class="filter-actions-row">
