@@ -1292,11 +1292,17 @@ exports.exportSalesReport = async (req, res) => {
 
         const browser = await puppeteer.launch({
             headless: "new",
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            args: [
+                '--no-sandbox', 
+                '--disable-setuid-sandbox', 
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--no-zygote'
+            ]
         });
         const page = await browser.newPage();
 
-        await page.setContent(compiledHtml, { waitUntil: 'networkidle0' });
+        await page.setContent(compiledHtml, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
         const pdfBuffer = await page.pdf({
             format: 'A4',
@@ -1307,9 +1313,11 @@ exports.exportSalesReport = async (req, res) => {
 
         await browser.close();
 
+        const nodeBuffer = Buffer.from(pdfBuffer);
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=sales-report-${Date.now()}.pdf`);
-        res.send(pdfBuffer);
+        res.setHeader('Content-Length', nodeBuffer.length);
+        res.end(nodeBuffer);
 
     } catch (error) {
         console.error("Export Report Error:", error);
@@ -1438,11 +1446,17 @@ exports.exportOrders = async (req, res) => {
 
         const browser = await puppeteer.launch({
             headless: "new",
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            args: [
+                '--no-sandbox', 
+                '--disable-setuid-sandbox', 
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--no-zygote'
+            ]
         });
         const page = await browser.newPage();
 
-        await page.setContent(compiledHtml, { waitUntil: 'networkidle0' });
+        await page.setContent(compiledHtml, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
         const pdfBuffer = await page.pdf({
             format: 'A4',
@@ -1453,9 +1467,11 @@ exports.exportOrders = async (req, res) => {
 
         await browser.close();
 
+        const nodeBuffer = Buffer.from(pdfBuffer);
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=orders-report-${Date.now()}.pdf`);
-        res.send(pdfBuffer);
+        res.setHeader('Content-Length', nodeBuffer.length);
+        res.end(nodeBuffer);
     } catch (error) {
         console.error("Export Orders Error:", error);
         res.status(500).send("Error generating orders report");

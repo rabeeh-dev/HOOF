@@ -933,13 +933,19 @@ exports.downloadInvoice = async (req, res) => {
     // 3. Generate PDF via Puppeteer
     const browser = await puppeteer.launch({ 
       headless: "new",
-      args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+      args: [
+        '--no-sandbox', 
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-zygote'
+      ] 
     });
     
     const page = await browser.newPage();
     
     // Set HTML and wait for styles to load
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+    await page.setContent(htmlContent, { waitUntil: 'domcontentloaded', timeout: 60000 });
     
     // Create the PDF buffer
     const pdfBuffer = await page.pdf({
@@ -954,11 +960,12 @@ exports.downloadInvoice = async (req, res) => {
     let filename = `invoice-${order._id}.pdf`;
     filename = encodeURIComponent(filename);
 
+    const nodeBuffer = Buffer.from(pdfBuffer);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('Content-Length', nodeBuffer.length);
     
-    return res.end(pdfBuffer);
+    return res.end(nodeBuffer);
 
   } catch (err) {
     console.error("Invoice Generation Error:", err);
