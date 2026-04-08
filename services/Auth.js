@@ -125,8 +125,9 @@ class AuthService {
             // Remove the referralCode from newUserData so it doesn't conflict
             delete newUserData.referralCode;
 
-            await User.create(newUserData);
-            redirectUrl = "/user/login?signupSuccess=true";
+            const newUser = await User.create(newUserData);
+            redirectUrl = "/user/home";
+            return { success: true, redirectUrl, newUser };
         }
 
         return { success: true, redirectUrl };

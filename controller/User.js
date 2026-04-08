@@ -143,6 +143,14 @@ exports.verifyOtp = async (req, res) => {
       req.session.changeEmailFlow = null;
     } else {
       req.session.pendingUser = null;
+      req.session.otpEmail = null;
+
+      // Auto-login: establish session for the newly created user
+      if (result.newUser) {
+        req.session.userId = result.newUser._id;
+        req.session.userName = result.newUser.fullName;
+        req.session.userEmail = result.newUser.email;
+      }
     }
 
     return res.json({ success: true, redirectUrl: result.redirectUrl });
