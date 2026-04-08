@@ -85,9 +85,13 @@
                         <i class="fas <%= (selectedStatus || selectedPayment) ? 'fa-times' : 'fa-filter' %>"></i>
                         Filters
                     </button>
-                    <button class="btn-export" onclick="exportOrders()">
-                        <i class="fas fa-download"></i>
-                        Export PDF
+                    <button class="btn-export" onclick="exportOrders('excel')" style="background-color: #27ae60; color: white; margin-right: 5px; min-width: auto; padding: 0.6rem 1rem;">
+                        <i class="fas fa-file-excel"></i>
+                         Excel
+                    </button>
+                    <button class="btn-export" onclick="exportOrders('pdf')" style="min-width: auto; padding: 0.6rem 1rem;">
+                        <i class="fas fa-file-pdf"></i>
+                         PDF
                     </button>
                 </div>
             </header>

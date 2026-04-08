@@ -43,6 +43,13 @@ router.get('/dashboard', adminAuth.isLogin, adminController.loadDashboard);
 router.get('/dashboard/export', adminAuth.isLogin, adminController.exportSalesReport);
 
 /**
+ * @desc    Export Sales Report as Excel.
+ * @route   GET /admin/dashboard/export-excel
+ * @access  Private (Admin Only)
+ */
+router.get('/dashboard/export-excel', adminAuth.isLogin, adminController.exportSalesExcel);
+
+/**
  * @desc    Load user management list with pagination.
  * @route   GET /admin/customers
  * @access  Private (Admin Only)
@@ -153,11 +160,18 @@ router.post('/products/edit/:id', adminAuth.isLogin, upload.array('productImages
 router.get('/orders', adminAuth.isLogin, adminController.loadOrders);
 
 /**
- * @desc    Export orders.
+ * @desc    Export orders as PDF.
  * @route   GET /admin/orders/export
  * @access  Private (Admin Only)
  */
 router.get('/orders/export', adminAuth.isLogin, adminController.exportOrders);
+
+/**
+ * @desc    Export orders as Excel.
+ * @route   GET /admin/orders/export-excel
+ * @access  Private (Admin Only)
+ */
+router.get('/orders/export-excel', adminAuth.isLogin, adminController.exportOrdersExcel);
 
 /**
  * @desc    Render dedicated order detail page.

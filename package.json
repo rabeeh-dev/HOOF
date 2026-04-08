@@ -16,6 +16,7 @@
     "connect-mongo": "^6.0.0",
     "dotenv": "^17.2.3",
     "ejs": "^4.0.1",
+    "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "express-ejs-layouts": "^2.5.1",
     "express-rate-limit": "^8.2.1",

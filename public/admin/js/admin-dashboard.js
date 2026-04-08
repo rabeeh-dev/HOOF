@@ -275,7 +275,8 @@ const downloadReport = async (type) => {
   const start = startDateInput.value;
   const end = endDateInput.value;
 
-  let url = `/admin/dashboard/export?type=${type}&filter=${filter}`;
+  let baseUrl = type === 'excel' ? '/admin/dashboard/export-excel' : '/admin/dashboard/export';
+  let url = `${baseUrl}?filter=${filter}`;
   if (filter === 'custom' && start && end) {
     url += `&startDate=${start}&endDate=${end}`;
   }
@@ -298,6 +299,7 @@ const downloadReport = async (type) => {
 };
 
 document.getElementById('downloadPDF')?.addEventListener('click', () => downloadReport('pdf'));
+document.getElementById('downloadExcel')?.addEventListener('click', () => downloadReport('excel'));
 
 // ==========================================
 // STAT COUNTER ANIMATION

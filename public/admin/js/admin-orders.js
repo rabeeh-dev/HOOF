@@ -100,9 +100,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Export Orders PDF (with current filters)
-    window.exportOrders = async () => {
-        const url = new URL('/admin/orders/export', window.location.origin);
+    // Export Orders (PDF or Excel)
+    window.exportOrders = async (type = 'pdf') => {
+        const basePath = type === 'excel' ? '/admin/orders/export-excel' : '/admin/orders/export';
+        const url = new URL(basePath, window.location.origin);
         const status = statusFilter ? statusFilter.value : '';
         const payment = paymentFilter ? paymentFilter.value : '';
         const search = searchInput ? searchInput.value.trim() : '';

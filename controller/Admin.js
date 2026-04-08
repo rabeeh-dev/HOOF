@@ -1326,6 +1326,110 @@ exports.exportSalesReport = async (req, res) => {
 };
 
 /**
+ * @desc    Export Sales Report as Excel.
+ * @route   GET /admin/dashboard/export-excel
+ * @access  Private (Admin Only)
+ */
+exports.exportSalesExcel = async (req, res) => {
+    try {
+        const { filter, startDate, endDate } = req.query;
+        let matchStage = {}; 
+
+        const now = new Date();
+        if (filter === 'daily') {
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+            matchStage.createdAt = { $gte: startOfDay };
+        } else if (filter === 'weekly') {
+            const lastWeek = new Date();
+            lastWeek.setDate(now.getDate() - 7);
+            matchStage.createdAt = { $gte: lastWeek };
+        } else if (filter === 'yearly') {
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(now.getFullYear() - 1);
+            matchStage.createdAt = { $gte: oneYearAgo };
+        } else if (filter === 'custom' && startDate && endDate) {
+            matchStage.createdAt = {
+                $gte: new Date(startDate),
+                $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
+            };
+        }
+
+        const orders = await Order.find(matchStage).populate('userId', 'fullName email').sort({ createdAt: -1 });
+
+        const exceljs = require('exceljs');
+        const workbook = new exceljs.Workbook();
+        const worksheet = workbook.addWorksheet('Sales Report');
+
+        worksheet.columns = [
+            { header: 'Order ID', key: 'id', width: 25 },
+            { header: 'Date', key: 'date', width: 15 },
+            { header: 'Customer Name', key: 'customer', width: 25 },
+            { header: 'Gross Value', key: 'gross', width: 15 },
+            { header: 'Discount+Refund', key: 'deductions', width: 18 },
+            { header: 'Net Profit', key: 'net', width: 15 },
+            { header: 'Payment', key: 'payment', width: 15 },
+            { header: 'Status', key: 'status', width: 15 },
+        ];
+
+        orders.forEach(order => {
+            const isPrepaid = ['Razorpay', 'Wallet'].includes(order.paymentMethod) && order.paymentStatus !== 'Failed';
+
+            let orderGross = 0;
+            let orderRefund = 0;
+            let orderDiscount = order.discountAmount || order.discount || 0;
+            let shippingFee = order.shippingCharge || order.shippingFee || 0;
+
+            if (order.items && order.items.length > 0) {
+                order.items.forEach(item => {
+                    const itemTotal = (item.priceAtPurchase || item.price || 0) * item.quantity;
+                    orderGross += itemTotal;
+
+                    const isItemRefunded = ['Cancelled', 'Returned'].includes(item.itemStatus);
+                    const isEntireOrderCancelled = order.status === 'CANCELLED';
+
+                    if (isEntireOrderCancelled) {
+                        if (isPrepaid) orderRefund += itemTotal;
+                    } else if (isItemRefunded) {
+                        if (isPrepaid || item.itemStatus === 'Returned') {
+                            orderRefund += itemTotal;
+                        }
+                    }
+                });
+            }
+
+            if (order.status === 'CANCELLED' && isPrepaid) {
+                orderRefund += shippingFee - orderDiscount;
+                if (orderRefund < 0) orderRefund = 0;
+            }
+
+            let orderNet = (orderGross + shippingFee) - orderDiscount - orderRefund;
+            if (orderNet < 0) orderNet = 0;
+
+            worksheet.addRow({
+                id: order._id.toString(),
+                date: new Date(order.createdAt).toLocaleDateString('en-IN'),
+                customer: order.userId ? order.userId.fullName : (order.shippingAddress ? order.shippingAddress.fullName : 'Guest'),
+                gross: (orderGross + shippingFee).toFixed(2),
+                deductions: (orderDiscount + orderRefund).toFixed(2),
+                net: orderNet.toFixed(2),
+                payment: order.paymentMethod,
+                status: order.status
+            });
+        });
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=sales-report-${Date.now()}.xlsx`);
+
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (error) {
+        console.error("Export Excel Error:", error);
+        res.status(500).send("Error generating Excel report");
+    }
+};
+
+/**
  * @desc    Export orders as PDF.
  * @route   GET /admin/orders/export
  * @access  Private (Admin Only)
@@ -1475,6 +1579,101 @@ exports.exportOrders = async (req, res) => {
     } catch (error) {
         console.error("Export Orders Error:", error);
         res.status(500).send("Error generating orders report");
+    }
+};
+
+/**
+ * @desc    Export orders as Excel.
+ * @route   GET /admin/orders/export-excel
+ * @access  Private (Admin Only)
+ */
+exports.exportOrdersExcel = async (req, res) => {
+    try {
+        const { status, payment, search } = req.query;
+        let query = {};
+
+        if (status) query.status = status;
+        if (payment) query.paymentMethod = payment;
+        if (search) {
+            const cleanSearch = search.replace('#', '').trim();
+            const searchRegex = new RegExp(cleanSearch, 'i');
+            query.$or = [
+                { 'shippingAddress.fullName': searchRegex },
+                { $expr: { $regexMatch: { input: { $toString: "$_id" }, regex: searchRegex } } }
+            ];
+        }
+
+        const orders = await Order.find(query).populate('userId', 'fullName email').sort({ createdAt: -1 });
+
+        const exceljs = require('exceljs');
+        const workbook = new exceljs.Workbook();
+        const worksheet = workbook.addWorksheet('Orders Management');
+
+        worksheet.columns = [
+            { header: 'Order ID', key: 'id', width: 25 },
+            { header: 'Order Date', key: 'date', width: 15 },
+            { header: 'Customer', key: 'customer', width: 25 },
+            { header: 'Gross Value', key: 'gross', width: 15 },
+            { header: 'Deductions', key: 'deductions', width: 15 },
+            { header: 'Net Amount', key: 'net', width: 15 },
+            { header: 'Payment Method', key: 'payment', width: 15 },
+            { header: 'Status', key: 'status', width: 15 },
+        ];
+
+        orders.forEach(order => {
+            const isPrepaid = ['Razorpay', 'Wallet'].includes(order.paymentMethod) && order.paymentStatus !== 'Failed';
+
+            let orderGross = 0;
+            let orderRefund = 0;
+            let orderDiscount = order.discountAmount || order.discount || 0;
+            let shippingFee = order.shippingCharge || order.shippingFee || 0;
+
+            if (order.items && order.items.length > 0) {
+                order.items.forEach(item => {
+                    const itemTotal = (item.priceAtPurchase || item.price || 0) * item.quantity;
+                    orderGross += itemTotal;
+
+                    const isItemRefunded = ['Cancelled', 'Returned'].includes(item.itemStatus);
+                    const isEntireOrderCancelled = order.status === 'CANCELLED';
+
+                    if (isEntireOrderCancelled) {
+                        if (isPrepaid) orderRefund += itemTotal;
+                    } else if (isItemRefunded) {
+                        if (isPrepaid || item.itemStatus === 'Returned') {
+                            orderRefund += itemTotal;
+                        }
+                    }
+                });
+            }
+
+            if (order.status === 'CANCELLED' && isPrepaid) {
+                orderRefund += shippingFee - orderDiscount;
+                if (orderRefund < 0) orderRefund = 0;
+            }
+
+            let orderNet = (orderGross + shippingFee) - orderDiscount - orderRefund;
+            if (orderNet < 0) orderNet = 0;
+
+            worksheet.addRow({
+                id: order._id.toString(),
+                date: new Date(order.createdAt).toLocaleDateString('en-IN'),
+                customer: order.userId ? order.userId.fullName : (order.shippingAddress ? order.shippingAddress.fullName : 'Guest'),
+                gross: (orderGross + shippingFee).toFixed(2),
+                deductions: (orderDiscount + orderRefund).toFixed(2),
+                net: orderNet.toFixed(2),
+                payment: order.paymentMethod,
+                status: order.status
+            });
+        });
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=orders-export-${Date.now()}.xlsx`);
+
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (error) {
+        console.error("Export Orders Excel Error:", error);
+        res.status(500).send("Error generating Excel report");
     }
 };
 
