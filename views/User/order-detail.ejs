@@ -538,7 +538,7 @@
                                                 </button>
                                                 <% } %>
 
-                                                    <% if (isDelivered) { %>
+                                                    <% if (canReview) { %>
                                                         <button class="action-btn-detail action-btn-invoice"
                                                             onclick="downloadInvoiceFromDetail('<%= order._id %>')">
                                                             <i class="fas fa-file-invoice"></i> Download Invoice

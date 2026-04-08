@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice #<%= String(order._id).slice(-8).toUpperCase() %></title>
+    <style>
+        :root {
+            --primary: #ff914d;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --bg-light: #f8f9fa;
+            --border: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-main);
+            background: #ffffff;
+            line-height: 1.6;
+        }
+
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 40px;
+        }
+
+        /* Header */
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .company-details h1 {
+            margin: 0;
+            font-size: 28px;
+            color: var(--primary);
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
+        }
+
+        .company-details p {
+            margin: 5px 0 0 0;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .invoice-title-wrapper {
+            text-align: right;
+        }
+
+        .invoice-title {
+            font-size: 32px;
+            margin: 0 0 5px 0;
+            color: var(--text-main);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .invoice-meta {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            background: var(--bg-light);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .info-block {
+            flex: 1;
+        }
+
+        .info-block h3 {
+            margin: 0 0 10px 0;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+
+        .info-block p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        /* Items Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .items-table th {
+            background: #f1f3f5;
+            color: var(--text-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .items-table th.right {
+            text-align: right;
+        }
+
+        .items-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .items-table td.right {
+            text-align: right;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: var(--text-main);
+            display: block;
+        }
+
+        /* Totals Area */
+        .totals-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 40px;
+        }
+
+        .totals-table {
+            border-collapse: collapse;
+            width: 300px;
+        }
+
+        .totals-table td {
+            padding: 10px 15px;
+            font-size: 14px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .totals-table td.right {
+            text-align: right;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .totals-table tr.grand-total td {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            border-bottom: none;
+            padding-top: 15px;
+        }
+
+        /* Footer */
+        .invoice-footer {
+            text-align: center;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .badge-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            background: #e3f2fd;
+            color: #1976d2;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+        
+        .badge-status.delivered { background: #e8f5e9; color: #2e7d32; }
+        .badge-status.cancelled { background: #ffebee; color: #c62828; }
+    </style>
+</head>
+<body>
+    <div class="invoice-box">
+        
+        <div class="invoice-header">
+            <div class="company-details">
+                <h1>HOOF</h1>
+                <p>Premium Sneakers Marketplace</p>
+                <p>123 Sneaker Street, Kerala, India</p>
+                <p>contact@hoof.com | +91 98765 43210</p>
+            </div>
+            <div class="invoice-title-wrapper">
+                <h2 class="invoice-title">INVOICE</h2>
+                <p class="invoice-meta">Order #<%= String(order._id).slice(-8).toUpperCase() %></p>
+                <p class="invoice-meta">Date: <%= new Date(order.createdAt).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'}) %></p>
+                <span class="badge-status <%= order.status.toLowerCase().replace(/\s+/g, '-') %>"><%= order.status %></span>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-block">
+                <h3>Billed To</h3>
+                <p><strong><%= order.shippingAddress.fullName %></strong></p>
+                <p><%= order.shippingAddress.street || order.shippingAddress.houseName || '' %></p>
+                <p><%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> <%= order.shippingAddress.zip || order.shippingAddress.pincode || '' %></p>
+                <p>Phone: <%= order.shippingAddress.phone || order.shippingAddress.mobile || '' %></p>
+            </div>
+            <div class="info-block" style="text-align: right;">
+                <h3>Payment Info</h3>
+                <p><strong>Method:</strong> <%= order.paymentMethod %></p>
+                <p><strong>Status:</strong> <%= order.paymentStatus %></p>
+            </div>
+        </div>
+
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Item Description</th>
+                    <th class="right">Qty</th>
+                    <th class="right">Unit Price</th>
+                    <th class="right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% 
+                   const activeItems = order.items.filter(item => !['Cancelled', 'Return Requested', 'Return Approved', 'Picked Up', 'Returned'].includes(item.itemStatus));
+                   let subtotal = 0;
+                   if (activeItems.length === 0) { 
+                %>
+                <tr>
+                    <td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic;">
+                        All items in this order have been cancelled or returned.
+                    </td>
+                </tr>
+                <% } else { 
+                   activeItems.forEach(item => { 
+                       const itemTotal = item.quantity * item.priceAtPurchase;
+                       subtotal += itemTotal;
+                %>
+                <tr>
+                    <td>
+                        <span class="item-name"><%= item.productName || (item.productId ? item.productId.productName : 'Product') %></span>
+                    </td>
+                    <td class="right"><%= item.quantity %></td>
+                    <td class="right">₹<%= (item.priceAtPurchase || 0).toLocaleString('en-IN') %></td>
+                    <td class="right">₹<%= itemTotal.toLocaleString('en-IN') %></td>
+                </tr>
+                <% }); } %>
+            </tbody>
+        </table>
+
+        <div class="totals-wrapper">
+            <table class="totals-table">
+                <tr>
+                    <td>Subtotal</td>
+                    <td class="right">₹<%= subtotal.toLocaleString('en-IN') %></td>
+                </tr>
+                <% if (order.shippingCharge > 0) { %>
+                <tr>
+                    <td>Shipping Fees</td>
+                    <td class="right">₹<%= order.shippingCharge.toLocaleString('en-IN') %></td>
+                </tr>
+                <% } %>
+                <% if (order.discountAmount > 0) { %>
+                <tr>
+                    <td>Discount</td>
+                    <td class="right">- ₹<%= order.discountAmount.toLocaleString('en-IN') %></td>
+                </tr>
+                <% } %>
+                <% 
+                   let finalTotal = subtotal + (order.shippingCharge || 0) - (order.discountAmount || 0);
+                   if (finalTotal < 0) finalTotal = 0;
+                %>
+                <tr class="grand-total">
+                    <td>Grand Total</td>
+                    <td class="right">₹<%= finalTotal.toLocaleString('en-IN') %></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="invoice-footer">
+            <strong>Thank you for choosing HOOF.</strong><br>
+            If you have any questions about this invoice, please contact support.
+        </div>
+        
+    </div>
+</body>
+</html>

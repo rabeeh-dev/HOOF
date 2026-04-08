@@ -912,93 +912,57 @@ exports.returnOrder = async (req, res) => {
 
 exports.downloadInvoice = async (req, res) => {
   try {
+    const puppeteer = require('puppeteer');
+    const ejs = require('ejs');
+    const path = require('path');
+    
+    // 1. Fetch Order Data
     const order = await Order.findOne({
       _id: req.params.id,
       userId: req.session.userId
     }).populate('items.productId');
 
-    if (!order || order.status.toLowerCase() !== "delivered") {
+    if (!order || !['delivered', 'return requested', 'return approved', 'picked up', 'returned'].includes(order.status.toLowerCase())) {
       return res.status(404).json({ error: "Invoice not available" });
     }
 
-    const doc = new PDFDocument({ margin: 50 });
+    // 2. Render HTML using EJS Template
+    const templatePath = path.join(__dirname, '../views/User/invoice-template.ejs');
+    const htmlContent = await ejs.renderFile(templatePath, { order });
+
+    // 3. Generate PDF via Puppeteer
+    const browser = await puppeteer.launch({ 
+      headless: "new",
+      args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+    });
+    
+    const page = await browser.newPage();
+    
+    // Set HTML and wait for styles to load
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+    
+    // Create the PDF buffer
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' }
+    });
+    
+    await browser.close();
+
+    // 4. Send the Output
     let filename = `invoice-${order._id}.pdf`;
     filename = encodeURIComponent(filename);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-
-    doc.pipe(res);
-
-    // Header
-    doc.fontSize(20).text('INVOICE', { align: 'center' });
-    doc.moveDown();
-
-    // Company Info
-    doc.fontSize(12).text('HOOF Premium Sneakers', { align: 'right' });
-    doc.text('123 Sneaker Street, Kerala, India', { align: 'right' });
-    doc.moveDown();
-
-    // Order Info
-    doc.text(`Order ID: #${String(order._id).slice(-8).toUpperCase()}`);
-    doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`);
-    doc.text(`Status: ${order.status}`);
-    doc.moveDown();
-
-    // Shipping Address
-    doc.fontSize(14).text('Shipping Address', { underline: true });
-    doc.fontSize(10).text(order.shippingAddress.fullName);
-    doc.text(order.shippingAddress.street || order.shippingAddress.houseName || '');
-    doc.text(`${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zip || order.shippingAddress.pincode || ''}`);
-    doc.text(`Phone: ${order.shippingAddress.phone || order.shippingAddress.mobile || ''}`);
-    doc.moveDown();
-
-    // Table Header
-    const tableTop = 330;
-    doc.fontSize(12).text('Item', 50, tableTop);
-    doc.text('Qty', 300, tableTop);
-    doc.text('Price', 400, tableTop);
-    doc.text('Total', 500, tableTop);
-    doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
-
-    // Table Content
-    let y = tableTop + 30;
+    res.setHeader('Content-Length', pdfBuffer.length);
     
-    // Filter out cancelled or returned items
-    const activeItems = order.items.filter(item => !['Cancelled', 'Return Requested', 'Return Approved', 'Picked Up', 'Returned'].includes(item.itemStatus));
-    
-    if (activeItems.length === 0) {
-      doc.fontSize(12).text('All items in this order have been cancelled or returned.', 50, y);
-      y += 30;
-    } else {
-      activeItems.forEach(item => {
-        doc.fontSize(10).text(item.productName || (item.productId ? item.productId.productName : 'Product'), 50, y);
-        doc.text(item.quantity.toString(), 300, y);
-        doc.text(`₹${item.priceAtPurchase.toLocaleString()}`, 400, y);
-        doc.text(`₹${(item.quantity * item.priceAtPurchase).toLocaleString()}`, 500, y);
-        y += 20;
-      });
-    }
-
-    // Calculate Effective Total
-    let effectiveSubtotal = activeItems.reduce((acc, item) => acc + (item.quantity * item.priceAtPurchase), 0);
-    let effectiveTotal = effectiveSubtotal + (order.shippingCharge || 0) - (order.discountAmount || 0);
-    if (effectiveTotal < 0) effectiveTotal = 0;
-
-    // Summary
-    doc.moveTo(50, y + 10).lineTo(550, y + 10).stroke();
-    y += 25;
-    doc.fontSize(12).text('Grand Total:', 400, y);
-    doc.text(`₹${effectiveTotal.toLocaleString()}`, 500, y);
-
-    // Footer
-    doc.fontSize(10).text('Thank you for shopping with HOOF!', 50, 700, { align: 'center' });
-
-    doc.end();
+    return res.end(pdfBuffer);
 
   } catch (err) {
-    console.error("Invoice Error:", err);
-    res.status(500).send("Error generating invoice");
+    console.error("Invoice Generation Error:", err);
+    res.status(500).send("Error generating beautiful invoice.");
   }
 };
 

@@ -256,6 +256,8 @@
                                   style="background:rgba(255, 215, 0, 0.1);color:#d4af37;border:1px solid rgba(255, 215, 0, 0.3);">
                                   <i class="fas fa-star"></i> Review
                                 </button>
+                                <% } %>
+                              <% if (['delivered', 'return requested', 'return approved', 'picked up', 'returned'].includes(normalizedStatus) ) { %>
                                 <button class="order-action-btn invoice-btn"
                                   onclick="downloadInvoice('<%= order._id %>')">
                                   <i class="fas fa-file-invoice"></i> Invoice
