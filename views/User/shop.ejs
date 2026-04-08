@@ -23,12 +23,12 @@
               <h3 class="filter-title"><i class="fas fa-th-large"></i> Categories</h3>
               <ul class="category-list">
                 <li class="category-item <%= !selectedCategory ? 'active' : '' %>"
-                  onclick="window.location.href='/user/shop'">
+                  onclick="setCategory('')">
                   <span class="category-name">All Products</span>
                 </li>
                 <% categories.forEach(cat=> { %>
                   <li class="category-item <%= String(selectedCategory) === String(cat._id) ? 'active' : '' %>"
-                    onclick="window.location.href='/user/shop?category=<%= cat._id %>&sort=<%= selectedSort %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&size=<%= selectedSize %>'">
+                    onclick="setCategory('<%= cat._id %>')">
                     <span class="category-name">
                       <%= cat.name %>
                     </span>
@@ -255,23 +255,17 @@
     track.style.background = `linear-gradient(to right, #ddd ${minPercent}%, var(--accent) ${minPercent}%, var(--accent) ${maxPercent}%, #ddd ${maxPercent}%)`;
   }
 
+  // Category click handler
+  function setCategory(catId) {
+    window.selectedCategoryOverride = catId;
+    navigateToPage(1);
+  }
+
   function toggleSize(size) {
     const currentSize = '<%= selectedSize %>';
     const newSize = (currentSize === size) ? '' : size;
-
-    // Call navigate to page 1 with new size
-    const search = document.getElementById('searchInput').value;
-    const sort = document.getElementById('sortSelect').value;
-    const minPrice = document.getElementById('minPriceRange').value;
-    const maxPrice = document.getElementById('maxPriceRange').value;
-    const category = '<%= selectedCategory %>';
-
-    let url = `/user/shop?page=1&sort=${sort}&minPrice=${minPrice}&maxPrice=${maxPrice}`;
-    if (newSize) url += `&size=${newSize}`;
-    if (category && category !== 'undefined' && category !== 'null') url += `&category=${category}`;
-    if (search) url += `&search=${encodeURIComponent(search)}`;
-
-    window.location.href = url;
+    window.selectedSizeOverride = newSize;
+    navigateToPage(1);
   }
 
   // Optimized Navigation Function
@@ -280,8 +274,9 @@
     const sort = document.getElementById('sortSelect').value;
     const minPrice = document.getElementById('minPriceRange').value;
     const maxPrice = document.getElementById('maxPriceRange').value;
-    const size = '<%= selectedSize %>';
-    const category = '<%= selectedCategory %>';
+    
+    const size = window.selectedSizeOverride !== undefined ? window.selectedSizeOverride : '<%= selectedSize %>';
+    const category = window.selectedCategoryOverride !== undefined ? window.selectedCategoryOverride : '<%= selectedCategory %>';
 
     let url = `/user/shop?page=${pageNumber}&sort=${sort}&minPrice=${minPrice}&maxPrice=${maxPrice}`;
     if (size && size !== 'undefined' && size !== 'null') url += `&size=${size}`;
