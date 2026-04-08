@@ -1045,7 +1045,16 @@ exports.cancelOrderItem = async (req, res) => {
     }
 
     // Partial refund if payment was already made
-    const refundAmount = item.priceAtPurchase * item.quantity;
+    // Deduct equal share of coupon discount per item
+    const itemTotal = item.priceAtPurchase * item.quantity;
+    const couponDiscount = order.discountAmount || 0;
+    const totalItemCount = order.items.length;
+    let perItemDiscount = 0;
+    if (couponDiscount > 0 && totalItemCount > 0) {
+      perItemDiscount = Math.round(couponDiscount / totalItemCount);
+    }
+    const refundAmount = itemTotal - perItemDiscount;
+
     if (order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'Paid') {
       const shortId = String(order._id).slice(-8).toUpperCase();
       await walletService.creditWallet(
@@ -1063,8 +1072,12 @@ exports.cancelOrderItem = async (req, res) => {
     });
 
     // Adjust order totals
-    order.subtotal -= refundAmount;
+    order.subtotal -= itemTotal;
     order.totalAmount -= refundAmount;
+    // Reduce remaining discount
+    if (couponDiscount > 0) {
+      order.discountAmount = Math.max(0, couponDiscount - perItemDiscount);
+    }
     if (order.subtotal < 0) order.subtotal = 0;
     if (order.totalAmount < 0) order.totalAmount = 0;
 

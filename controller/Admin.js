@@ -900,11 +900,13 @@ exports.updateOrderStatus = async (req, res) => {
         if (status === 'Returned' && returningItems.length > 0) {
             const shortId = String(order._id).slice(-8).toUpperCase();
             let totalRefundAmount = 0;
+            let totalItemCost = 0;
             const Product = require("../model/Product");
+            const couponDiscount = order.discountAmount || 0;
 
             for (const item of returningItems) {
-                // Calculate partial refund
-                totalRefundAmount += (item.priceAtPurchase * item.quantity);
+                const itemTotal = item.priceAtPurchase * item.quantity;
+                totalItemCost += itemTotal;
 
                 // Restore stock
                 const product = await Product.findById(item.productId);
@@ -921,9 +923,22 @@ exports.updateOrderStatus = async (req, res) => {
                 }
             }
 
+            // Calculate equal share of coupon discount per returned item
+            const totalItemCount = order.items.length;
+            let totalDiscount = 0;
+            if (couponDiscount > 0 && totalItemCount > 0) {
+                const perItemDiscount = Math.round(couponDiscount / totalItemCount);
+                totalDiscount = perItemDiscount * returningItems.length;
+            }
+            totalRefundAmount = totalItemCost - totalDiscount;
+
             // Adjust order totals based on refunded items
-            order.subtotal -= totalRefundAmount;
+            order.subtotal -= totalItemCost;
             order.totalAmount -= totalRefundAmount;
+            // Reduce remaining discount
+            if (couponDiscount > 0) {
+                order.discountAmount = Math.max(0, couponDiscount - totalDiscount);
+            }
             if (order.subtotal < 0) order.subtotal = 0;
             if (order.totalAmount < 0) order.totalAmount = 0;
 
@@ -1010,7 +1025,16 @@ exports.updateItemStatus = async (req, res) => {
         // Handle stock restoration and refund when item becomes "Returned"
         if (status === 'Returned') {
             const shortId = String(order._id).slice(-8).toUpperCase();
-            const refundAmount = item.priceAtPurchase * item.quantity;
+            const itemTotal = item.priceAtPurchase * item.quantity;
+            const couponDiscount = order.discountAmount || 0;
+
+            // Calculate equal share of coupon discount per item
+            const totalItemCount = order.items.length;
+            let perItemDiscount = 0;
+            if (couponDiscount > 0 && totalItemCount > 0) {
+                perItemDiscount = Math.round(couponDiscount / totalItemCount);
+            }
+            const refundAmount = itemTotal - perItemDiscount;
 
             // Restore stock
             const product = await Product.findById(item.productId);
@@ -1038,8 +1062,12 @@ exports.updateItemStatus = async (req, res) => {
             }
 
             // Adjust order totals
-            order.subtotal -= refundAmount;
+            order.subtotal -= itemTotal;
             order.totalAmount -= refundAmount;
+            // Reduce remaining discount
+            if (couponDiscount > 0) {
+                order.discountAmount = Math.max(0, couponDiscount - perItemDiscount);
+            }
             if (order.subtotal < 0) order.subtotal = 0;
             if (order.totalAmount < 0) order.totalAmount = 0;
         }
