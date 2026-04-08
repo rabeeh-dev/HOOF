@@ -39,24 +39,13 @@ const limiter = rateLimit({
   max: 100 // limit each IP to 100 requests per windowMs
 });
 app.use('/api/', limiter);
-
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://checkout.razorpay.com", "https://cdnjs.cloudflare.com"],
-      scriptSrcAttr: ["'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-      imgSrc: ["'self'", "data:", "blob:", "https:"],
-      connectSrc: ["'self'", "https://api.razorpay.com", "ws:", "wss:"],
-      frameSrc: ["'self'", "https://api.razorpay.com"],
-    }
-  }
+  contentSecurityPolicy: false,
+  secure: false,
 }));
 // ==========================================
 // VIEW ENGINE SETUP
-// ==========================================
+// =========================================
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(expressLayouts);
@@ -90,7 +79,7 @@ const sessionOptions = {
       maxAge: 1000 * 60 * 60 * 24, // 1 day
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === 'production',
+      secure:false,
     },
 };
 
