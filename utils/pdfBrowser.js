@@ -25,10 +25,13 @@ async function launchBrowser() {
     chromium.setGraphicsMode = false;
 
     const browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
+      args: [
+        ...chromium.args,
+        '--font-render-hinting=none',  // Better font rendering on servers
+      ],
+      defaultViewport: { width: 1280, height: 900 },
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless,      // "new" headless
+      headless: chromium.headless,
     });
 
     return browser;
@@ -38,6 +41,7 @@ async function launchBrowser() {
 
     const browser = await puppeteer.launch({
       headless: "new",
+      defaultViewport: { width: 1280, height: 900 },
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -51,4 +55,33 @@ async function launchBrowser() {
   }
 }
 
-module.exports = { launchBrowser };
+/**
+ * Generate a PDF buffer from an HTML string.
+ * Handles page creation, content loading, and proper rendering wait.
+ * @param {import('puppeteer').Browser} browser - Puppeteer browser instance
+ * @param {string} htmlContent - Full HTML string to render
+ * @param {object} pdfOptions - Options passed to page.pdf()
+ * @returns {Promise<Buffer>} PDF as a Node.js Buffer
+ */
+async function generatePdfFromHtml(browser, htmlContent, pdfOptions = {}) {
+  const page = await browser.newPage();
+
+  // Set content and wait for everything (styles, layout) to fully render
+  await page.setContent(htmlContent, {
+    waitUntil: ['domcontentloaded', 'networkidle0'],
+    timeout: 60000
+  });
+
+  // Extra wait to ensure CSS is fully painted (critical for production servers)
+  await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 500)));
+
+  const pdfBuffer = await page.pdf({
+    format: 'A4',
+    printBackground: true,
+    ...pdfOptions
+  });
+
+  return Buffer.from(pdfBuffer);
+}
+
+module.exports = { launchBrowser, generatePdfFromHtml };

@@ -1352,7 +1352,7 @@ exports.exportSalesReport = async (req, res) => {
         });
 
         const ejs = require('ejs');
-        const { launchBrowser } = require('../utils/pdfBrowser');
+        const { launchBrowser, generatePdfFromHtml } = require('../utils/pdfBrowser');
         const path = require('path');
 
         const ejsTemplatePath = path.join(__dirname, '../views/Admin/sales-report.ejs');
@@ -1369,20 +1369,12 @@ exports.exportSalesReport = async (req, res) => {
         });
 
         const browser = await launchBrowser();
-        const page = await browser.newPage();
-
-        await page.setContent(compiledHtml, { waitUntil: 'domcontentloaded', timeout: 60000 });
-
-        const pdfBuffer = await page.pdf({
-            format: 'A4',
+        const nodeBuffer = await generatePdfFromHtml(browser, compiledHtml, {
             landscape: true,
-            printBackground: true,
             margin: { top: '30px', right: '30px', bottom: '30px', left: '30px' }
         });
-
         await browser.close();
 
-        const nodeBuffer = Buffer.from(pdfBuffer);
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=sales-report-${Date.now()}.pdf`);
         res.setHeader('Content-Length', nodeBuffer.length);
@@ -1595,7 +1587,7 @@ exports.exportOrders = async (req, res) => {
         });
 
         const ejs = require('ejs');
-        const { launchBrowser } = require('../utils/pdfBrowser');
+        const { launchBrowser, generatePdfFromHtml } = require('../utils/pdfBrowser');
         const path = require('path');
 
         const filters = [];
@@ -1618,20 +1610,12 @@ exports.exportOrders = async (req, res) => {
         });
 
         const browser = await launchBrowser();
-        const page = await browser.newPage();
-
-        await page.setContent(compiledHtml, { waitUntil: 'domcontentloaded', timeout: 60000 });
-
-        const pdfBuffer = await page.pdf({
-            format: 'A4',
+        const nodeBuffer = await generatePdfFromHtml(browser, compiledHtml, {
             landscape: true,
-            printBackground: true,
             margin: { top: '30px', right: '30px', bottom: '30px', left: '30px' }
         });
-
         await browser.close();
 
-        const nodeBuffer = Buffer.from(pdfBuffer);
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=orders-report-${Date.now()}.pdf`);
         res.setHeader('Content-Length', nodeBuffer.length);

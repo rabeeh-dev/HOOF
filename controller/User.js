@@ -930,18 +930,10 @@ exports.downloadInvoice = async (req, res) => {
     const htmlContent = await ejs.renderFile(templatePath, { order });
 
     // 3. Generate PDF via Puppeteer (production-safe)
-    const { launchBrowser } = require('../utils/pdfBrowser');
+    const { launchBrowser, generatePdfFromHtml } = require('../utils/pdfBrowser');
     const browser = await launchBrowser();
     
-    const page = await browser.newPage();
-    
-    // Set HTML and wait for styles to load
-    await page.setContent(htmlContent, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    
-    // Create the PDF buffer
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
+    const nodeBuffer = await generatePdfFromHtml(browser, htmlContent, {
       margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' }
     });
     
@@ -951,7 +943,6 @@ exports.downloadInvoice = async (req, res) => {
     let filename = `invoice-${order._id}.pdf`;
     filename = encodeURIComponent(filename);
 
-    const nodeBuffer = Buffer.from(pdfBuffer);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Length', nodeBuffer.length);
