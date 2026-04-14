@@ -1352,7 +1352,7 @@ exports.exportSalesReport = async (req, res) => {
         });
 
         const ejs = require('ejs');
-        const puppeteer = require('puppeteer');
+        const { launchBrowser } = require('../utils/pdfBrowser');
         const path = require('path');
 
         const ejsTemplatePath = path.join(__dirname, '../views/Admin/sales-report.ejs');
@@ -1368,16 +1368,7 @@ exports.exportSalesReport = async (req, res) => {
             generatedDate: new Date().toLocaleString('en-IN')
         });
 
-        const browser = await puppeteer.launch({
-            headless: "new",
-            args: [
-                '--no-sandbox', 
-                '--disable-setuid-sandbox', 
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--no-zygote'
-            ]
-        });
+        const browser = await launchBrowser();
         const page = await browser.newPage();
 
         await page.setContent(compiledHtml, { waitUntil: 'domcontentloaded', timeout: 60000 });
@@ -1604,7 +1595,7 @@ exports.exportOrders = async (req, res) => {
         });
 
         const ejs = require('ejs');
-        const puppeteer = require('puppeteer');
+        const { launchBrowser } = require('../utils/pdfBrowser');
         const path = require('path');
 
         const filters = [];
@@ -1626,16 +1617,7 @@ exports.exportOrders = async (req, res) => {
             generatedDate: new Date().toLocaleString('en-IN')
         });
 
-        const browser = await puppeteer.launch({
-            headless: "new",
-            args: [
-                '--no-sandbox', 
-                '--disable-setuid-sandbox', 
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--no-zygote'
-            ]
-        });
+        const browser = await launchBrowser();
         const page = await browser.newPage();
 
         await page.setContent(compiledHtml, { waitUntil: 'domcontentloaded', timeout: 60000 });

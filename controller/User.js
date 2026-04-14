@@ -912,7 +912,6 @@ exports.returnOrder = async (req, res) => {
 
 exports.downloadInvoice = async (req, res) => {
   try {
-    const puppeteer = require('puppeteer');
     const ejs = require('ejs');
     const path = require('path');
     
@@ -930,17 +929,9 @@ exports.downloadInvoice = async (req, res) => {
     const templatePath = path.join(__dirname, '../views/User/invoice-template.ejs');
     const htmlContent = await ejs.renderFile(templatePath, { order });
 
-    // 3. Generate PDF via Puppeteer
-    const browser = await puppeteer.launch({ 
-      headless: "new",
-      args: [
-        '--no-sandbox', 
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--no-zygote'
-      ] 
-    });
+    // 3. Generate PDF via Puppeteer (production-safe)
+    const { launchBrowser } = require('../utils/pdfBrowser');
+    const browser = await launchBrowser();
     
     const page = await browser.newPage();
     
