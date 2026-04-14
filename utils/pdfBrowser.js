@@ -1,14 +1,47 @@
 /**
  * @file utils/pdfBrowser.js
- * @description Shared Puppeteer browser launcher that works in both local dev and production.
+ * @description Shared Puppeteer browser launcher for local dev and production (AWS EC2).
  *
- * - Local:       Uses the full `puppeteer` package (bundled Chromium).
- * - Production:  Uses `puppeteer-core` + `@sparticuz/chromium` which provides
- *                a pre-built Chromium binary compatible with Linux servers
- *                (Render, Railway, AWS, etc.).
+ * Production (AWS EC2):
+ *   Uses puppeteer-core + system-installed Google Chrome / Chromium.
+ *   Requires ONE-TIME setup on the server (see README or setup commands below).
+ *
+ * Local development:
+ *   Uses the full puppeteer package with its bundled Chromium.
  */
 
 const isProduction = process.env.NODE_ENV === 'production';
+
+/**
+ * Find Chrome/Chromium executable path on Linux.
+ */
+function findChromePath() {
+  const { execSync } = require('child_process');
+  const paths = [
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/snap/bin/chromium',
+  ];
+
+  for (const p of paths) {
+    try {
+      execSync(`test -f ${p}`, { stdio: 'ignore' });
+      return p;
+    } catch (e) {
+      // Not found, try next
+    }
+  }
+
+  // Last resort: try 'which'
+  try {
+    return execSync('which google-chrome || which chromium || which chromium-browser')
+      .toString().trim();
+  } catch (e) {
+    return null;
+  }
+}
 
 /**
  * Launch a headless Chromium browser configured for the current environment.
@@ -16,29 +49,41 @@ const isProduction = process.env.NODE_ENV === 'production';
  */
 async function launchBrowser() {
   if (isProduction) {
-    // Production: use puppeteer-core + @sparticuz/chromium
     const puppeteer = require('puppeteer-core');
-    const chromium = require('@sparticuz/chromium');
+    const chromePath = findChromePath();
 
-    // Install a basic font so text renders on servers without system fonts
-    await chromium.font(
-      'https://raw.githubusercontent.com/google/fonts/main/apache/roboto/Roboto%5Bwdth%2Cwght%5D.ttf'
-    );
+    if (!chromePath) {
+      throw new Error(
+        'Chrome/Chromium not found on this server. ' +
+        'Please install it: sudo apt install -y chromium-browser fonts-liberation ' +
+        'OR sudo yum install -y chromium google-noto-sans-fonts'
+      );
+    }
+
+    console.log(`[PDF] Using Chrome at: ${chromePath}`);
 
     const browser = await puppeteer.launch({
-      args: chromium.args,
+      executablePath: chromePath,
+      headless: 'new',
       defaultViewport: { width: 1280, height: 900 },
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-zygote',
+        '--single-process',
+        '--font-render-hinting=none',
+      ]
     });
 
     return browser;
   } else {
-    // Local development: use the full puppeteer package (has its own Chromium)
+    // Local: use the full puppeteer package with bundled Chromium
     const puppeteer = require('puppeteer');
 
     const browser = await puppeteer.launch({
-      headless: "new",
+      headless: 'new',
       defaultViewport: { width: 1280, height: 900 },
       args: [
         '--no-sandbox',
@@ -55,26 +100,24 @@ async function launchBrowser() {
 
 /**
  * Generate a PDF buffer from an HTML string.
- * Handles page creation, content loading, and proper rendering wait.
- * @param {import('puppeteer').Browser} browser - Puppeteer browser instance
- * @param {string} htmlContent - Full HTML string to render
- * @param {object} pdfOptions - Options passed to page.pdf()
- * @returns {Promise<Buffer>} PDF as a Node.js Buffer
+ * @param {import('puppeteer').Browser} browser
+ * @param {string} htmlContent - Full HTML to render
+ * @param {object} pdfOptions - Options for page.pdf()
+ * @returns {Promise<Buffer>}
  */
 async function generatePdfFromHtml(browser, htmlContent, pdfOptions = {}) {
   const page = await browser.newPage();
 
-  // Set content and wait for everything to fully render
   await page.setContent(htmlContent, {
     waitUntil: ['load', 'networkidle0'],
     timeout: 60000
   });
 
-  // Wait for all fonts to finish loading
+  // Wait for fonts to load
   await page.evaluate(() => document.fonts.ready);
 
-  // Extra wait to ensure everything is fully painted
-  await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 1500)));
+  // Small delay for final paint
+  await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 500)));
 
   const pdfBuffer = await page.pdf({
     format: 'A4',
