@@ -66,14 +66,17 @@ async function launchBrowser() {
 async function generatePdfFromHtml(browser, htmlContent, pdfOptions = {}) {
   const page = await browser.newPage();
 
-  // Set content and wait for everything (styles, layout) to fully render
+  // Set content and wait for everything (styles, fonts) to fully render
   await page.setContent(htmlContent, {
-    waitUntil: ['domcontentloaded', 'networkidle0'],
+    waitUntil: ['load', 'networkidle0'],
     timeout: 60000
   });
 
-  // Extra wait to ensure CSS is fully painted (critical for production servers)
-  await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 500)));
+  // Wait for all web fonts to finish loading
+  await page.evaluate(() => document.fonts.ready);
+
+  // Extra wait to ensure CSS + fonts are fully painted
+  await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 1000)));
 
   const pdfBuffer = await page.pdf({
     format: 'A4',
