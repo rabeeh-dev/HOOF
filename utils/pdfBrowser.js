@@ -20,15 +20,13 @@ async function launchBrowser() {
     const puppeteer = require('puppeteer-core');
     const chromium = require('@sparticuz/chromium');
 
-    // @sparticuz/chromium optimisations
-    chromium.setHeadlessMode = true;
-    chromium.setGraphicsMode = false;
+    // Install a basic font so text renders on servers without system fonts
+    await chromium.font(
+      'https://raw.githubusercontent.com/google/fonts/main/apache/roboto/Roboto%5Bwdth%2Cwght%5D.ttf'
+    );
 
     const browser = await puppeteer.launch({
-      args: [
-        ...chromium.args,
-        '--font-render-hinting=none',  // Better font rendering on servers
-      ],
+      args: chromium.args,
       defaultViewport: { width: 1280, height: 900 },
       executablePath: await chromium.executablePath(),
       headless: chromium.headless,
@@ -66,17 +64,17 @@ async function launchBrowser() {
 async function generatePdfFromHtml(browser, htmlContent, pdfOptions = {}) {
   const page = await browser.newPage();
 
-  // Set content and wait for everything (styles, fonts) to fully render
+  // Set content and wait for everything to fully render
   await page.setContent(htmlContent, {
     waitUntil: ['load', 'networkidle0'],
     timeout: 60000
   });
 
-  // Wait for all web fonts to finish loading
+  // Wait for all fonts to finish loading
   await page.evaluate(() => document.fonts.ready);
 
-  // Extra wait to ensure CSS + fonts are fully painted
-  await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 1000)));
+  // Extra wait to ensure everything is fully painted
+  await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 1500)));
 
   const pdfBuffer = await page.pdf({
     format: 'A4',
