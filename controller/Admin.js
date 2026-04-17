@@ -1626,18 +1626,38 @@ exports.exportSalesExcel = async (req, res) => {
  */
 exports.exportOrders = async (req, res) => {
     try {
-        const { status, payment, search } = req.query;
+        const { status, payment, search, startDate, endDate } = req.query;
         let query = {};
 
         if (status) query.status = status;
         if (payment) query.paymentMethod = payment;
+        
+        if (startDate && endDate) {
+            query.createdAt = {
+                $gte: new Date(startDate),
+                $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
+            };
+        }
+
         if (search) {
             const cleanSearch = search.replace('#', '').trim();
             const searchRegex = new RegExp(cleanSearch, 'i');
+            
+            const User = require('../model/User');
+            const matchingUsers = await User.find({
+                $or: [{ fullName: searchRegex }, { email: searchRegex }]
+            }).select('_id');
+            const matchingUserIds = matchingUsers.map(u => u._id);
+
             query.$or = [
                 { 'shippingAddress.fullName': searchRegex },
+                { userId: { $in: matchingUserIds } },
                 { $expr: { $regexMatch: { input: { $toString: "$_id" }, regex: searchRegex } } }
             ];
+            
+            if (/^[0-9a-fA-F]{24}$/.test(cleanSearch)) {
+                query.$or.push({ _id: cleanSearch });
+            }
         }
 
         const orders = await Order.find(query)
@@ -1762,18 +1782,38 @@ exports.exportOrders = async (req, res) => {
  */
 exports.exportOrdersExcel = async (req, res) => {
     try {
-        const { status, payment, search } = req.query;
+        const { status, payment, search, startDate, endDate } = req.query;
         let query = {};
 
         if (status) query.status = status;
         if (payment) query.paymentMethod = payment;
+        
+        if (startDate && endDate) {
+            query.createdAt = {
+                $gte: new Date(startDate),
+                $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
+            };
+        }
+
         if (search) {
             const cleanSearch = search.replace('#', '').trim();
             const searchRegex = new RegExp(cleanSearch, 'i');
+            
+            const User = require('../model/User');
+            const matchingUsers = await User.find({
+                $or: [{ fullName: searchRegex }, { email: searchRegex }]
+            }).select('_id');
+            const matchingUserIds = matchingUsers.map(u => u._id);
+
             query.$or = [
                 { 'shippingAddress.fullName': searchRegex },
+                { userId: { $in: matchingUserIds } },
                 { $expr: { $regexMatch: { input: { $toString: "$_id" }, regex: searchRegex } } }
             ];
+            
+            if (/^[0-9a-fA-F]{24}$/.test(cleanSearch)) {
+                query.$or.push({ _id: cleanSearch });
+            }
         }
 
         const orders = await Order.find(query).populate('userId', 'fullName email').sort({ createdAt: -1 });

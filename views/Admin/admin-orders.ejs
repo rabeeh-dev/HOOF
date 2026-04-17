@@ -85,11 +85,11 @@
                         <i class="fas <%= (selectedStatus || selectedPayment) ? 'fa-times' : 'fa-filter' %>"></i>
                         Filters
                     </button>
-                    <button class="btn-export" onclick="exportOrders('excel')" style="background-color: #27ae60; color: white; margin-right: 5px; min-width: auto; padding: 0.6rem 1rem;">
+                    <button class="btn-export" onclick="openExportModal('excel')" style="background-color: #27ae60; color: white; margin-right: 5px; min-width: auto; padding: 0.6rem 1rem;">
                         <i class="fas fa-file-excel"></i>
                          Excel
                     </button>
-                    <button class="btn-export" onclick="exportOrders('pdf')" style="min-width: auto; padding: 0.6rem 1rem;">
+                    <button class="btn-export" onclick="openExportModal('pdf')" style="min-width: auto; padding: 0.6rem 1rem;">
                         <i class="fas fa-file-pdf"></i>
                          PDF
                     </button>
@@ -560,6 +560,64 @@
                     <button class="modal-btn cancel" id="cancelStatusBtn">Cancel</button>
                     <button class="modal-btn confirm" id="confirmStatusUpdate">
                         <i class="fas fa-check"></i> Update Status
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- EXPORT DATE MODAL -->
+        <div class="custom-modal" id="exportDateModal">
+            <div class="modal-overlay" onclick="closeExportModal()"></div>
+            <div class="modal-container" style="max-width: 450px;">
+                <!-- Header -->
+                <div class="modal-header-band">
+                    <div class="header-left">
+                        <div class="header-icon-box" style="background: rgba(255, 255, 255, 0.2);">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="header-text">
+                            <h3>Select Report Range</h3>
+                            <p id="exportFormatHint">Export Orders</p>
+                        </div>
+                    </div>
+                    <button class="modal-close-btn" onclick="closeExportModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="modal-body-content" style="gap: 1.5rem;">
+                    <p style="font-size: 0.85rem; color: #718096; margin: 0; line-height: 1.4;">Select a preset timeframe or specify a custom date range to filter the exported orders.</p>
+                    
+                    <!-- Presets -->
+                    <div>
+                        <label class="modal-detail-label" style="margin-bottom: 0.8rem; display: block;">Quick Presets</label>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button type="button" class="preset-chip active" data-range="all" style="padding: 0.5rem 1rem; border-radius: 20px; border: 1px solid var(--admin-primary); background: var(--admin-primary); color: white; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s;">All Time</button>
+                            <button type="button" class="preset-chip" data-range="today" style="padding: 0.5rem 1rem; border-radius: 20px; border: 1px solid var(--admin-border); background: white; color: var(--admin-text); font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s;">Today</button>
+                            <button type="button" class="preset-chip" data-range="7days" style="padding: 0.5rem 1rem; border-radius: 20px; border: 1px solid var(--admin-border); background: white; color: var(--admin-text); font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s;">7 Days</button>
+                            <button type="button" class="preset-chip" data-range="30days" style="padding: 0.5rem 1rem; border-radius: 20px; border: 1px solid var(--admin-border); background: white; color: var(--admin-text); font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s;">30 Days</button>
+                            <button type="button" class="preset-chip" data-range="custom" style="padding: 0.5rem 1rem; border-radius: 20px; border: 1px solid var(--admin-border); background: white; color: var(--admin-text); font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s;">Custom</button>
+                        </div>
+                    </div>
+
+                    <!-- Custom Date Fields -->
+                    <div id="exportCustomDateWrap" style="display: none; padding: 1rem; background: rgba(0,0,0,0.02); border-radius: 12px; border: 1px solid var(--admin-border);">
+                        <div class="new-status-field">
+                            <label class="modal-detail-label">Start Date</label>
+                            <input type="date" id="exportStartDate" class="filter-select" style="background: white;" />
+                        </div>
+                        <div class="new-status-field" style="margin-top: 12px;">
+                            <label class="modal-detail-label">End Date</label>
+                            <input type="date" id="exportEndDate" class="filter-select" style="background: white;" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="modal-footer-strip">
+                    <button class="modal-btn cancel" onclick="closeExportModal()">Cancel</button>
+                    <button class="modal-btn confirm" id="confirmExportBtn" style="background: #27ae60;">
+                        <i class="fas fa-download"></i> Download
                     </button>
                 </div>
             </div>

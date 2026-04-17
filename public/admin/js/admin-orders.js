@@ -101,31 +101,122 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Export Orders (PDF or Excel)
-    window.exportOrders = async (type = 'pdf') => {
-        const basePath = type === 'excel' ? '/admin/orders/export-excel' : '/admin/orders/export';
-        const url = new URL(basePath, window.location.origin);
-        const status = statusFilter ? statusFilter.value : '';
-        const payment = paymentFilter ? paymentFilter.value : '';
-        const search = searchInput ? searchInput.value.trim() : '';
-        if (status) url.searchParams.set('status', status);
-        if (payment) url.searchParams.set('payment', payment);
-        if (search) url.searchParams.set('search', search);
-        showLoading('Exporting orders...');
-        try {
-            const res = await fetch(url.toString());
-            const blob = await res.blob();
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            const filename = res.headers.get('Content-Disposition')?.match(/filename="?(.+?)"?$/)?.[1] || 'orders-export.pdf';
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(a.href);
-        } catch (err) {
-            console.error('Export failed:', err);
-        } finally {
-            hideLoading();
+    let currentExportType = 'pdf';
+    let currentExportRange = 'all';
+
+    window.openExportModal = (type = 'pdf') => {
+        currentExportType = type;
+        const modal = document.getElementById('exportDateModal');
+        const hint = document.getElementById('exportFormatHint');
+        
+        if (hint) {
+            hint.textContent = type === 'excel' ? 'Export as Excel Spreadsheet' : 'Export as PDF Document';
+        }
+        
+        if (modal) {
+            modal.style.display = 'flex';
         }
     };
+
+    window.closeExportModal = () => {
+        const modal = document.getElementById('exportDateModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    };
+
+    const presetChips = document.querySelectorAll('.preset-chip');
+    const customDateWrap = document.getElementById('exportCustomDateWrap');
+    
+    presetChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            // Update active state
+            presetChips.forEach(c => {
+                c.classList.remove('active');
+                c.style.background = 'white';
+                c.style.color = 'var(--admin-text)';
+                c.style.borderColor = 'var(--admin-border)';
+            });
+            chip.classList.add('active');
+            chip.style.background = 'var(--admin-primary)';
+            chip.style.color = 'white';
+            chip.style.borderColor = 'var(--admin-primary)';
+            
+            // Set range
+            currentExportRange = chip.getAttribute('data-range');
+            
+            // Show/hide custom inputs
+            if (currentExportRange === 'custom') {
+                customDateWrap.style.display = 'block';
+            } else {
+                customDateWrap.style.display = 'none';
+                document.getElementById('exportStartDate').value = '';
+                document.getElementById('exportEndDate').value = '';
+            }
+        });
+    });
+
+    const confirmExportBtn = document.getElementById('confirmExportBtn');
+    if (confirmExportBtn) {
+        confirmExportBtn.addEventListener('click', async () => {
+            let startDate = '';
+            let endDate = '';
+            const now = new Date();
+            
+            if (currentExportRange === 'today') {
+                startDate = now.toISOString().split('T')[0];
+                endDate = now.toISOString().split('T')[0];
+            } else if (currentExportRange === '7days') {
+                const past = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000);
+                startDate = past.toISOString().split('T')[0];
+                endDate = now.toISOString().split('T')[0];
+            } else if (currentExportRange === '30days') {
+                const past = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000);
+                startDate = past.toISOString().split('T')[0];
+                endDate = now.toISOString().split('T')[0];
+            } else if (currentExportRange === 'custom') {
+                startDate = document.getElementById('exportStartDate')?.value;
+                endDate = document.getElementById('exportEndDate')?.value;
+                if (startDate && !endDate) return showToast('Please select an end date', 'warning');
+                if (endDate && !startDate) return showToast('Please select a start date', 'warning');
+                if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+                    return showToast('Start date cannot be after end date', 'warning');
+                }
+            }
+
+            closeExportModal();
+            const basePath = currentExportType === 'excel' ? '/admin/orders/export-excel' : '/admin/orders/export';
+            const url = new URL(basePath, window.location.origin);
+            
+            // Check existing filters
+            const status = statusFilter ? statusFilter.value : '';
+            const payment = paymentFilter ? paymentFilter.value : '';
+            const search = searchInput ? searchInput.value.trim() : '';
+            
+            if (status) url.searchParams.set('status', status);
+            if (payment) url.searchParams.set('payment', payment);
+            if (search) url.searchParams.set('search', search);
+            if (startDate) url.searchParams.set('startDate', startDate);
+            if (endDate) url.searchParams.set('endDate', endDate);
+            
+            showLoading('Exporting orders...');
+            try {
+                const res = await fetch(url.toString());
+                const blob = await res.blob();
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                const filename = res.headers.get('Content-Disposition')?.match(/filename="?(.+?)"?$/)?.[1] || `orders-export.${currentExportType === 'excel' ? 'xlsx' : 'pdf'}`;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(a.href);
+            } catch (err) {
+                console.error('Export failed:', err);
+                showToast('Failed to export orders', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+    }
 
     // ==========================================
     // ORDER DETAILS MODAL
