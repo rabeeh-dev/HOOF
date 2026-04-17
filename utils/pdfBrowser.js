@@ -109,8 +109,8 @@ async function generatePdfFromHtml(browser, htmlContent, pdfOptions = {}) {
   const page = await browser.newPage();
 
   await page.setContent(htmlContent, {
-    waitUntil: ['load', 'networkidle0'],
-    timeout: 60000
+    waitUntil: 'domcontentloaded',
+    timeout: 30000
   });
 
   // Wait for fonts to load
