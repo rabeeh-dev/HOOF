@@ -382,9 +382,21 @@ exports.loadCustomers = async (req, res) => {
         const limit = 5;
         const skip = (page - 1) * limit;
 
-        const totalUsers = await User.countDocuments({});
+        const { search } = req.query;
+        let query = {};
+        if (search) {
+            const searchRegex = new RegExp(search.trim(), 'i');
+            query.$or = [
+                { fullName: searchRegex },
+                { email: searchRegex },
+                { phone: searchRegex }
+            ];
+        }
+
+        const totalUsers = await User.countDocuments(query);
 
         const users = await User.aggregate([
+            { $match: query },
             { $sort: { createdAt: -1 } },
             { $skip: skip },
             { $limit: limit },
@@ -426,6 +438,7 @@ exports.loadCustomers = async (req, res) => {
             users,
             currentPage: page,
             totalPages: Math.ceil(totalUsers / limit) || 1,
+            search: search || '',
             title: "Customers | HOOF Admin",
             layout: false
         });
@@ -786,13 +799,23 @@ exports.loadOrders = async (req, res) => {
             const cleanSearch = search.replace('#', '').trim();
             const searchRegex = new RegExp(cleanSearch, 'i');
 
-            // Build the base $or array for string fields
+            // Find matching users by name or email
+            const matchingUsers = await User.find({
+                $or: [
+                    { fullName: searchRegex },
+                    { email: searchRegex }
+                ]
+            }).select('_id');
+            const matchingUserIds = matchingUsers.map(u => u._id);
+
+            // Build the base $or array
             query.$or = [
                 { 'shippingAddress.fullName': searchRegex },
+                { userId: { $in: matchingUserIds } },
                 { $expr: { $regexMatch: { input: { $toString: "$_id" }, regex: searchRegex } } }
             ];
 
-            // If the search string is a valid 24-character hex string, we can search by exact _id
+            // If the search string is a valid 24-character hex string, search exact _id
             if (/^[0-9a-fA-F]{24}$/.test(cleanSearch)) {
                 query.$or.push({ _id: cleanSearch });
             }

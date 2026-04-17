@@ -33,49 +33,58 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ==========================================
-    // SEARCH FUNCTIONALITY
-    // ==========================================
-
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     const clearBtn = document.getElementById('clearSearchBtn');
 
-    function searchCustomers() {
+    let searchTimeout;
+
+    function applySearch() {
         if (!searchInput) return;
-        const searchTerm = searchInput.value.toLowerCase().trim();
-        const rows = document.querySelectorAll('.customers-table tbody tr');
+        const searchTerm = searchInput.value.trim();
+        if (typeof showLoading === 'function') showLoading('Searching globally...');
+        const url = new URL(window.location.href);
+        if (searchTerm) {
+            url.searchParams.set('search', searchTerm);
+        } else {
+            url.searchParams.delete('search');
+        }
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    }
 
-        if (clearBtn) clearBtn.style.display = searchTerm.length > 0 ? 'flex' : 'none';
-
-        rows.forEach(row => {
-            const nameEl = row.querySelector('.customer-info h4');
-            const emailEl = row.querySelector('.contact-text');
-            if (nameEl && emailEl) {
-                const match = nameEl.textContent.toLowerCase().includes(searchTerm) ||
-                    emailEl.textContent.toLowerCase().includes(searchTerm);
-                row.style.display = match ? '' : 'none';
-            }
-        });
+    function searchCustomers() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(applySearch, 800);
     }
 
     function clearSearch() {
         if (searchInput) {
             searchInput.value = '';
-            searchCustomers();
+            applySearch();
         }
     }
 
-    if (searchBtn) searchBtn.addEventListener('click', searchCustomers);
+    if (searchBtn) searchBtn.addEventListener('click', applySearch);
     if (clearBtn) clearBtn.addEventListener('click', clearSearch);
     if (searchInput) {
         searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') searchCustomers();
+            if (e.key === 'Enter') {
+                clearTimeout(searchTimeout);
+                applySearch();
+            }
         });
         searchInput.addEventListener('input', () => {
             if (clearBtn) clearBtn.style.display = searchInput.value.length > 0 ? 'flex' : 'none';
             searchCustomers();
         });
+        
+        // Populate search box from URL on load
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('search')) {
+            searchInput.value = urlParams.get('search');
+            if (clearBtn) clearBtn.style.display = 'flex';
+        }
     }
 
     // ==========================================
