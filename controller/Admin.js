@@ -980,7 +980,11 @@ exports.updateOrderStatus = async (req, res) => {
             let totalRefundAmount = 0;
             let totalItemCost = 0;
             const Product = require("../model/Product");
+            const Coupon = require("../model/Coupon");
             const couponDiscount = order.discountAmount || 0;
+
+            // Calculate original order subtotal (sum of all items at purchase price)
+            const originalSubtotal = order.items.reduce((sum, i) => sum + (i.priceAtPurchase * i.quantity), 0);
 
             for (const item of returningItems) {
                 const itemTotal = item.priceAtPurchase * item.quantity;
@@ -1001,21 +1005,36 @@ exports.updateOrderStatus = async (req, res) => {
                 }
             }
 
-            // Calculate equal share of coupon discount per returned item
-            const totalItemCount = order.items.length;
-            let totalDiscount = 0;
-            if (couponDiscount > 0 && totalItemCount > 0) {
-                const perItemDiscount = Math.round(couponDiscount / totalItemCount);
-                totalDiscount = perItemDiscount * returningItems.length;
+            // Calculate proportional coupon deduction based on each returning item's contribution
+            let totalProportionalDiscount = 0;
+            if (couponDiscount > 0 && originalSubtotal > 0) {
+                for (const item of returningItems) {
+                    const itemTotal = item.priceAtPurchase * item.quantity;
+                    const itemContribution = itemTotal / originalSubtotal;
+                    totalProportionalDiscount += Math.round(couponDiscount * itemContribution);
+                }
             }
-            totalRefundAmount = totalItemCost - totalDiscount;
+
+            // Check if remaining order value falls below coupon minPurchaseAmount
+            const remainingSubtotal = order.subtotal - totalItemCost;
+            let couponClawback = totalProportionalDiscount;
+            if (couponDiscount > 0 && order.couponCode) {
+                const coupon = await Coupon.findOne({ couponCode: order.couponCode });
+                if (coupon && coupon.minPurchaseAmount > 0 && remainingSubtotal < coupon.minPurchaseAmount) {
+                    // Order no longer qualifies — deduct full remaining coupon from refund
+                    couponClawback = couponDiscount;
+                }
+            }
+
+            totalRefundAmount = totalItemCost - couponClawback;
+            if (totalRefundAmount < 0) totalRefundAmount = 0;
 
             // Adjust order totals based on refunded items
             order.subtotal -= totalItemCost;
             order.totalAmount -= totalRefundAmount;
             // Reduce remaining discount
             if (couponDiscount > 0) {
-                order.discountAmount = Math.max(0, couponDiscount - totalDiscount);
+                order.discountAmount = Math.max(0, couponDiscount - couponClawback);
             }
             if (order.subtotal < 0) order.subtotal = 0;
             if (order.totalAmount < 0) order.totalAmount = 0;
@@ -1102,16 +1121,33 @@ exports.updateItemStatus = async (req, res) => {
 
         // Handle stock restoration and refund when item becomes "Returned"
         if (status === 'Returned') {
+            const Coupon = require("../model/Coupon");
             const shortId = String(order._id).slice(-8).toUpperCase();
             const itemTotal = item.priceAtPurchase * item.quantity;
             const couponDiscount = order.discountAmount || 0;
 
-            // Calculate proportional coupon discount for this item
+            // Calculate original order subtotal (sum of all items at purchase price)
+            const originalSubtotal = order.items.reduce((sum, i) => sum + (i.priceAtPurchase * i.quantity), 0);
+
+            // Calculate proportional coupon discount based on this item's contribution
             let proportionalDiscount = 0;
-            if (couponDiscount > 0 && order.subtotal > 0) {
-                proportionalDiscount = Math.round((itemTotal / order.subtotal) * couponDiscount);
+            if (couponDiscount > 0 && originalSubtotal > 0) {
+                const itemContribution = itemTotal / originalSubtotal;
+                proportionalDiscount = Math.round(couponDiscount * itemContribution);
             }
-            const refundAmount = itemTotal - proportionalDiscount;
+
+            // Check if remaining order value falls below coupon minPurchaseAmount
+            const remainingSubtotal = order.subtotal - itemTotal;
+            let couponClawback = proportionalDiscount;
+            if (couponDiscount > 0 && order.couponCode) {
+                const coupon = await Coupon.findOne({ couponCode: order.couponCode });
+                if (coupon && coupon.minPurchaseAmount > 0 && remainingSubtotal < coupon.minPurchaseAmount) {
+                    // Order no longer qualifies — deduct full remaining coupon from refund
+                    couponClawback = couponDiscount;
+                }
+            }
+
+            const refundAmount = Math.max(0, itemTotal - couponClawback);
 
             // Restore stock
             const product = await Product.findById(item.productId);
@@ -1141,9 +1177,9 @@ exports.updateItemStatus = async (req, res) => {
             // Adjust order totals
             order.subtotal -= itemTotal;
             order.totalAmount -= refundAmount;
-            // Reduce remaining discount proportionally
+            // Reduce remaining discount
             if (couponDiscount > 0) {
-                order.discountAmount = Math.max(0, couponDiscount - proportionalDiscount);
+                order.discountAmount = Math.max(0, couponDiscount - couponClawback);
             }
             if (order.subtotal < 0) order.subtotal = 0;
             if (order.totalAmount < 0) order.totalAmount = 0;
