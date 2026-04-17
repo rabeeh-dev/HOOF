@@ -138,7 +138,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <%= product.quantity %>
+                                            <%= Math.max(0, product.quantity) %>
                                         </td>
                                         <td>
                                             <span class="status-badge <%= product.isBlocked ? 'unlisted' : 'listed' %>">

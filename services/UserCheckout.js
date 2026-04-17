@@ -127,8 +127,9 @@ exports.createOrder = async (userId, addressId, paymentMethod = "COD", couponCod
         // UPI orders: stock is deducted after payment verification
         if (paymentMethod !== 'upi') {
             variant.quantity -= item.quantity;
+            if (variant.quantity < 0) variant.quantity = 0;
             variant.status = variant.quantity > 0 ? 'Available' : 'Out of Stock';
-            product.quantity -= item.quantity;
+            product.quantity = Math.max(0, product.quantity - item.quantity);
             await product.save();
         }
     }
@@ -266,9 +267,10 @@ exports.deductStockForOrder = async (orderId) => {
 
         if (variant) {
             variant.quantity -= item.quantity;
+            if (variant.quantity < 0) variant.quantity = 0;
             variant.status = variant.quantity > 0 ? 'Available' : 'Out of Stock';
         }
-        product.quantity -= item.quantity;
+        product.quantity = Math.max(0, product.quantity - item.quantity);
         await product.save();
     }
 };
