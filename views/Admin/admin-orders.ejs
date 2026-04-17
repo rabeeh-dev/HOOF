@@ -152,6 +152,16 @@
                         <div class="stat-label">Total Revenue</div>
                     </div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">₹<%= stats.totalDiscount.toLocaleString('en-IN') %>
+                        </div>
+                        <div class="stat-label">Total Discount</div>
+                    </div>
+                </div>
             </div>
 
             <!-- FILTER PANEL -->
@@ -272,6 +282,11 @@
                                                 <span class="total-amount">₹<%=
                                                         order.totalAmount.toLocaleString('en-IN') %>
                                                 </span>
+                                                <% if (order.discountAmount && order.discountAmount > 0) { %>
+                                                    <div style="font-size: 0.75rem; color: #10b981; margin-top: 2px; font-weight: 500;">
+                                                        Disc: ₹<%= order.discountAmount.toLocaleString('en-IN') %>
+                                                    </div>
+                                                <% } %>
                                                 <% let displayS=order.paymentStatus || 'Pending' ; let sClass=(displayS)
                                                     ? displayS.toLowerCase() : 'pending' ; if
                                                     (order.status==='DELIVERED' ) {

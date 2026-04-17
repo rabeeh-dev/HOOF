@@ -835,8 +835,12 @@ exports.loadOrders = async (req, res) => {
             processing: await Order.countDocuments({ status: 'Processing' }),
             delivered: await Order.countDocuments({ status: 'DELIVERED' }),
             totalRevenue: (await Order.aggregate([
-                { $match: { status: 'DELIVERED' } },
+                { $match: { status: { $nin: ['CANCELLED', 'Returned'] } } },
                 { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+            ]))[0]?.total || 0,
+            totalDiscount: (await Order.aggregate([
+                { $match: { status: { $nin: ['CANCELLED', 'Returned'] } } },
+                { $group: { _id: null, total: { $sum: { $ifNull: ['$discountAmount', 0] } } } }
             ]))[0]?.total || 0
         };
 
