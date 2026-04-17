@@ -91,6 +91,20 @@ async function submitCouponForm(e) {
     payload.maxDiscountAmount = payload.maxDiscountAmount ? parseFloat(payload.maxDiscountAmount) : undefined;
     payload.usageLimit = parseInt(payload.usageLimit);
 
+    // Expiry date validation: must be today or in the future
+    const expiryDate = new Date(payload.expiryDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (expiryDate < today) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Invalid Expiry Date',
+            text: 'Expiry date cannot be in the past. Please select today or a future date.',
+            confirmButtonColor: '#c41e3a'
+        });
+        return;
+    }
+
     // Confirmation for 100% discount
     if (payload.discountType === 'percentage' && payload.discountValue === 100) {
         const result = await Swal.fire({
@@ -215,5 +229,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         // Run once on initial load
         discountTypeEl.dispatchEvent(new Event('change'));
+    }
+
+    // Set min date for expiry date input to today
+    const expiryDateInput = document.getElementById('expiryDate');
+    if (expiryDateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        expiryDateInput.setAttribute('min', today);
     }
 });
