@@ -72,7 +72,7 @@
                             const variant = (product.variants || []).find(v => String(v.size) === size);
                             const stock = variant ? variant.quantity : 0;
                         %>
-                            <div class="size-option" data-size="<%= size %>" data-stock="<%= stock %>"
+                            <div class="size-option <%= stock === 0 ? 'out-of-stock' : '' %>" data-size="<%= size %>" data-stock="<%= stock %>"
                                 onclick="selectSize(this)">
                                 <%= size %>
                             </div>

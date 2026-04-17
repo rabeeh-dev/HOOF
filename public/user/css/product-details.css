@@ -263,6 +263,35 @@
     transform: scale(1.05);
 }
 
+/* Out of Stock Variant */
+.size-option.out-of-stock {
+    background: #f0f0f0;
+    color: #b0b0b0;
+    border-color: rgba(0, 0, 0, 0.06);
+    cursor: not-allowed;
+    position: relative;
+    overflow: hidden;
+    opacity: 0.65;
+    box-shadow: none;
+}
+
+.size-option.out-of-stock::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -10%;
+    width: 120%;
+    height: 2px;
+    background: #b0b0b0;
+    transform: rotate(-45deg);
+    transform-origin: center;
+}
+
+.size-option.out-of-stock:hover {
+    border-color: rgba(0, 0, 0, 0.06);
+    transform: none;
+}
+
 .stock-status {
     margin-top: 1rem;
     font-size: 0.95rem;
