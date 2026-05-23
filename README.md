@@ -26,7 +26,7 @@
 
 [✨ Features](#-features) • [🛠️ Tech Stack](#️-tech-stack) • [⚙️ Installation](#️-installation--setup) • [📸 Screenshots](#-screenshots) • [🤝 Contributing](#-contributing)
 
----
+----
 
 </div>
 
