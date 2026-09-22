@@ -104,143 +104,56 @@
 
 ## 🛠️ Tech Stack
 
-<div align="center">
+### Frontend & Backend (Monolith)
+- **Runtime / Framework:** Node.js, Express 5
+- **Templating Engine:** EJS (Embedded JavaScript Templates) with layout wrappers
+- **Database & ODM:** MongoDB, Mongoose
+- **Authentication:** Passport.js (Local Strategy, Google OAuth 2.0), bcrypt
+- **Validation & Security:** express-validator, express-session, helmet, csurf (or similar security middleware)
+- **File Uploads:** Multer (handling local storage for products & profiles)
+- **Email & Notifications:** Nodemailer (SMTP / Gmail for OTP & password reset)
+- **Payments:** Razorpay SDK (secure online payment integration)
+- **PDF & Reports:** Puppeteer (invoice & sales report generation)
 
-| Layer | Technology |
-|:------|:-----------|
-| 🎨 **Frontend** | EJS, CSS3, Vanilla JavaScript |
-| ⚙️ **Backend** | Node.js, Express.js |
-| 🗄️ **Database** | MongoDB, Mongoose ODM |
-| 🔐 **Auth** | Passport.js (Local + Google OAuth), bcrypt, Express Session |
-| 📧 **Email / OTP** | Nodemailer |
-| 🖼️ **File Uploads** | Multer |
-| 💳 **Payments** | Razorpay |
-| 🔧 **Dev Tools** | Nodemon, Git, Postman, VS Code |
+##└── 📂 server/                         # Express 5 + Node.js Backend Server & Monolith
+    ├── 📄 app.js                      # Express app entry point
+    ├── 📄 backfillReferralCodes.js    # Utility: backfill referral codes
+    ├── 📄 package.json                # Server dependencies & scripts
+    ├── 📄 .env                        # Server environment variables
+    ├── 📄 .env.example                # Server environment documentation template
+    │
+    ├── 📂 config/
+    │   ├── 📄 db.js                   # MongoDB connection
+    │   └── 📄 passport.js             # Passport.js strategies (Local + Google)
+    │
+    ├── 📂 controller/
+    │   ├── 📄 Address.js              # Address CRUD for users
+    │   ├── 📄 Admin.js                # Admin dashboard & user management
+    │   ├── 📄 AdminCoupon.js          # Admin coupon management
+    │   ├── 📄 AdminProduct.js         # Admin product management
+    │   ├── 📄 Coupon.js               # User coupon application
+    │   ├── 📄 Product.js              # Product listing & details
+    │   ├── 📄 User.js                 # User profile, auth, OTP
+    │   ├── 📄 UserCheckout.js         # Checkout & order placement
+    │   └── 📂 api/                    # Headless REST API Controllers (JSON)
+    ├── 📂 services/
+    │   ├── 📄 AdminProduct.js         # Admin product business logic
+    │   ├── 📄 Auth.js                 # Auth service (OTP, sessions)
+    │   ├── 📄 Password.js             # Password reset logic
+    │   ├── 📄 Product.js              # Product filtering & search
+    │   ├── 📄 User.js                 # User profile logic
+    │   ├── 📄 UserCheckout.js         # Checkout business logic
+    │   └── 📄 Wallet.js               # Wallet debit/credit logic
+    │
+    ├── 📂 utils/
+    │   ├── 📄 generateOtp.js          # OTP generator
+    │   ├── 📄 googleSheets.js         # Google Sheets API lead integration
+    │   ├── 📄 pdfBrowser.js           # Shared Puppeteer Chromium launcher
+    │   └── 📄 sendEmail.js            # Nodemailer emai## 🔐 Environment Variables
 
-</div>
+Create a `.env` file in the `server/` directory (`server/.env`):
 
-```
-     🌐 BROWSER
-          │
-          │  HTTP Request (GET / POST)
-          ▼
-  ┌───────────────────────────────────────┐
-  │          ⚙️  EXPRESS.JS SERVER         │
-  │                                       │
-  │  Routes → Middleware → Controllers    │
-  │            ↓                          │
-  │       Services / Utils                │
-  │            ↓                          │
-  │       EJS Views (SSR)                 │
-  └──────────────┬────────────────────────┘
-                 │
-                 │  Mongoose ODM
-                 ▼
-  ┌───────────────────────────────────────┐
-  │             🗄️  MONGODB                │
-  │  Users | Products | Orders | Cart     │
-  │  Wishlist | Wallet | Coupons | OTP    │
-  └───────────────────────────────────────┘
-```
-
----
-
-## 📁 Project Structure
-
-```
-HOOF/
-│
-├── 📄 app.js                          # Express app entry point
-├── 📄 backfillReferralCodes.js        # Utility: backfill referral codes
-├── 📄 package.json
-│
-├── 📂 config/
-│   ├── 📄 db.js                       # MongoDB connection
-│   └── 📄 passport.js                 # Passport.js strategies (Local + Google)
-│
-├── 📂 controller/
-│   ├── 📄 Address.js                  # Address CRUD for users
-│   ├── 📄 Admin.js                    # Admin dashboard & user management
-│   ├── 📄 AdminCoupon.js              # Admin coupon management
-│   ├── 📄 AdminProduct.js             # Admin product management
-│   ├── 📄 Coupon.js                   # User coupon application
-│   ├── 📄 Product.js                  # Product listing & details
-│   ├── 📄 User.js                     # User profile, auth, OTP
-│   └── 📄 UserCheckout.js             # Checkout & order placement
-│
-├── 📂 middleware/
-│   ├── 📄 adminAuth.js                # Admin route protection
-│   ├── 📄 auth.js                     # User route protection
-│   ├── 📄 breadcrumb.js               # Breadcrumb navigation builder
-│   ├── 📄 cartCount.js                # Inject cart count into views
-│   ├── 📄 multer.js                   # Profile image upload config
-│   ├── 📄 productMulter.js            # Product image upload config
-│   └── 📄 wishlistCount.js            # Inject wishlist count into views
-│
-├── 📂 model/
-│   ├── 📄 Address.js                  # Address schema
-│   ├── 📄 Admin.js                    # Admin schema
-│   ├── 📄 Cart.js                     # Cart schema
-│   ├── 📄 Category.js                 # Category schema
-│   ├── 📄 Coupon.js                   # Coupon schema
-│   ├── 📄 Order.js                    # Order schema
-│   ├── 📄 Otp.js                      # OTP schema
-│   ├── 📄 Product.js                  # Product schema
-│   ├── 📄 Review.js                   # Review & rating schema
-│   ├── 📄 User.js                     # User schema
-│   ├── 📄 Wallet.js                   # Wallet schema
-│   └── 📄 Wishlist.js                 # Wishlist schema
-│
-├── 📂 routes/
-│   ├── 📄 Address.js                  # /address/*
-│   ├── 📄 Admin.js                    # /admin/*
-│   ├── 📄 Auth.js                     # /login, /register, /logout
-│   └── 📄 User.js                     # /shop, /cart, /orders, etc.
-│
-├── 📂 services/
-│   ├── 📄 AdminProduct.js             # Admin product business logic
-│   ├── 📄 Auth.js                     # Auth service (OTP, sessions)
-│   ├── 📄 Password.js                 # Password reset logic
-│   ├── 📄 Product.js                  # Product filtering & search
-│   ├── 📄 User.js                     # User profile logic
-│   ├── 📄 UserCheckout.js             # Checkout business logic
-│   └── 📄 Wallet.js                   # Wallet debit/credit logic
-│
-├── 📂 utils/
-│   ├── 📄 generateOtp.js              # OTP generator
-│   └── 📄 sendEmail.js                # Nodemailer email sender
-│
-├── 📂 public/
-│   ├── 📂 admin/
-│   │   ├── 📂 css/                    # Admin stylesheets
-│   │   └── 📂 js/                     # Admin client-side scripts
-│   ├── 📂 user/
-│   │   ├── 📂 css/                    # User stylesheets
-│   │   ├── 📂 js/                     # User client-side scripts
-│   │   ├── 📂 fonts/                  # Custom fonts
-│   │   └── 📂 images/                 # Static UI images
-│   └── 📂 uploads/
-│       ├── 📂 products/               # Uploaded product images
-│       └── 📂 profile/                # Uploaded user profile pictures
-│
-└── 📂 views/
-    ├── 📂 Admin/
-    │   ├── 📄 admin-dashboard.ejs
-    │   ├── 📄 product-management.ejs
-    │   ├── 📄 add-product.ejs
-    │   ├── 📄 edit-product.ejs
-    │   ├── 📄 category-management.ejs
-    │   ├── 📄 coupon-management.ejs
-    │   ├── 📄 admin-orders.ejs
-    │   ├── 📄 admin-order-detail.ejs
-    │   ├── 📄 user-management.ejs
-    │   └── 📂 auth/
-    │       └── 📄 login.ejs
-    ├── 📂 User/
-    │   ├── 📄 landing.ejs
-    │   ├── 📄 home.ejs
-    │   ├── 📄 shop.ejs
-    │   ├── 📄 product-details.ejs
+```env��── 📄 product-details.ejs
     │   ├── 📄 cart.ejs
     │   ├── 📄 checkout.ejs
     │   ├── 📄 wishlist.ejs

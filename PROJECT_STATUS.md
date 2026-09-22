@@ -55,7 +55,7 @@
 ### Dual-Architecture Evolution
 The project exists in a high-value state of architectural transition:
 1. **Tier A (Production-Grade Monolith)**: A battle-tested **Express 5 + EJS Server-Side Rendered (SSR)** monolith that is **100% feature-complete and operational**. It handles complete user and administrative shopping operations with server-side layout composition.
-2. **Tier B (Modern Headless SPA Modernization)**: A state-of-the-art **React 19 + Vite 8 + Ant Design 6** Single Page Application located in `frontend/`, powered by a dedicated **REST API namespace (`/api/*`)** in Express. The frontend code is already built and passes Vite production compilation with 0 errors.
+2. **Tier B (Modern Headless SPA Modernization)**: A state-of-the-art **React 19 + Vite 8 + Ant Design 6** Single Page Application located in `client/`, powered by a dedicated **REST API namespace (`/api/*`)** in Express (`server/`). The client code is already built and passes Vite production compilation with 0 errors.
 
 ---
 
@@ -155,7 +155,7 @@ The project exists in a high-value state of architectural transition:
 - **Client Scripting**: SweetAlert2 (modals/alerts), Cropper.js (image cropping), Chart.js (dashboard charts).
 
 ### 3.3 Frontend Tier B (React 19 + Vite SPA)
-Located in `frontend/`:
+Located in `client/`:
 | Package | Version | Purpose |
 |:---|:---|:---|
 | **React** & **React DOM** | `^19.2.8` | Latest React framework with concurrency & compiler improvements |
@@ -194,9 +194,9 @@ Located in `frontend/`:
 1. **EJS Monolithic Application**: **100% Fully Working & Production Ready**.
    - User authentication, email OTP, Google OAuth, shopping catalog, size-variant selection, cart, wishlist, multi-address management, coupons, wallet payments, Razorpay online payments with failure-recovery retry, order history, Puppeteer PDF invoice downloads, item-wise returns/cancellations with proportional clawbacks, and the comprehensive admin management suite all function reliably.
 2. **REST API Namespace (`/api/*`)**: **~90% Complete & Operational**.
-   - Dedicated controllers in `controller/api/` and routes in `routes/api/` wrap all user and admin actions into structured JSON payloads with cookie session authentication.
-3. **React 19 SPA (`frontend/`)**: **~85% Complete & Fully Compiling**.
-   - Builds with 0 errors via `npm run build` in `frontend/`.
+   - Dedicated controllers in `server/controller/api/` and routes in `server/routes/api/` wrap all user and admin actions into structured JSON payloads with cookie session authentication.
+3. **React 19 SPA (`client/`)**: **~85% Complete & Fully Compiling**.
+   - Builds with 0 errors via `npm run build` in `client/` (or `npm run client:build` from root).
    - Includes full implementations for: Home, Shop, Product Detail, Cart, Wishlist, Multi-step Checkout, Order Tracking, Profile, Address Book, Wallet, Referrals, Admin Dashboard, Admin Products, Categories, Orders, Coupons, and Reports.
 
 ### 4.2 Module-by-Module Completion Audit
@@ -387,95 +387,103 @@ Every HTTP transaction passes through an ordered pipeline in `app.js`:
 ### 6.1 Directory & File Layout
 ```
 /Users/rabeeh/HOOF
-├── app.js                          # Main Express server entry point
-├── package.json                    # Backend dependencies & script definitions
-├── backfillReferralCodes.js        # Migration script to assign referral codes
-├── config/
-│   ├── db.js                       # Mongoose MongoDB connection initializer
-│   └── passport.js                 # Passport Google OAuth & Local strategy setup
-├── controller/                     # Monolith EJS controllers
-│   ├── Address.js                  # Address CRUD handlers
-│   ├── Admin.js                    # Admin orders, categories, customers & exports
-│   ├── AdminCoupon.js              # Coupon CRUD operations
-│   ├── AdminProduct.js             # Product catalog administration
-│   ├── Coupon.js                   # Storefront coupon validation
-│   ├── Product.js                  # Storefront product catalog & filtering
-│   ├── User.js                     # Customer profile, orders, returns, auth
-│   ├── UserCheckout.js             # Monolith checkout & Razorpay handlers
-│   └── api/                        # Headless REST API Controllers (JSON)
-│       ├── Account.js              # User profile, orders, referrals & reviews
-│       ├── AdminCouponReferral.js  # Admin coupons & referral configuration
-│       ├── AdminManagement.js      # Admin orders & customer management
-│       ├── AdminProduct.js         # Admin products & categories
-│       ├── AdminReports.js         # Admin sales, product & customer reports
-│       ├── Auth.js                 # API auth, login, signup, OTP, password
-│       ├── CartWishlist.js         # API cart & wishlist operations
-│       ├── Checkout.js             # API checkout prep & wallet
-│       ├── Dashboard.js            # Analytical aggregations for React charts
-│       └── Product.js              # Storefront products & categories
-├── middleware/
-│   ├── adminAuth.js                # Guard ensuring active adminId in session
-│   ├── auth.js                     # User authentication & blocked status checks
-│   ├── breadcrumb.js               # Dynamic breadcrumb navigation generator
-│   ├── cartCount.js                # Syncs cart item count into res.locals
-│   ├── multer.js                   # Avatar and general upload storage
-│   ├── productMulter.js            # Product multi-image upload storage
-│   └── wishlistCount.js            # Syncs wishlist count into res.locals
-├── model/                          # Mongoose Database Schemas (13 Models)
-│   ├── Address.js                  # Customer delivery addresses
-│   ├── Admin.js                    # Admin credentials
-│   ├── Cart.js                     # User cart items with size variant bindings
-│   ├── Category.js                 # Product category taxonomy
-│   ├── Coupon.js                   # Promotional coupon codes & constraints
-│   ├── Order.js                    # Master order tracking, payments, refunds
-│   ├── Otp.js                      # Ephemeral OTP storage with expiration
-│   ├── Product.js                  # Product catalog with nested size variants
-│   ├── ReferralConfig.js           # Global referral bonus rules
-│   ├── Review.js                   # Product customer ratings & reviews
-│   ├── User.js                     # User profile, wallet, referral data
-│   ├── Wallet.js                   # Dedicated wallet balance & ledger entries
-│   └── Wishlist.js                 # User saved favourite items
-├── public/                         # Static assets (images, stylesheets, scripts)
-├── routes/
-│   ├── Address.js                  # EJS Address routes
-│   ├── Admin.js                    # EJS Admin routes
-│   ├── Auth.js                     # EJS Auth routes
-│   ├── User.js                     # EJS User routes
-│   └── api/                        # REST API routing mounts
-│       ├── admin.js                # /api/admin router
-│       ├── auth.js                 # /api/auth router
-│       ├── index.js                # Master /api router
-│       └── user.js                 # /api/user router
-├── services/                       # Business logic services
-│   ├── AdminProduct.js             # Product creation & variant calculation
-│   ├── Auth.js                     # Authentication logic & password validation
-│   ├── Password.js                 # Password hashing and token generation
-│   ├── Product.js                  # Query filters, pagination & category matches
-│   ├── User.js                     # User profile logic
-│   ├── UserCheckout.js             # Order creation, Razorpay & stock logic
-│   └── Wallet.js                   # Balance debit/credit & ledger management
-├── utils/
-│   ├── generateOtp.js              # 6-digit numeric OTP generator
-│   ├── googleSheets.js             # Google Sheets API lead integration
-│   ├── pdfBrowser.js               # Shared Puppeteer Chromium launcher
-│   └── sendEmail.js                # Nodemailer email dispatch templates
-├── views/                          # EJS Templates (Monolith UI)
-│   ├── Admin/                      # 14 Admin views (dashboard, orders, products)
-│   ├── User/                       # 22 User views (shop, cart, checkout, profile)
-│   ├── layouts/                    # User and Admin master wrappers
-│   └── partials/                   # Header, footer, breadcrumbs, notifications
-└── frontend/                       # Modern React 19 + Vite 8 SPA Application
-    ├── package.json                # React frontend dependencies
-    ├── vite.config.js              # Vite configuration
-    └── src/
-        ├── App.jsx                 # QueryClient, Ant Design ConfigProvider
-        ├── api/                    # Axios API service modules (14 services)
-        ├── components/             # Reusable UI components & modals
-        ├── context/                # AuthContext (session state & role management)
-        ├── layouts/                # MainLayout, AdminLayout, AuthLayout
-        ├── pages/                  # 20 Storefront & Auth pages
-        │   └── admin/              # 24 Admin dashboard pages
-        └── routes/                 # ProtectedRoute, AdminRoute, GuestRoute
+├── package.json                    # Root workspace package.json (dev/build orchestration)
+├── .gitignore                      # Workspace gitignore (ignores client & server build/env)
+│
+├── client/                         # Modern React 19 + Vite 8 SPA Application
+│   ├── package.json                # React frontend dependencies & build scripts
+│   ├── vite.config.js              # Vite configuration
+│   ├── index.html                  # Single page entry HTML
+│   └── src/
+│       ├── App.jsx                 # QueryClient, Ant Design ConfigProvider
+│       ├── api/                    # Axios API service modules (14 services)
+│       ├── components/             # Reusable UI components & modals
+│       ├── context/                # AuthContext & SocketContext
+│       ├── layouts/                # MainLayout, AdminLayout, AuthLayout
+│       ├── pages/                  # 20 Storefront & Auth pages
+│       │   └── admin/              # 24 Admin dashboard pages
+│       └── routes/                 # ProtectedRoute, AdminRoute, GuestRoute
+│
+└── server/                         # Express 5 + Node.js Backend Server & Monolith
+    ├── app.js                      # Main Express server entry point
+    ├── backfillReferralCodes.js    # Migration script to assign referral codes
+    ├── package.json                # Server dependencies & script definitions
+    ├── .env                        # Server environment variables
+    ├── .env.example                # Server environment documentation template
+    ├── config/
+    │   ├── db.js                   # Mongoose MongoDB connection initializer
+    │   └── passport.js             # Passport Google OAuth & Local strategy setup
+    ├── controller/                 # Monolith EJS controllers
+    │   ├── Address.js              # Address CRUD handlers
+    │   ├── Admin.js                # Admin orders, categories, customers & exports
+    │   ├── AdminCoupon.js          # Coupon CRUD operations
+    │   ├── AdminProduct.js         # Product catalog administration
+    │   ├── Coupon.js               # Storefront coupon validation
+    │   ├── Product.js              # Storefront product catalog & filtering
+    │   ├── User.js                 # Customer profile, orders, returns, auth
+    │   ├── UserCheckout.js         # Monolith checkout & Razorpay handlers
+    │   └── api/                    # Headless REST API Controllers (JSON)
+    │       ├── Account.js          # User profile, orders, referrals & reviews
+    │       ├── AdminCouponReferral.js # Admin coupons & referral configuration
+    │       ├── AdminManagement.js  # Admin orders & customer management
+    │       ├── AdminProduct.js     # Admin products & categories
+    │       ├── AdminReports.js     # Admin sales, product & customer reports
+    │       ├── Auth.js             # API auth, login, signup, OTP, password
+    │       ├── CartWishlist.js     # API cart & wishlist operations
+    │       ├── Checkout.js         # API checkout prep & wallet
+    │       ├── Dashboard.js        # Analytical aggregations for React charts
+    │       └── Product.js          # Storefront products & categories
+    ├── middleware/
+    │   ├── adminAuth.js            # Guard ensuring active adminId in session
+    │   ├── auth.js                 # User authentication & blocked status checks
+    │   ├── breadcrumb.js           # Dynamic breadcrumb navigation generator
+    │   ├── cartCount.js            # Syncs cart item count into res.locals
+    │   ├── multer.js               # Avatar and general upload storage
+    │   ├── productMulter.js        # Product multi-image upload storage
+    │   └── wishlistCount.js        # Syncs wishlist count into res.locals
+    ├── model/                      # Mongoose Database Schemas (13 Models)
+    │   ├── Address.js              # Customer delivery addresses
+    │   ├── Admin.js                # Admin credentials
+    │   ├── Cart.js                 # User cart items with size variant bindings
+    │   ├── Category.js             # Product category taxonomy
+    │   ├── Coupon.js               # Promotional coupon codes & constraints
+    │   ├── Order.js                # Master order tracking, payments, refunds
+    │   ├── Otp.js                  # Ephemeral OTP storage with expiration
+    │   ├── Product.js              # Product catalog with nested size variants
+    │   ├── ReferralConfig.js       # Global referral bonus rules
+    │   ├── Review.js               # Product customer ratings & reviews
+    │   ├── User.js                 # User profile, wallet, referral data
+    │   ├── Wallet.js               # Dedicated wallet balance & ledger entries
+    │   └── Wishlist.js             # User saved favourite items
+    ├── public/                     # Static assets (images, stylesheets, scripts, uploads)
+    ├── routes/
+    │   ├── Address.js              # EJS Address routes
+    │   ├── Admin.js                # EJS Admin routes
+    │   ├── Auth.js                 # EJS Auth routes
+    │   ├── User.js                 # EJS User routes
+    │   └── api/                    # REST API routing mounts
+    │       ├── admin.js            # /api/admin router
+    │       ├── auth.js             # /api/auth router
+    │       ├── index.js            # Master /api router
+    │       └── user.js             # /api/user router
+    ├── services/                   # Business logic services
+    │   ├── AdminProduct.js         # Product creation & variant calculation
+    │   ├── Auth.js                 # Authentication logic & password validation
+    │   ├── Password.js             # Password hashing and token generation
+    │   ├── Product.js              # Query filters, pagination & category matches
+    │   ├── User.js                 # User profile logic
+    │   ├── UserCheckout.js         # Order creation, Razorpay & stock logic
+    │   └── Wallet.js               # Balance debit/credit & ledger management
+    ├── utils/
+    │   ├── generateOtp.js          # 6-digit numeric OTP generator
+    │   ├── googleSheets.js         # Google Sheets API lead integration
+    │   ├── pdfBrowser.js           # Shared Puppeteer Chromium launcher
+    │   └── sendEmail.js            # Nodemailer email dispatch templates
+    └── views/                      # EJS Templates (Monolith UI)
+        ├── Admin/                  # 14 Admin views (dashboard, orders, products)
+        ├── User/                   # 22 User views (shop, cart, checkout, profile)
+        ├── layouts/                # User and Admin master wrappers
+        └── partials/               # Header, footer, breadcrumbs, notifications
 ```
 
 ### 6.2 Complete MongoDB Data Models & Schema Design
@@ -572,38 +580,42 @@ Located in `utils/googleSheets.js`:
 
 ---
 
-## 7. Balance to Finish (Pending Tasks & Known Gaps)
+## 7. Status of Recent Balance Tasks
 
-While the project is fully functioning on the EJS tier and the React tier compiles cleanly, the following specific tasks represent the balance required to achieve 100% complete parity and production deployment:
+All four core architectural balance items have been addressed and completed:
 
-### 1. Git Repository Hygiene
-- **Current State**: `git status` shows uncommitted files:
-  - `M app.js`
-  - `?? controller/api/`
-  - `?? frontend/`
-  - `?? routes/api/`
-- **Action Required**: Stage and commit the REST API controllers, API routes, and React frontend into the Git tree (`develop` or a dedicated feature branch).
+### 1. Git Repository Hygiene ✅ (Completed)
+- **Status**: Completed by user via commit `feat: complete REST API endpoints and initial React 19 SPA architecture`.
+- All controllers, routes, and React frontend sources are tracked in Git.
 
-### 2. Client-Side Image Cropping in React Admin
-- **Current State**: The EJS admin panel uses Cropper.js for image uploads. The React admin product form (`frontend/src/components/admin/ProductImageUploader.jsx`) accepts image files and previews them, but does not yet have an interactive canvas crop modal before upload.
-- **Action Required**: Integrate `react-easy-crop` or an Ant Design image cropper into `ProductImageUploader.jsx` so administrators can crop footwear photos to standard aspect ratios (e.g. 1:1) in the React panel.
+### 2. Client-Side Image Cropping in React Admin ✅ (Completed)
+- **Status**: Implemented via `react-easy-crop` in [ImageCropModal.jsx](file:///Users/rabeeh/HOOF/client/src/components/admin/ImageCropModal.jsx) and integrated into [ProductImageUploader.jsx](file:///Users/rabeeh/HOOF/client/src/components/admin/ProductImageUploader.jsx).
+- Supports 1:1 square footwear cropping, interactive zoom slider, multi-file sequential queue cropping, canvas Blob export, and re-cropping of uploaded images via the preview crop button.
 
-### 3. Production Deployment & Domain Routing
-- **Current State**:
-  - React frontend is configured for `http://localhost:5173` via Vite dev server.
-  - CORS in `app.js` specifically whitelists `http://localhost:5173`.
-  - Google OAuth callback in `routes/api/auth.js` redirects hardcoded to `http://localhost:5173/`.
-- **Action Required**: Add an environment variable (e.g. `FRONTEND_URL`) so that both local development (`http://localhost:5173`) and production domains (e.g. `https://hoofshoes.com`) work seamlessly without hardcoded hostnames.
+### 3. Production Deployment & Domain Routing (`FRONTEND_URL`) ✅ (Completed)
+- **Status**: Completed across backend and configuration files.
+- Added `FRONTEND_URL` to [.env.example](file:///Users/rabeeh/HOOF/server/.env.example) and [.env](file:///Users/rabeeh/HOOF/server/.env).
+- [app.js](file:///Users/rabeeh/HOOF/server/app.js) CORS dynamically whitelists `FRONTEND_URL` alongside `localhost:5173`.
+- [routes/api/auth.js](file:///Users/rabeeh/HOOF/server/routes/api/auth.js) Google OAuth callback failure and success paths redirect to dynamic `FRONTEND_URL`.
+- [utils/sendEmail.js](file:///Users/rabeeh/HOOF/server/utils/sendEmail.js) generates reset password links pointing to the React frontend when initiated from API requests.
 
-### 4. Socket.IO Real-Time Client Listeners
-- **Current State**: Socket.IO is initialized on the server in `app.js` (`app.set('io', io)`), but storefront and admin client views currently rely on React Query polling or manual refreshes.
-- **Action Required**: Wire up client-side socket listeners for:
+### 4. Socket.IO Real-Time Client Listeners & Server Emitters ✅ (Completed)
+- **Status**: Real-time WebSocket infrastructure is active and integrated end-to-end.
+- **Backend Setup**: [app.js](file:///Users/rabeeh/HOOF/server/app.js) initializes Socket.IO with CORS, client connection handling, and room partitioning (`user_{userId}` and `admin_channel`).
+- **Backend Emitters**:
+  - `order:created` emitted to `admin_channel` on new order placements (COD, Wallet, or verified Razorpay).
+  - `order:status_updated` emitted to both the customer room and `admin_channel` upon status changes, cancellations, or return requests.
+  - `product:low_stock` emitted to `admin_channel` when inventory drops to $\le 2$ pairs.
+- **Frontend Integration**:
+  - [SocketContext.jsx](file:///Users/rabeeh/HOOF/client/src/context/SocketContext.jsx) manages connection lifecycle and automatic room membership based on auth state.
+  - [MainLayout.jsx](file:///Users/rabeeh/HOOF/client/src/layouts/MainLayout.jsx) displays Ant Design toast notifications for order status changes and invalidates customer query caches.
+  - [AdminLayout.jsx](file:///Users/rabeeh/HOOF/client/src/layouts/AdminLayout.jsx) displays real-time popups for new incoming orders and low-stock alerts, automatically refreshing dashboard and order tables.
   - Live order status notifications to customers.
   - New order alerts on the admin dashboard.
   - Low stock warning alerts to administrators.
 
 ### 5. Automated Unit & Integration Testing Suite
-- **Current State**: `package.json` contains `"test": "echo \"Error: no test specified\" && exit 1"`.
+- **Current State**: `server/package.json` contains `"test": "echo \"Error: no test specified\" && exit 1"`.
 - **Action Required**: Implement Jest / Supertest test suites covering:
   - Coupon calculation & clawback edge cases.
   - Stock variant decrement under concurrent checkouts.
@@ -614,16 +626,17 @@ While the project is fully functioning on the EJS tier and the React tier compil
 ## 8. Continuous Roadmap & Production Readiness Plan
 
 ### Phase 1: Git Consolidation & Environment Alignment (Immediate)
-- [ ] Commit all modern API controllers, routes, and `frontend/` source code into version control.
-- [ ] Centralize `FRONTEND_URL` in `.env` and configure CORS, Google OAuth redirects, and password reset email links to consume it.
+- [x] Separate codebase into clean `client/` and `server/` directories with workspace root orchestration.
+- [ ] Commit all modern API controllers, routes, and `client/` source code into version control.
+- [ ] Centralize `FRONTEND_URL` in `server/.env` and configure CORS, Google OAuth redirects, and password reset email links to consume it.
 
 ### Phase 2: React Frontend Parity & Polish (Short-Term)
-- [ ] Add `react-easy-crop` to the React admin product image uploader.
+- [x] Add `react-easy-crop` to the React admin product image uploader.
 - [ ] Perform manual end-to-end verification of Razorpay modal callbacks and retry payments in the React UI.
 - [ ] Connect the Puppeteer PDF invoice download stream button in React order detail views.
 
 ### Phase 3: Production Infrastructure & Deployment (Medium-Term)
-- [ ] **Unified Production Build**: Build the React application into `frontend/dist` and serve it as static assets from Express, or deploy the frontend to a CDN (e.g., Vercel / Cloudflare Pages) with the backend on AWS EC2.
+- [ ] **Unified Production Build**: Build the React application into `client/dist` and serve it as static assets from Express, or deploy the frontend to a CDN (e.g., Vercel / Cloudflare Pages) with the backend on AWS EC2.
 - [ ] **Reverse Proxy**: Setup Nginx with SSL (Let's Encrypt), HTTP/2, and Gzip/Brotli compression.
 - [ ] **Process Management**: Configure PM2 in cluster mode to manage Node.js instances with automatic restarts.
 - [ ] **Server Chrome Setup**: Ensure `chromium-browser` and required fonts (`fonts-liberation`, `google-noto-sans-fonts`) are provisioned on AWS EC2 for Puppeteer invoice generation.
@@ -637,31 +650,40 @@ While the project is fully functioning on the EJS tier and the React tier compil
 
 ## 9. Quick-Start Guide for Developers
 
-### Running the Monolith (EJS)
+### Running Both Client and Server from Root
 ```bash
-# 1. Install backend dependencies
-npm install
+# 1. Install all dependencies across client and server
+npm run install:all
 
-# 2. Start the Express server
-npm start
-# -> Access at http://localhost:8080
+# 2. In Terminal 1: Run the backend server
+npm run server:dev
+# -> Server running on http://localhost:8080
+
+# 3. In Terminal 2: Run the React Vite client
+npm run client:dev
+# -> Client running on http://localhost:5173
 ```
 
-### Running the Modern React SPA
+### Running Server Individually
 ```bash
-# 1. In terminal 1: Keep backend running on port 8080
+cd server
+npm install
 npm start
+# -> Access EJS Monolith at http://localhost:8080
+```
 
-# 2. In terminal 2: Navigate to frontend and start Vite
-cd frontend
+### Running Client Individually
+```bash
+cd client
 npm install
 npm run dev
-# -> Access at http://localhost:5173
+# -> Access React SPA at http://localhost:5173
 ```
 
-### Building React for Production
+### Building Client for Production
 ```bash
-cd frontend
-npm run build
-# -> Compiles clean bundle into frontend/dist/
+npm run client:build
+# Or inside client/ directory:
+# cd client && npm run build
+# -> Compiles clean bundle into client/dist/
 ```
