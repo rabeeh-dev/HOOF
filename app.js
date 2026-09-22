@@ -31,6 +31,24 @@ const server = http.createServer(app);
 const { Server } = require('socket.io');
 const io = new Server(server);
 app.set('io', io);
+
+// Configure CORS for React frontend (http://localhost:5173) with cookie credentials
+app.use((req, res, next) => {
+  const allowedOrigins = ['http://localhost:5173'];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.use(compression());
 
 // Establish Database Connection
@@ -97,7 +115,7 @@ const adminSession = session({
 });
 
 app.use((req, res, next) => {
-    if (req.originalUrl.startsWith('/admin')) {
+    if (req.originalUrl.startsWith('/admin') || req.originalUrl.startsWith('/api/admin')) {
         adminSession(req, res, next);
     } else {
         userSession(req, res, next);
@@ -153,6 +171,7 @@ const userRoutes = require("./routes/User");
 const addressRoutes = require("./routes/Address");
 const authRoutes = require("./routes/Auth");
 const adminRoutes = require('./routes/Admin');
+const apiRoutes = require('./routes/api');
 
 app.use("/user", userRoutes);
 app.use("/user/address", addressRoutes);
@@ -163,6 +182,9 @@ app.use('/admin', (req, res, next) => {
   res.locals.layout = false;
   next();
 }, adminRoutes);
+
+// Mount REST API namespace
+app.use('/api', apiRoutes);
 
 
 // ==========================================
