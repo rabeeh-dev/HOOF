@@ -1,17 +1,13 @@
-const cartService = require("../services/cart.service");
+/**
+ * @file middleware/cartCount.js
+ * @description Backward-compatible wrapper pointing to middlewares/navCounts.middleware.js
+ */
 
-const fetchCartCount = async (req, res, next) => {
-    if (req.session && req.session.userId) {
-        try {
-            res.locals.cartCount = await cartService.getCartCount(req.session.userId);
-        } catch (error) {
-            console.error("Error fetching cart count:", error);
-            res.locals.cartCount = 0;
-        }
-    } else {
-        res.locals.cartCount = 0;
-    }
-    next();
+const navCounts = require('../middlewares/navCounts.middleware');
+
+module.exports = async (req, res, next) => {
+  if (typeof res.locals.cartCount !== 'undefined') {
+    return next();
+  }
+  return navCounts(req, res, next);
 };
-
-module.exports = fetchCartCount;

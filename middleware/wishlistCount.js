@@ -1,17 +1,13 @@
-const wishlistService = require("../services/wishlist.service");
+/**
+ * @file middleware/wishlistCount.js
+ * @description Backward-compatible wrapper pointing to middlewares/navCounts.middleware.js
+ */
 
-const fetchWishlistCount = async (req, res, next) => {
-    if (req.session && req.session.userId) {
-        try {
-            res.locals.wishlistCount = await wishlistService.getWishlistCount(req.session.userId);
-        } catch (error) {
-            console.error("Error fetching wishlist count:", error);
-            res.locals.wishlistCount = 0;
-        }
-    } else {
-        res.locals.wishlistCount = 0;
-    }
-    next();
+const navCounts = require('../middlewares/navCounts.middleware');
+
+module.exports = async (req, res, next) => {
+  if (typeof res.locals.wishlistCount !== 'undefined') {
+    return next();
+  }
+  return navCounts(req, res, next);
 };
-
-module.exports = fetchWishlistCount;

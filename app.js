@@ -1,132 +1,119 @@
 /**
  * @file app.js
- * @description Main application entry point for HOOF.
- * Sets up Express, middleware, view engine, session, and routes.
+ * @description Main application configuration for HOOF.
+ * Sets up Express, view engine, security headers, sessions, middlewares, and routes.
  */
 
-const env = require("./config/env");
+const path = require('path');
+const express = require('express');
 const helmet = require('helmet');
 const compression = require('compression');
-const express = require("express");
-const http = require("http");
-const expressLayouts = require("express-ejs-layouts");
-const path = require("path");
-const connectDB = require("./config/db");
-const passport = require("./config/passport");
-const { sessionDispatcher } = require("./config/session");
-const { checkBlocked } = require("./middlewares/auth.middleware");
-const routes = require("./routes/index");
+const expressLayouts = require('express-ejs-layouts');
+
+const env = require('./config/env');
+const passport = require('./config/passport');
+const { sessionDispatcher } = require('./config/session');
+const { checkBlocked } = require('./middlewares/auth.middleware');
+const navCountsMiddleware = require('./middlewares/navCounts.middleware');
+const breadcrumbMiddleware = require('./middlewares/breadcrumb.middleware');
+const { notFoundHandler, globalErrorHandler } = require('./middlewares/error.middleware');
+const routes = require('./routes/index');
 
 const app = express();
-const server = http.createServer(app);
 
-// Socket.IO Setup
-const { Server } = require('socket.io');
-const io = new Server(server);
-app.set('io', io);
+// Proxy configuration if behind a reverse proxy (e.g. Nginx, Cloudflare, AWS ALB)
+app.set('trust proxy', 1);
+
+// Performance compression
 app.use(compression());
 
-// Establish Database Connection
-connectDB();
+// Security headers
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-}));
-
-// ==========================================
-// VIEW ENGINE SETUP
-// ==========================================
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
+// View engine setup & layouts
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 app.use(expressLayouts);
-app.set("layout", "layouts/user");
-app.set("layout extractMetas", true);
-app.set("layout extractScripts", true);
-app.set("layout extractStyles", true);
+app.set('layout', 'layouts/user');
+app.set('layout extractMetas', true);
+app.set('layout extractScripts', true);
+app.set('layout extractStyles', true);
 
-// ==========================================
-// BODY PARSING MIDDLEWARE
-// ==========================================
+// Cross-platform case-insensitive view path resolver (Linux/AWS compatibility)
+app.use((req, res, next) => {
+  const origRender = res.render;
+  res.render = function (view, options, callback) {
+    let normalizedView = view;
+    if (typeof normalizedView === 'string') {
+      if (normalizedView.startsWith('user/')) {
+        normalizedView = 'User/' + normalizedView.slice(5);
+      } else if (normalizedView.startsWith('admin/')) {
+        normalizedView = 'Admin/' + normalizedView.slice(6);
+      }
+    }
+    return origRender.call(this, normalizedView, options, callback);
+  };
+  next();
+});
+
+// Body parsers
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// ==========================================
-// STATIC FILES
-// ==========================================
-app.use(express.static(path.join(__dirname, "public")));
+// Static file hosting
+app.use(express.static(path.join(__dirname, 'public')));
 
-// ==========================================
-// SESSION CONFIGURATION
-// ==========================================
+// Session dispatch (splits user and admin cookies)
 app.use(sessionDispatcher);
 
-// Proxy configuration if behind a load balancer
-app.set('trust proxy', 1);
-
-// ==========================================
-// PASSPORT AUTHENTICATION
-// ==========================================
+// Passport OAuth & Session
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Custom middleware to check if user is blocked
+// Customer access guards
 app.use(checkBlocked);
 
-// Header Cart Count Middleware
-const fetchCartCount = require("./middleware/cartCount");
-app.use(fetchCartCount);
+// Dynamic navbar badges (cartCount & wishlistCount)
+app.use(navCountsMiddleware);
 
-// Header Wishlist Count Middleware
-const fetchWishlistCount = require("./middleware/wishlistCount");
-app.use(fetchWishlistCount);
-
-// ==========================================
-// GLOBAL LOCALS & CACHE CONTROL
-// ==========================================
+// Global locals & cache control
 app.use((req, res, next) => {
-  // Prevent browser caching for sensitive pages
   res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
   res.header('Expires', '-1');
   res.header('Pragma', 'no-cache');
 
-  // Make user data available across all views
-  res.locals.user = req.session.userId ? {
-    id: req.session.userId,
-    name: req.session.userName,
-    email: req.session.userEmail
-  } : null;
+  res.locals.user =
+    req.session && req.session.userId
+      ? {
+          id: req.session.userId,
+          name: req.session.userName,
+          email: req.session.userEmail,
+        }
+      : null;
+
   next();
 });
 
-// Breadcrumb logic
-const breadcrumbMiddleware = require("./middleware/breadcrumb");
+// Dynamic visual breadcrumbs
 app.use(breadcrumbMiddleware);
 
-// ==========================================
-// ROUTE DEFINITIONS
-// ==========================================
-app.use("/", routes);
+// Master route tree
+app.use('/', routes);
 
-// ==========================================
-// CATCH-ALL 404 HANDLER
-// ==========================================
-app.use((req, res, next) => {
-  if (req.originalUrl.startsWith('/admin')) {
-    res.status(404).render('Admin/404', { layout: false, title: '404 - Page Not Found' });
-  } else {
-    res.status(404).render('User/404', { title: '404 - Page Not Found' });
-  }
-});
+// 404 Not Found handler
+app.use(notFoundHandler);
 
-// ==========================================
-// SERVER INITIALIZATION
-// ==========================================
-const PORT = env.PORT || 8080;
+// Centralized 500 Server Error handler
+app.use(globalErrorHandler);
+
+// Backward-compatible direct execution (boots server.js)
 if (require.main === module) {
-  server.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-  });
+  require('./server');
 }
 
-module.exports = { app, server };
+module.exports = app;
