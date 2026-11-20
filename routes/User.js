@@ -8,135 +8,13 @@ const router = express.Router();
 const userController = require("../controller/User");
 const checkoutController = require("../controller/UserCheckout");
 const couponController = require("../controller/Coupon");
-const { isUser, isLoggedOut } = require("../middleware/auth");
+const { isUser, isLoggedOut } = require("../middlewares/auth.middleware");
 const upload = require('../middleware/multer');
 const passport = require("../config/passport");
+const authRoutes = require("./user/auth.routes");
 
-// ==========================================
-// AUTHENTICATION ROUTES (Signup, Login, OTP)
-// ==========================================
-
-/**
- * @desc    Render signup page for new users.
- * @route   GET /user/signup
- * @access  Public (Guest Only)
- */
-router.get("/signup", isLoggedOut, userController.signupPage);
-
-/**
- * @desc    Handle user registration submitted via form.
- * @route   POST /user/signup
- * @access  Public
- */
-router.post("/signup", isLoggedOut, userController.signup);
-
-/**
- * @desc    Render OTP verification page.
- * @route   GET /user/verify-otp
- * @access  Public (Session-based)
- */
-router.get("/verify-otp", (req, res) => {
-  res.render("User/auth/verify-otp", {
-    layout: "layouts/user",
-    error: null,
-  });
-});
-
-/**
- * @desc    Verify the submitted OTP code.
- * @route   POST /user/verify-otp
- * @access  Public
- */
-router.post("/verify-otp", userController.verifyOtp);
-
-/**
- * @desc    Trigger a new OTP email (resend).
- * @route   POST /user/resend-otp
- * @access  Public
- */
-router.post("/resend-otp", userController.resendOtp);
-
-/**
- * @desc    Render login page.
- * @route   GET /user/login
- * @access  Public (Guest Only)
- */
-router.get("/login", isLoggedOut, userController.loginPage);
-
-/**
- * @desc    Authenticate user credentials and create session.
- * @route   POST /user/login
- * @access  Public
- */
-router.post("/login", isLoggedOut, userController.login);
-
-// ==========================================
-// GOOGLE OAUTH ROUTES
-// ==========================================
-
-/**
- * @desc    Redirect to Google OAuth consent screen.
- * @route   GET /user/auth/google
- * @access  Public / Social Auth
- */
-router.get("/auth/google", isLoggedOut,
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
-
-/**
- * @desc    Handle Google authentication callback and session creation.
- * @route   GET /user/auth/google/callback
- * @access  Public
- */
-router.get("/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/user/login" }),
-  (req, res) => {
-    // Populate session with authenticated user data
-    req.session.userId = req.user._id;
-    req.session.userName = req.user.fullName;
-    req.session.userEmail = req.user.email;
-
-    req.session.save((err) => {
-      if (err) {
-        console.error("Session Save Error:", err);
-        return res.redirect("/user/login");
-      }
-      res.redirect("/user/home");
-    });
-  }
-);
-
-// ==========================================
-// PASSWORD RECOVERY ROUTES
-// ==========================================
-
-/**
- * @desc    Render forgot password request page.
- * @route   GET /user/forgot-password
- * @access  Public
- */
-router.get("/forgot-password", isLoggedOut, userController.forgotPasswordPage);
-
-/**
- * @desc    Handle forgot password email submission.
- * @route   POST /user/forgot-password
- * @access  Public
- */
-router.post("/forgot-password", isLoggedOut, userController.forgotPassword);
-
-/**
- * @desc    Render reset password form via token link from email.
- * @route   GET /user/reset-password/:token
- * @access  Public (Token-based)
- */
-router.get("/reset-password/:token", userController.resetPasswordPage);
-
-/**
- * @desc    Process the password update after successful reset.
- * @route   POST /user/reset-password/:token
- * @access  Public
- */
-router.post("/reset-password/:token", userController.resetPassword);
+// Mount user authentication routes (login, signup, OTP, Google OAuth, password reset)
+router.use("/", authRoutes);
 
 // ==========================================
 // USER PROFILE & ACCOUNT MANAGEMENT

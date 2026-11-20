@@ -1,13 +1,14 @@
 /**
  * @file utils/generateOtp.js
- * @description Utility for generating random 6-digit numeric OTPs.
+ * @description Cryptographically secure 6-digit numeric OTP generator.
  */
+
+const crypto = require('crypto');
 
 /**
- * Generates a random 6-digit One-Time Password (OTP).
- * @returns {string} The generated 6-digit OTP string.
+ * Generates a cryptographically secure 6-digit One-Time Password.
+ * @returns {string} 6-digit OTP string
  */
 exports.generateOtp = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 1000000).toString();
 };
-

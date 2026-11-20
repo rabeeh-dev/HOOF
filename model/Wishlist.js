@@ -1,21 +1,6 @@
 /**
  * @file model/Wishlist.js
- * @description Mongoose schema for user wishlists.
+ * @description Backward-compatible proxy to models/Wishlist.js
  */
 
-const mongoose = require("mongoose");
-
-const wishlistSchema = new mongoose.Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-        index: true,
-    },
-    products: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
-    }],
-}, { timestamps: true });
-
-module.exports = mongoose.model("Wishlist", wishlistSchema);
+module.exports = require("../models/Wishlist");

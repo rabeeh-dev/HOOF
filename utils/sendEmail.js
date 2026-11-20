@@ -9,27 +9,36 @@ const nodemailer = require("nodemailer");
 // CREATE TRANSPORTER (GMAIL SMTP)
 // ==========================================
 
+const mailUser = process.env.MAIL_USER || process.env.EMAIL_USER || "hoof.store@example.com";
+const mailPass = process.env.MAIL_PASS || process.env.EMAIL_PASS || "";
+const mailHost = process.env.MAIL_HOST || "smtp.gmail.com";
+const mailPort = Number(process.env.MAIL_PORT) || 587;
+
 const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST,
-  port: Number(process.env.MAIL_PORT),
+  host: mailHost,
+  port: mailPort,
   secure: false,
   auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
+    user: mailUser,
+    pass: mailPass,
   },
   tls: {
     rejectUnauthorized: false,
   },
 });
 
-// Verify mail transporter connection on startup
-transporter.verify((error) => {
-  if (error) {
-    console.error("❌ Mail transporter error:", error);
-  } else {
-    console.log("✅ Mail transporter is ready");
-  }
-});
+// Verify mail transporter connection on startup if credentials exist
+if (mailUser && mailPass && mailPass !== "temp_email_app_password") {
+  transporter.verify((error) => {
+    if (error) {
+      console.error("❌ Mail transporter error:", error);
+    } else {
+      console.log("✅ Mail transporter is ready");
+    }
+  });
+} else {
+  console.log("ℹ️ Mail transporter initialized with placeholder credentials (emails will not be delivered).");
+}
 
 // ==========================================
 // SEND OTP EMAIL
@@ -104,7 +113,7 @@ const sendOtpEmail = async (email, otp) => {
 `;
 
     await transporter.sendMail({
-      from: `"HOOF" <${process.env.MAIL_USER}>`,
+      from: `"HOOF" <${mailUser}>`,
       to: email,
       subject: "Verify your HOOF account",
       html,
@@ -129,7 +138,8 @@ const sendOtpEmail = async (email, otp) => {
  */
 const sendResetPasswordEmail = async (email, resetToken) => {
   try {
-    const resetUrl = `${process.env.BASE_URL}/user/reset-password/${resetToken}`;
+    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 8080}`;
+    const resetUrl = `${baseUrl}/user/reset-password/${resetToken}`;
 
     const html = `
 <!DOCTYPE html>
@@ -191,7 +201,7 @@ const sendResetPasswordEmail = async (email, resetToken) => {
 `;
 
     await transporter.sendMail({
-      from: `"HOOF" <${process.env.MAIL_USER}>`,
+      from: `"HOOF" <${mailUser}>`,
       to: email,
       subject: "Reset your HOOF password",
       html,
@@ -299,9 +309,9 @@ const sendContactEmail = async (name, email, subject, message) => {
 `;
 
     await transporter.sendMail({
-      from: `"HOOF Contact Form" <${process.env.MAIL_USER}>`,
+      from: `"HOOF Contact Form" <${mailUser}>`,
       replyTo: email,
-      to: process.env.MAIL_USER,
+      to: mailUser,
       subject: `Contact: ${subject}`,
       html,
     });
