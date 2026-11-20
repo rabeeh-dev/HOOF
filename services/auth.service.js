@@ -342,6 +342,31 @@ class AuthService {
       email: user.email,
     };
   }
+
+  /**
+   * Verifies administrator login credentials.
+   * @param {string} email
+   * @param {string} password
+   * @returns {Promise<Object>} Authenticated admin document
+   */
+  async verifyAdminLogin(email, password) {
+    const Admin = require('../models/Admin');
+    if (!email || !password) {
+      throw new AppError('Email and password are required', 400);
+    }
+
+    const adminData = await Admin.findOne({ email: email.trim() });
+    if (!adminData) {
+      throw new AppError('Invalid email or password', 401);
+    }
+
+    const passwordMatch = await bcrypt.compare(password, adminData.password);
+    if (!passwordMatch) {
+      throw new AppError('Invalid email or password', 401);
+    }
+
+    return adminData;
+  }
 }
 
 module.exports = new AuthService();

@@ -1,233 +1,24 @@
 /**
- * @file routes/adminRoutes.js
- * @description Route definitions for administrative operations, including dashboard, user management, and category/product controls.
+ * @file routes/Admin.js
+ * @description Master router for the administrative portal mounting modular admin sub-routers.
  */
 
 const express = require('express');
 const router = express.Router();
-const adminController = require('../controller/Admin');
-const adminProductController = require('../controller/AdminProduct');
-const adminAuth = require('../middleware/adminAuth');
-const upload = require('../middleware/productMulter');
+
+const authRoutes = require('./admin/auth.routes');
+const dashboardRoutes = require('./admin/dashboard.routes');
+const productRoutes = require('./admin/product.routes');
+const orderRoutes = require('./admin/order.routes');
 const couponRoutes = require('./admin/coupon.routes');
 const customerRoutes = require('./admin/customer.routes');
 
 // Mount Admin sub-routers
+router.use('/', authRoutes);
+router.use('/', dashboardRoutes);
+router.use('/', productRoutes);
+router.use('/', orderRoutes);
 router.use('/', couponRoutes);
 router.use('/', customerRoutes);
-
-// ==========================================
-// ADMIN AUTHENTICATION ROUTES
-// ==========================================
-
-/**
- * @desc    Render the admin login page.
- * @route   GET /admin/login
- * @access  Public (Guest Only)
- */
-router.get('/login', adminAuth.isLogout, adminController.loadLogin);
-
-/**
- * @desc    Authenticate admin credentials and create a session.
- * @route   POST /admin/login
- * @access  Public
- */
-router.post('/login', adminController.verifyAdmin);
-
-// ==========================================
-// ADMIN DASHBOARD & MANAGEMENT
-// ==========================================
-
-router.get('/dashboard', adminAuth.isLogin, adminController.loadDashboard);
-
-/**
- * @desc    Export Sales Report as PDF or Excel.
- * @route   GET /admin/dashboard/export
- * @access  Private (Admin Only)
- */
-router.get('/dashboard/export', adminAuth.isLogin, adminController.exportSalesReport);
-
-/**
- * @desc    Export Sales Report as Excel.
- * @route   GET /admin/dashboard/export-excel
- * @access  Private (Admin Only)
- */
-router.get('/dashboard/export-excel', adminAuth.isLogin, adminController.exportSalesExcel);
-
-/**
- * @desc    Generate and download a PDF report of all users.
- * @route   GET /admin/users/export-pdf
- * @access  Private (Admin Only)
- */
-router.get('/users/export-pdf', adminAuth.isLogin, adminController.exportUsersPDF);
-
-// ==========================================
-// CATEGORY MANAGEMENT SECTION
-// ==========================================
-
-/**
- * @desc    Load category management list.
- * @route   GET /admin/categories
- * @access  Private (Admin Only)
- */
-router.get('/categories', adminAuth.isLogin, adminController.loadCategories);
-
-/**
- * @desc    Add a new category.
- * @route   POST /admin/categories/add
- * @access  Private (Admin Only)
- */
-router.post('/categories/add', adminAuth.isLogin, adminController.addCategory);
-
-/**
- * @desc    Update category details.
- * @route   PATCH /admin/categories/edit/:id
- * @access  Private (Admin Only)
- */
-router.patch('/categories/edit/:id', adminAuth.isLogin, adminController.updateCategory);
-
-/**
- * @desc    Toggle category listing status.
- * @route   PATCH /admin/categories/toggle-status/:id
- * @access  Private (Admin Only)
- */
-router.patch('/categories/toggle-status/:id', adminAuth.isLogin, adminController.toggleCategoryStatus);
-
-/**
- * @desc    Apply an offer percentage to a category.
- * @route   POST /admin/categories/offer/:id
- * @access  Private (Admin)
- */
-router.post('/categories/offer/:id', adminAuth.isLogin, adminController.applyCategoryOffer);
-
-/**
- * @desc    Remove an offer from a category.
- * @route   POST /admin/categories/remove-offer/:id
- * @access  Private (Admin)
- */
-router.post('/categories/remove-offer/:id', adminAuth.isLogin, adminController.removeCategoryOffer);
-
-// ==========================================
-// PRODUCT MANAGEMENT SECTION
-// ==========================================
-
-/**
- * @desc    Load product management list.
- * @route   GET /admin/products
- * @access  Private (Admin Only)
- */
-router.get('/products', adminAuth.isLogin, adminProductController.listProductsAdmin);
-
-/**
- * @desc    Render the add product form.
- * @route   GET /admin/products/add
- * @access  Private (Admin Only)
- */
-router.get('/products/add', adminAuth.isLogin, adminProductController.loadAddProduct);
-
-/**
- * @desc    Add a new product with multiple images.
- * @route   POST /admin/products/add
- * @access  Private (Admin Only)
- */
-router.post('/products/add', adminAuth.isLogin, upload.array('productImages', 4), adminProductController.addProduct);
-
-/**
- * @desc    Toggle product blocked status.
- * @route   PATCH /admin/products/toggle-status/:id
- * @access  Private (Admin Only)
- */
-router.patch('/products/toggle-status/:id', adminAuth.isLogin, adminProductController.toggleProductStatus);
-
-/**
- * @desc    Render the edit product form.
- * @route   GET /admin/products/edit/:id
- * @access  Private (Admin Only)
- */
-router.get('/products/edit/:id', adminAuth.isLogin, adminProductController.loadEditProduct);
-
-/**
- * @desc    Update an existing product (handles image updates).
- * @route   POST /admin/products/edit/:id
- * @access  Private (Admin Only)
- */
-router.post('/products/edit/:id', adminAuth.isLogin, upload.array('productImages', 4), adminProductController.updateProduct);
-
-// ==========================================
-// ORDER MANAGEMENT SECTION
-// ==========================================
-
-/**
- * @desc    Load order management list with filters and search.
- * @route   GET /admin/orders
- * @access  Private (Admin Only)
- */
-router.get('/orders', adminAuth.isLogin, adminController.loadOrders);
-
-/**
- * @desc    Export orders as PDF.
- * @route   GET /admin/orders/export
- * @access  Private (Admin Only)
- */
-router.get('/orders/export', adminAuth.isLogin, adminController.exportOrders);
-
-/**
- * @desc    Export orders as Excel.
- * @route   GET /admin/orders/export-excel
- * @access  Private (Admin Only)
- */
-router.get('/orders/export-excel', adminAuth.isLogin, adminController.exportOrdersExcel);
-
-/**
- * @desc    Render dedicated order detail page.
- * @route   GET /admin/orders/:id
- * @access  Private (Admin Only)
- */
-router.get('/orders/:id', adminAuth.isLogin, adminController.loadOrderDetailPage);
-
-/**
- * @desc    Get order details as JSON.
- * @route   GET /admin/orders/:id/detail
- * @access  Private (Admin Only)
- */
-router.get('/orders/:id/detail', adminAuth.isLogin, adminController.getOrderDetail);
-
-/**
- * @desc    Update order status.
- * @route   PATCH /admin/orders/:id/status
- * @access  Private (Admin Only)
- */
-router.patch('/orders/:id/status', adminAuth.isLogin, adminController.updateOrderStatus);
-
-/**
- * @desc    Cancel an order (Admin).
- * @route   PATCH /admin/orders/:id/cancel
- * @access  Private (Admin Only)
- */
-router.patch('/orders/:id/cancel', adminAuth.isLogin, adminController.cancelOrderAdmin);
-
-/**
- * @desc    Update individual item status (for per-item return management).
- * @route   PATCH /admin/orders/:orderId/item/:itemId/status
- * @access  Private (Admin Only)
- */
-router.patch('/orders/:orderId/item/:itemId/status', adminAuth.isLogin, adminController.updateItemStatus);
-
-// ==========================================
-// COUPON MANAGEMENT SECTION (Delegated to routes/admin/coupon.routes.js)
-// ==========================================
-
-// ==========================================
-// REFERRAL SETTINGS SECTION (Delegated to routes/admin/customer.routes.js)
-// ==========================================
-
-// ==========================================
-
-/**
- * @desc    Destroy admin session and redirect to login.
- * @route   GET /admin/logout
- * @access  Private (Admin Only)
- */
-router.get('/logout', adminAuth.isLogin, adminController.logout);
 
 module.exports = router;

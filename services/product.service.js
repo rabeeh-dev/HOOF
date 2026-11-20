@@ -222,6 +222,35 @@ class ProductService {
   async getActiveCategories() {
     return await Category.find({ isListed: true }).lean();
   }
+
+  // ==========================================
+  // ADMIN CATALOG & CATEGORY METHODS
+  // ==========================================
+
+  async getAllProductsAdmin(page = 1, limit = 5, search = '') {
+    const adminProductService = require('./AdminProduct');
+    return await adminProductService.getAllProductsAdmin(page, limit, search);
+  }
+
+  async addProduct(productData, files) {
+    const adminProductService = require('./AdminProduct');
+    return await adminProductService.addProduct(productData, files);
+  }
+
+  async getAllCategoriesAdmin(page = 1, limit = 5, search = '') {
+    const adminProductService = require('./AdminProduct');
+    return await adminProductService.getAllCategoriesAdmin(page, limit, search);
+  }
+
+  async getProductById(id) {
+    const adminProductService = require('./AdminProduct');
+    return await adminProductService.getProductById(id);
+  }
+
+  async updateProduct(id, productData, files) {
+    const adminProductService = require('./AdminProduct');
+    return await adminProductService.updateProduct(id, productData, files);
+  }
 }
 
 module.exports = new ProductService();
