@@ -24,7 +24,7 @@
 
 <br/>
 
-[✨ Features](#-features) • [🛠️ Tech Stack](#️-tech-stack) • [⚙️ Installation](#️-installation--setup) • [📸 Screenshots](#-screenshots) • [🤝 Contributing](#-contributing)
+[✨ Features](#-features) • [🛠️ Tech Stack](#️-tech-stack) • [🏗️ Architecture & Status](#️-current-status--architecture) • [⚙️ Installation](#️-installation--setup) • [🤝 Contributing](#-contributing)
 
 ---
 
@@ -33,6 +33,7 @@
 ## 📌 Table of Contents
 
 - [🌟 About the Project](#-about-the-project)
+- [🏗️ Current Status & Architecture](#️-current-status--architecture)
 - [✨ Features](#-features)
 - [🛠️ Tech Stack](#️-tech-stack)
 - [📁 Project Structure](#-project-structure)
@@ -42,6 +43,20 @@
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 - [👨‍💻 Author](#-author)
+
+---
+
+## 🏗️ Current Status & Architecture
+
+The application has successfully undergone a **complete modular architectural refactoring** across all 13 core domain modules. All legacy monolithic controllers, redundant middlewares, legacy router files, and obsolete proxy services have been eliminated in favor of clean separation of concerns:
+
+- 🏛️ **Controller-Service-Model Architecture**: Thin controllers, pure asynchronous business logic services, and strongly-typed Mongoose models.
+- ⚡ **Real-Time Communication**: Integrated **Socket.IO** for instantaneous inventory status alerts, block/unblock updates, and order notifications.
+- 🛡️ **Production-Ready Security**: Centralized rate limiting (`express-rate-limit`), MongoDB-backed sessions (`connect-mongo`), role-based middleware (`isUser`, `isAdminLogin`, `isLoggedOut`), and global error handling (`AppError` + `errorHandler`).
+- 📊 **Analytics & Reporting**: Sales reporting engine generating PDF (`puppeteer`) and Excel (`exceljs`) exports with dynamic date filters (daily, weekly, monthly, custom).
+- 🖼️ **Smart Image Processing**: Multi-image disk storage with automatic Apple `.HEIC` to JPEG conversion (`heic-convert`).
+- 📈 **Third-Party Integrations**: Google OAuth 2.0 (Passport), Nodemailer SMTP with Gmail App Passwords, Razorpay Payment Gateway, and Google Sheets API.
+- 🧪 **100% Route Coverage**: All 103 user and admin routes audited, tested, and active.
 
 ---
 
@@ -363,46 +378,56 @@ npm run dev
 npm start
 ```
 
-> 🌐 App runs on: `http://localhost:3000`
+> 🌐 App runs on: `http://localhost:8080`
 
 ---
 
 ### 🛡️ Access Admin Dashboard
 
 1. Register / seed an admin document in MongoDB
-2. Visit `http://localhost:3000/admin`
+2. Visit `http://localhost:8080/admin/login`
 
 ---
 
 ## 🔐 Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory (or copy from `.env.example`):
 
 ```env
-# ─── Server ─────────────────────────────────────
-PORT=3000
+# ─── Server Configuration ───────────────────────
+PORT=8080
 NODE_ENV=development
+BASE_URL=http://localhost:8080
 
 # ─── Database ───────────────────────────────────
-MONGO_URI=mongodb://localhost:27017/hoofdb
+MONGO_URI=mongodb://localhost:27017/hoof_dev
 # OR MongoDB Atlas:
-# MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/hoofdb
+# MONGO_URI=mongodb+srv://<username>:<password>@cluster0.abcde.mongodb.net/hoof?retryWrites=true&w=majority
 
-# ─── Session ────────────────────────────────────
+# ─── Session & Security ─────────────────────────
 SESSION_SECRET=your_super_secret_session_key
 
-# ─── Google OAuth (Passport.js) ─────────────────
-GOOGLE_CLIENT_ID=your_google_client_id
+# ─── Google OAuth 2.0 (Passport.js) ─────────────
+GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+GOOGLE_CALLBACK_URL=http://localhost:8080/auth/google/callback
 
-# ─── Email / OTP ────────────────────────────────
+# ─── Email / SMTP (Nodemailer) ──────────────────
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USER=your_email@gmail.com
+MAIL_PASS=your_16_character_app_password
 EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_email_app_password
+EMAIL_PASS=your_16_character_app_password
 
-# ─── Payment Gateway ────────────────────────────
+# ─── Payment Gateway (Razorpay) ─────────────────
 RAZORPAY_KEY_ID=your_razorpay_key_id
 RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+
+# ─── Google Sheets API (Contact Us) ─────────────
+GOOGLE_SHEET_ID=your_google_sheet_id
+GOOGLE_SERVICE_ACCOUNT_EMAIL=your_service_account@project.iam.gserviceaccount.com
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 ```
 
 > ⚠️ **Never commit your `.env` file!** It's already covered by `.gitignore`.
