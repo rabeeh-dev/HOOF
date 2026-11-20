@@ -38,4 +38,4 @@ const walletSchema = new mongoose.Schema({
     ]
 }, { timestamps: true });
 
-module.exports = mongoose.model('Wallet', walletSchema);
+module.exports = mongoose.models.Wallet || mongoose.model('Wallet', walletSchema);

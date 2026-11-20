@@ -372,67 +372,11 @@ exports.returnOrderItem = orderController.returnOrderItem;
 exports.downloadInvoice = orderController.downloadInvoice;
 
 // ==========================================
-// WALLET SECTION
+// WALLET SECTION (Delegated to controllers/user/wallet.controller.js)
 // ==========================================
-
-/**
- * @desc    Render the wallet page with balance and transaction history.
- * @route   GET /user/wallet
- * @access  Private
- */
-exports.loadWalletPage = async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    const user = await User.findById(userId);
-    const wallet = await walletService.getWallet(userId);
-
-    // Sort transactions newest first
-    const transactions = wallet.transactions
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    const totalCredits = transactions
-      .filter(t => t.type === 'credit')
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const totalDebits = transactions
-      .filter(t => t.type === 'debit')
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    res.render('User/wallet', {
-      user,
-      wallet: {
-        balance: wallet.balance,
-        transactions,
-        totalCredits,
-        totalDebits
-      },
-      title: 'My Wallet | HOOF',
-      layout: 'layouts/user'
-    });
-  } catch (err) {
-    console.error("Wallet Page Error:", err);
-    res.redirect('/user/profile');
-  }
-};
-
-/**
- * @desc    API endpoint for wallet data (JSON).
- * @route   GET /user/wallet/data
- * @access  Private
- */
-exports.getWalletData = async (req, res) => {
-  try {
-    const wallet = await walletService.getWallet(req.session.userId);
-    res.json({
-      success: true,
-      balance: wallet.balance,
-      transactions: wallet.transactions.sort((a, b) => new Date(b.date) - new Date(a.date))
-    });
-  } catch (err) {
-    console.error("Wallet Data Error:", err);
-    res.status(500).json({ success: false, message: "Failed to load wallet" });
-  }
-};
+const walletController = require("../controllers/user/wallet.controller");
+exports.loadWalletPage = walletController.loadWalletPage;
+exports.getWalletData = walletController.getWalletData;
 
 // ==========================================
 // REFERRAL SECTION
