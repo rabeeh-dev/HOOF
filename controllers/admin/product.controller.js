@@ -5,7 +5,7 @@
 
 const Product = require('../../models/Product');
 const Category = require('../../models/Category');
-const adminProductService = require('../../services/AdminProduct');
+const productService = require('../../services/product.service');
 
 // ==========================================
 // CATEGORY MANAGEMENT
@@ -22,7 +22,7 @@ exports.loadCategories = async (req, res) => {
     const search = req.query.search || '';
 
     const { categories, totalPages, currentPage } =
-      await adminProductService.getAllCategoriesAdmin(page, 5, search);
+      await productService.getAllCategoriesAdmin(page, 5, search);
 
     res.render('Admin/category-management', {
       categories,
@@ -231,7 +231,7 @@ exports.listProductsAdmin = async (req, res) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
     const search = req.query.search || '';
-    const { products, totalPages, currentPage } = await adminProductService.getAllProductsAdmin(
+    const { products, totalPages, currentPage } = await productService.getAllProductsAdmin(
       page,
       5,
       search
@@ -284,7 +284,7 @@ exports.addProduct = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please upload at least one image.' });
     }
 
-    await adminProductService.addProduct(productData, files);
+    await productService.addProduct(productData, files);
 
     return res.json({ success: true, message: 'Product added successfully!' });
   } catch (error) {
@@ -335,7 +335,7 @@ exports.toggleProductStatus = async (req, res) => {
 exports.loadEditProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await adminProductService.getProductById(id);
+    const product = await productService.getProductById(id);
     const categories = await Category.find({});
 
     res.render('Admin/edit-product', {
@@ -358,7 +358,7 @@ exports.loadEditProduct = async (req, res) => {
 exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await adminProductService.updateProduct(id, req.body, req.files);
+    const result = await productService.updateProduct(id, req.body, req.files);
 
     if (result) {
       return res.json({ success: true, message: 'Product updated successfully' });

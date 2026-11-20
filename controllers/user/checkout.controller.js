@@ -6,7 +6,7 @@
 const User = require('../../models/User');
 const Order = require('../../models/Order');
 const checkoutService = require('../../services/checkout.service');
-const walletService = require('../../services/Wallet');
+const walletService = require('../../services/wallet.service');
 
 /**
  * @desc    Render the checkout page with cart items, addresses, and pricing.

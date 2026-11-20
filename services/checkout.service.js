@@ -10,7 +10,7 @@ const Address = require('../models/Address');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Coupon = require('../models/Coupon');
-const walletService = require('./Wallet');
+const walletService = require('./wallet.service');
 const AppError = require('../utils/AppError');
 
 // Initialize Razorpay client

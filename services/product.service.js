@@ -3,6 +3,9 @@
  * @description Pure business logic for product catalog, filtering, sorting, pagination, reviews, and discovery.
  */
 
+const fs = require('fs');
+const path = require('path');
+const convert = require('heic-convert');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const Review = require('../models/Review');
@@ -228,28 +231,258 @@ class ProductService {
   // ==========================================
 
   async getAllProductsAdmin(page = 1, limit = 5, search = '') {
-    const adminProductService = require('./AdminProduct');
-    return await adminProductService.getAllProductsAdmin(page, limit, search);
+    const skip = (page - 1) * limit;
+
+    let query = {};
+    if (search) {
+      query = {
+        $or: [
+          { productName: { $regex: search, $options: 'i' } },
+          { brand: { $regex: search, $options: 'i' } },
+        ],
+      };
+    }
+
+    const products = await Product.find(query)
+      .populate('category', 'name')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalProducts = await Product.countDocuments(query);
+
+    return {
+      products,
+      totalPages: Math.ceil(totalProducts / limit) || 1,
+      currentPage: page,
+    };
   }
 
   async addProduct(productData, files) {
-    const adminProductService = require('./AdminProduct');
-    return await adminProductService.addProduct(productData, files);
+    const imagePaths = [];
+
+    for (const file of files) {
+      let filename = file.filename;
+      let filePath = file.path;
+
+      if (file.originalname && file.originalname.toLowerCase().endsWith('.heic')) {
+        const inputBuffer = fs.readFileSync(filePath);
+        const outputBuffer = await convert({
+          buffer: inputBuffer,
+          format: 'JPEG',
+          quality: 1,
+        });
+
+        filename = `conv-${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
+        const newPath = path.resolve('public/uploads/products', filename);
+        fs.writeFileSync(newPath, outputBuffer);
+        try {
+          fs.unlinkSync(filePath);
+        } catch (_) {}
+      }
+
+      imagePaths.push(`/uploads/products/${filename}`);
+    }
+
+    const variants = [];
+    if (
+      !productData.variantSize ||
+      (Array.isArray(productData.variantSize) && productData.variantSize.length === 0)
+    ) {
+      throw new AppError('At least one variant (Size & Stock) is required.', 400);
+    }
+
+    const sizes = Array.isArray(productData.variantSize)
+      ? productData.variantSize
+      : [productData.variantSize];
+    const stocks = Array.isArray(productData.variantStock)
+      ? productData.variantStock
+      : [productData.variantStock];
+
+    sizes.forEach((size, i) => {
+      if (!size || !stocks[i]) return;
+      variants.push({
+        size,
+        quantity: parseInt(stocks[i], 10) || 0,
+        status: parseInt(stocks[i], 10) > 0 ? 'Available' : 'Out of Stock',
+      });
+    });
+
+    if (variants.length === 0) {
+      throw new AppError('At least one valid variant is required.', 400);
+    }
+
+    const totalQuantity = variants.reduce((sum, v) => sum + v.quantity, 0);
+
+    const regPrice = parseFloat(productData.regularPrice);
+    const inputSalePrice = parseFloat(productData.salePrice);
+
+    const productOffer = Math.round(100 - (inputSalePrice / regPrice) * 100);
+
+    const categoryDoc = await Category.findById(productData.category);
+    const categoryOffer = categoryDoc ? categoryDoc.categoryOffer || 0 : 0;
+
+    const effectiveOffer = Math.max(productOffer, categoryOffer);
+    const finalSalePrice = Math.round(regPrice - (regPrice * effectiveOffer) / 100);
+
+    const newProduct = new Product({
+      productName: productData.productName,
+      description: productData.description,
+      brand: productData.brand,
+      category: productData.category,
+      regularPrice: regPrice,
+      salePrice: finalSalePrice,
+      productOffer,
+      quantity: totalQuantity,
+      productImage: imagePaths,
+      variants,
+    });
+
+    return await newProduct.save();
   }
 
   async getAllCategoriesAdmin(page = 1, limit = 5, search = '') {
-    const adminProductService = require('./AdminProduct');
-    return await adminProductService.getAllCategoriesAdmin(page, limit, search);
+    const skip = (page - 1) * limit;
+
+    let query = {};
+    if (search) {
+      query.name = { $regex: search, $options: 'i' };
+    }
+
+    const categories = await Category.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalCategories = await Category.countDocuments(query);
+
+    return {
+      categories,
+      totalPages: Math.ceil(totalCategories / limit) || 1,
+      currentPage: page,
+      totalCategories,
+    };
   }
 
   async getProductById(id) {
-    const adminProductService = require('./AdminProduct');
-    return await adminProductService.getProductById(id);
+    return await Product.findById(id).populate('category');
   }
 
   async updateProduct(id, productData, files) {
-    const adminProductService = require('./AdminProduct');
-    return await adminProductService.updateProduct(id, productData, files);
+    if (!productData.productName || productData.productName.trim() === '') {
+      throw new AppError('Product name cannot be empty.', 400);
+    }
+    if (!productData.category || productData.category.trim() === '') {
+      throw new AppError('Category cannot be empty.', 400);
+    }
+
+    const regPrice = parseFloat(productData.regularPrice);
+    const salePrice = parseFloat(productData.salePrice);
+
+    if (isNaN(regPrice) || regPrice <= 0) {
+      throw new AppError('Regular price must be a positive number.', 400);
+    }
+    if (isNaN(salePrice) || salePrice <= 0) {
+      throw new AppError('Sale price must be a positive number.', 400);
+    }
+    if (salePrice > regPrice) {
+      throw new AppError('Sale price cannot be greater than regular price.', 400);
+    }
+
+    const newImagePaths = [];
+    if (files && files.length > 0) {
+      for (const file of files) {
+        let filename = file.filename;
+        let filePath = file.path;
+
+        if (file.originalname && file.originalname.toLowerCase().endsWith('.heic')) {
+          const inputBuffer = fs.readFileSync(filePath);
+          const outputBuffer = await convert({ buffer: inputBuffer, format: 'JPEG', quality: 1 });
+          filename = `upd-${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
+          const newPath = path.resolve('public/uploads/products', filename);
+          fs.writeFileSync(newPath, outputBuffer);
+          try {
+            fs.unlinkSync(filePath);
+          } catch (_) {}
+        }
+        newImagePaths.push(`/uploads/products/${filename}`);
+      }
+    }
+
+    let finalImages = [];
+    if (productData.existingImages) {
+      try {
+        finalImages = JSON.parse(productData.existingImages);
+      } catch (e) {
+        finalImages = Array.isArray(productData.existingImages)
+          ? productData.existingImages
+          : [productData.existingImages];
+      }
+    }
+    finalImages = [...finalImages, ...newImagePaths];
+
+    const variants = [];
+    if (
+      !productData.variantSize ||
+      (Array.isArray(productData.variantSize) && productData.variantSize.length === 0)
+    ) {
+      throw new AppError('At least one variant (Size & Stock) is required.', 400);
+    }
+
+    const sizes = Array.isArray(productData.variantSize)
+      ? productData.variantSize
+      : [productData.variantSize];
+    const stocks = Array.isArray(productData.variantStock)
+      ? productData.variantStock
+      : [productData.variantStock];
+
+    sizes.forEach((size, i) => {
+      if (!size || !stocks[i]) return;
+
+      if (/[a-zA-Z]/.test(size)) {
+        throw new AppError(`Variant size "${size}" must not contain alphabetic characters.`, 400);
+      }
+
+      const qty = parseInt(stocks[i], 10);
+      if (isNaN(qty) || qty <= 0) {
+        throw new AppError(`Variant stock must be a positive number (found: ${stocks[i]}).`, 400);
+      }
+
+      variants.push({
+        size,
+        quantity: qty,
+        status: qty > 0 ? 'Available' : 'Out of Stock',
+      });
+    });
+
+    if (variants.length === 0) {
+      throw new AppError('At least one valid variant is required.', 400);
+    }
+
+    const totalQuantity = variants.reduce((sum, v) => sum + v.quantity, 0);
+
+    const productOffer = Math.round(100 - (salePrice / regPrice) * 100);
+
+    const categoryDoc = await Category.findById(productData.category);
+    const categoryOffer = categoryDoc ? categoryDoc.categoryOffer || 0 : 0;
+
+    const effectiveOffer = Math.max(productOffer, categoryOffer);
+    const finalSalePrice = Math.round(regPrice - (regPrice * effectiveOffer) / 100);
+
+    const updateFields = {
+      productName: productData.productName,
+      description: productData.description,
+      brand: productData.brand,
+      category: productData.category,
+      regularPrice: regPrice,
+      salePrice: finalSalePrice,
+      productOffer,
+      quantity: totalQuantity,
+      productImage: finalImages,
+      variants,
+    };
+
+    return await Product.findByIdAndUpdate(id, updateFields, { returnDocument: 'after' });
   }
 }
 
