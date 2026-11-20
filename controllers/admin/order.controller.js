@@ -49,16 +49,34 @@ exports.loadOrders = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    res.render('Admin/order-management', {
+    const stats = {
+      total: await Order.countDocuments({}),
+      pending: await Order.countDocuments({ status: 'Pending' }),
+      processing: await Order.countDocuments({ status: 'Processing' }),
+      delivered: await Order.countDocuments({ status: 'DELIVERED' }),
+      totalRevenue:
+        (
+          await Order.aggregate([
+            { $match: { status: 'DELIVERED' } },
+            { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+          ])
+        )[0]?.total || 0,
+    };
+
+    res.render('Admin/admin-orders', {
       orders,
-      totalPages: Math.ceil(totalOrders / limit) || 1,
       currentPage: page,
+      totalPages: Math.ceil(totalOrders / limit) || 1,
       totalOrders,
+      selectedStatus: status || '',
+      selectedPayment: payment || '',
       statusFilter: status || '',
       paymentFilter: payment || '',
+      search: search || '',
       searchQuery: search || '',
       sortFilter: sort,
-      title: 'Order Management | HOOF Admin',
+      stats,
+      title: 'Orders | HOOF Admin',
       layout: false,
     });
   } catch (error) {

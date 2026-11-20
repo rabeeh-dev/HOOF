@@ -421,6 +421,7 @@ class UserService {
       config,
       stats: {
         totalReferrals,
+        totalPointsDistributed: totalPointsEarned[0]?.total || 0,
         totalPointsEarned: totalPointsEarned[0]?.total || 0,
         topReferrers,
       },

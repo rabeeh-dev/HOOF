@@ -33,7 +33,12 @@ exports.verifyAdmin = async (req, res) => {
     const adminData = await authService.verifyAdminLogin(email, password);
 
     req.session.adminId = adminData._id;
-    return res.status(200).json({ success: true });
+    req.session.save((err) => {
+      if (err) {
+        console.error('Admin session save error:', err);
+      }
+      return res.status(200).json({ success: true });
+    });
   } catch (error) {
     const statusCode = error.statusCode || 401;
     return res.status(statusCode).json({
