@@ -111,9 +111,9 @@ app.use(notFoundHandler);
 // Centralized 500 Server Error handler
 app.use(globalErrorHandler);
 
-// Backward-compatible direct execution (boots server.js)
+module.exports = app;
+
+// Backward-compatible direct execution (boots server.js when run via `node app.js`)
 if (require.main === module) {
   require('./server');
 }
-
-module.exports = app;
