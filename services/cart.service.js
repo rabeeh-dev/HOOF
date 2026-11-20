@@ -7,6 +7,7 @@ const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const Wishlist = require('../models/Wishlist');
 const AppError = require('../utils/AppError');
+const wishlistService = require('./wishlist.service');
 
 class CartService {
   /**
@@ -286,6 +287,33 @@ class CartService {
   async clearCart(userId) {
     if (!userId) return;
     await Cart.updateOne({ userId }, { $set: { items: [] } });
+  }
+
+  // ==========================================
+  // WISHLIST DOMAIN METHODS (Delegated to WishlistService)
+  // ==========================================
+  getWishlist(userId) {
+    return wishlistService.getWishlist(userId);
+  }
+
+  addToWishlist(params) {
+    return wishlistService.addToWishlist(params);
+  }
+
+  removeFromWishlist(params) {
+    return wishlistService.removeFromWishlist(params);
+  }
+
+  moveAllWishlistToCart(userId) {
+    return wishlistService.moveAllToCart(userId);
+  }
+
+  clearWishlist(userId) {
+    return wishlistService.clearWishlist(userId);
+  }
+
+  getWishlistCount(userId) {
+    return wishlistService.getWishlistCount(userId);
   }
 }
 

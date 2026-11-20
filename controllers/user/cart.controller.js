@@ -132,3 +132,13 @@ exports.removeItem = async (req, res) => {
 exports.applyPromo = async (req, res) => {
   return res.json({ success: false, message: 'Invalid promo code' });
 };
+
+// ==========================================
+// WISHLIST CONTROLLER EXPORTS (Combined Cart & Wishlist Domain)
+// ==========================================
+const wishlistController = require('./wishlist.controller');
+exports.getWishlist = wishlistController.getWishlist;
+exports.addToWishlist = wishlistController.addToWishlist;
+exports.removeFromWishlist = wishlistController.removeFromWishlist;
+exports.moveAllToCart = wishlistController.moveAllToCart;
+exports.clearWishlist = wishlistController.clearWishlist;

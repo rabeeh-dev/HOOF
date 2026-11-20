@@ -1,10 +1,9 @@
-const Wishlist = require("../model/Wishlist");
+const wishlistService = require("../services/wishlist.service");
 
 const fetchWishlistCount = async (req, res, next) => {
-    if (req.session.userId) {
+    if (req.session && req.session.userId) {
         try {
-            const wishlist = await Wishlist.findOne({ userId: req.session.userId });
-            res.locals.wishlistCount = wishlist ? wishlist.products.length : 0;
+            res.locals.wishlistCount = await wishlistService.getWishlistCount(req.session.userId);
         } catch (error) {
             console.error("Error fetching wishlist count:", error);
             res.locals.wishlistCount = 0;
