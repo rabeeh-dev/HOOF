@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const User = require('../models/User');
+const Address = require('../models/Address');
 const Product = require('../models/Product');
 const ReferralConfig = require('../models/ReferralConfig');
 const walletService = require('./wallet.service');
@@ -91,6 +92,208 @@ class UserService {
     user.profileImage = '';
     await user.save();
     return true;
+  }
+
+  // ==========================================
+  // ADDRESS BOOK MANAGEMENT METHODS
+  // ==========================================
+
+  /**
+   * Helper to validate common delivery address fields.
+   * @param {Object} data
+   */
+  validateAddressData(data) {
+    const { fullName, mobile, houseName, pincode, city, state } = data;
+    if (!fullName || fullName.trim().length < 3) {
+      throw new AppError('Name must be at least 3 characters.', 400);
+    }
+    if (!/^[6-9]\d{9}$/.test(mobile)) {
+      throw new AppError('Enter a valid 10-digit mobile number.', 400);
+    }
+    if (!houseName || houseName.trim().length < 2) {
+      throw new AppError('House name/Flat is required.', 400);
+    }
+    if (!/^\d{6}$/.test(pincode)) {
+      throw new AppError('Enter a valid 6-digit pincode.', 400);
+    }
+    if (!city || city.trim().length < 2) {
+      throw new AppError('City is required.', 400);
+    }
+    if (!state || state.trim().length < 2) {
+      throw new AppError('State is required.', 400);
+    }
+  }
+
+  /**
+   * Retrieves address book page data: user and list of addresses.
+   * @param {string} userId
+   * @returns {Promise<Object>}
+   */
+  async getAddressPageData(userId) {
+    if (!userId) throw new AppError('User authentication required', 401);
+
+    const [user, addresses] = await Promise.all([
+      User.findById(userId),
+      Address.find({ userId }),
+    ]);
+
+    if (!user) throw new AppError('User not found', 404);
+
+    return { user, addresses };
+  }
+
+  /**
+   * Returns all addresses for a specific user.
+   * @param {string} userId
+   * @returns {Promise<Array>}
+   */
+  async getUserAddresses(userId) {
+    if (!userId) throw new AppError('User authentication required', 401);
+    return await Address.find({ userId });
+  }
+
+  /**
+   * Returns a single address by id belonging to user.
+   * @param {string} userId
+   * @param {string} addressId
+   * @returns {Promise<Object>}
+   */
+  async getAddressById(userId, addressId) {
+    const address = await Address.findOne({ _id: addressId, userId });
+    if (!address) throw new AppError('Address not found', 404);
+    return address;
+  }
+
+  /**
+   * Adds and saves a new delivery address for the user.
+   * @param {string} userId
+   * @param {Object} data
+   * @returns {Promise<Object>}
+   */
+  async addAddress(userId, data) {
+    if (!userId) throw new AppError('User authentication required', 401);
+
+    this.validateAddressData(data);
+
+    const isDefault = data.isDefault === true || data.isDefault === 'true' || data.isDefault === 'on';
+
+    if (isDefault) {
+      await Address.updateMany({ userId }, { isDefault: false });
+    }
+
+    const newAddress = new Address({
+      userId,
+      fullName: data.fullName.trim(),
+      mobile: data.mobile.trim(),
+      houseName: data.houseName.trim(),
+      pincode: data.pincode.trim(),
+      city: data.city.trim(),
+      state: data.state.trim(),
+      addressType: data.addressType || 'Home',
+      isDefault,
+    });
+
+    await newAddress.save();
+    return newAddress;
+  }
+
+  /**
+   * Updates an existing address for user.
+   * @param {string} userId
+   * @param {string} addressId
+   * @param {Object} data
+   * @returns {Promise<Object>}
+   */
+  async editAddress(userId, addressId, data) {
+    if (!userId) throw new AppError('User authentication required', 401);
+
+    this.validateAddressData(data);
+
+    const isDefault = data.isDefault === true || data.isDefault === 'true' || data.isDefault === 'on';
+
+    if (isDefault) {
+      await Address.updateMany({ userId }, { isDefault: false });
+    }
+
+    const updated = await Address.findOneAndUpdate(
+      { _id: addressId, userId },
+      {
+        fullName: data.fullName.trim(),
+        mobile: data.mobile.trim(),
+        houseName: data.houseName.trim(),
+        pincode: data.pincode.trim(),
+        city: data.city.trim(),
+        state: data.state.trim(),
+        addressType: data.addressType || 'Home',
+        isDefault,
+      },
+      { returnDocument: 'after' }
+    );
+
+    if (!updated) throw new AppError('Address not found', 404);
+    return updated;
+  }
+
+  /**
+   * Deletes an address belonging to user.
+   * @param {string} userId
+   * @param {string} addressId
+   * @returns {Promise<boolean>}
+   */
+  async deleteAddress(userId, addressId) {
+    if (!userId) throw new AppError('User authentication required', 401);
+
+    const result = await Address.findOneAndDelete({ _id: addressId, userId });
+    if (!result) throw new AppError('Address not found', 404);
+    return true;
+  }
+
+  /**
+   * Sets a specific address as default, unsetting all others.
+   * @param {string} userId
+   * @param {string} addressId
+   * @returns {Promise<Object>}
+   */
+  async setDefaultAddress(userId, addressId) {
+    if (!userId) throw new AppError('User authentication required', 401);
+
+    await Address.updateMany({ userId }, { isDefault: false });
+    const address = await Address.findOneAndUpdate(
+      { _id: addressId, userId },
+      { isDefault: true },
+      { returnDocument: 'after' }
+    );
+
+    if (!address) throw new AppError('Address not found', 404);
+    return address;
+  }
+
+  /**
+   * Fetches user profile page data including addresses and status notices.
+   * @param {string} userId
+   * @param {Object} query
+   * @returns {Promise<Object>}
+   */
+  async getProfilePageData(userId, query = {}) {
+    if (!userId) throw new AppError('User authentication required', 401);
+
+    const [user, addresses] = await Promise.all([
+      User.findById(userId),
+      Address.find({ userId }),
+    ]);
+
+    if (!user) throw new AppError('User not found', 404);
+
+    let successMessage = null;
+    if (query.emailChanged === 'true') {
+      successMessage = 'Your email has been updated successfully!';
+    } else if (query.passwordChanged === 'true') {
+      successMessage = 'Your password has been changed successfully!';
+    } else if (query.message === 'reset_link_sent') {
+      successMessage = 'A password reset link has been sent to your email.';
+    }
+
+    return { user, addresses, successMessage };
   }
 
   // ==========================================

@@ -16,6 +16,7 @@ const checkoutRoutes = require("./user/checkout.routes");
 const orderRoutes = require("./user/order.routes");
 const walletRoutes = require("./user/wallet.routes");
 const referralRoutes = require("./user/referral.routes");
+const profileRoutes = require("./user/profile.routes");
 
 // Mount user sub-routers
 router.use("/", authRoutes);
@@ -25,80 +26,11 @@ router.use("/", checkoutRoutes);
 router.use("/", orderRoutes);
 router.use("/", walletRoutes);
 router.use("/", referralRoutes);
+router.use("/", profileRoutes);
 
 // ==========================================
-// USER PROFILE & ACCOUNT MANAGEMENT
+// USER PROFILE & ACCOUNT MANAGEMENT (Delegated to routes/user/profile.routes.js)
 // ==========================================
-
-/**
- * @desc    User homepage (Landing after login).
- * @route   GET /user/home
- * @access  Private (isUser)
- */
-router.get('/home', isUser, userController.getHome);
-
-/**
- * @desc    Render user profile dashboard with addresses and details.
- * @route   GET /user/profile
- * @access  Private (isUser)
- */
-router.get('/profile', isUser, userController.getProfile);
-
-/**
- * @desc    Update text-based profile details (Full Name, Phone, etc.) via AJAX.
- * @route   POST /user/profile/update
- * @access  Private (isUser)
- */
-router.post('/profile/update', isUser, userController.updateProfile);
-
-/**
- * @desc    Upload, crop, and set a new profile image.
- * @route   POST /user/profile/update-image
- * @access  Private (isUser)
- */
-router.post('/profile/update-image', isUser, upload.single('profileImage'), userController.updateProfileImage);
-
-/**
- * @desc    Remove current profile image and revert to default.
- * @route   DELETE /user/profile/delete-image
- * @access  Private (isUser)
- */
-router.delete('/profile/delete-image', isUser, userController.deleteProfileImage);
-
-// ==========================================
-// EMAIL & PASSWORD CHANGE FLOW (Inside Profile)
-// ==========================================
-
-/**
- * @desc    Initiate email change (sends OTP to old email).
- * @route   GET /user/profile/change-email-start
- * @access  Private (isUser)
- */
-router.get('/profile/change-email-start', isUser, userController.getChangeEmailOtp);
-
-/**
- * @desc    Render form to enter new email address (requires OTP verification).
- * @route   GET /user/profile/change-email-form
- * @access  Private (isUser, Session-protected)
- */
-router.get('/profile/change-email-form', isUser, (req, res) => {
-  if (!req.session.emailVerifiedForChange) return res.redirect('/user/profile');
-  res.render('User/change-email', { layout: 'layouts/user' });
-});
-
-/**
- * @desc    Send OTP to the new email address for confirmation.
- * @route   POST /user/profile/change-email-new-otp
- * @access  Private (isUser)
- */
-router.post('/profile/change-email-new-otp', isUser, userController.sendNewEmailOtp);
-
-/**
- * @desc    Initiate password change flow via reset link from profile settings.
- * @route   GET /user/profile/change-password-request
- * @access  Private (isUser)
- */
-router.get('/profile/change-password-request', isUser, userController.changePasswordRequest);
 
 // ==========================================
 // ADDRESS MANAGEMENT

@@ -1,7 +1,12 @@
+/**
+ * @file routes/Address.js
+ * @description Backward-compatible address router delegating to controllers/user/profile.controller.js
+ */
+
 const express = require("express");
 const router = express.Router();
 const addressController = require("../controller/Address");
-const { isUser } = require("../middleware/auth");
+const { isUser } = require("../middlewares/auth.middleware");
 
 /**
  * @desc    Render the address management page.
