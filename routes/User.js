@@ -6,19 +6,19 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controller/User");
-const checkoutController = require("../controller/UserCheckout");
-const couponController = require("../controller/Coupon");
 const { isUser, isLoggedOut } = require("../middlewares/auth.middleware");
 const upload = require('../middleware/multer');
 const passport = require("../config/passport");
 const authRoutes = require("./user/auth.routes");
 const shopRoutes = require("./user/shop.routes");
 const cartRoutes = require("./user/cart.routes");
+const checkoutRoutes = require("./user/checkout.routes");
 
-// Mount user authentication & discovery routes
+// Mount user sub-routers
 router.use("/", authRoutes);
 router.use("/", shopRoutes);
 router.use("/", cartRoutes);
+router.use("/", checkoutRoutes);
 
 // ==========================================
 // USER PROFILE & ACCOUNT MANAGEMENT
@@ -44,10 +44,6 @@ router.get('/profile', isUser, userController.getProfile);
  * @access  Private (isUser)
  */
 router.post('/profile/update', isUser, userController.updateProfile);
-// Razorpay Payment Verification & Failure
-router.post('/checkout/verify-payment', isUser, checkoutController.verifyPayment);
-router.get('/payment-failure/:id', isUser, checkoutController.loadPaymentFailure);
-router.post('/checkout/retry-payment', isUser, checkoutController.retryPayment);
 
 /**
  * @desc    Upload, crop, and set a new profile image.
@@ -125,15 +121,9 @@ router.post("/logout", userController.logout);
 // WISHLIST ROUTES (Delegated to routes/user/wishlist.routes.js via cart.routes.js)
 // ==========================================
 
-//Checkout page 
-router.get('/checkout', isUser, checkoutController.loadCheckout);
-router.post('/checkout', isUser, checkoutController.placeOrder);
-router.post('/checkout/place-order', isUser, checkoutController.placeOrderApi);
-router.get('/order-success/:id', isUser, checkoutController.loadOrderSuccess);
-
-// Coupons
-router.get('/available-coupons', isUser, couponController.getAvailableCoupons);
-router.post('/apply-coupon', isUser, couponController.applyCoupon);
+// ==========================================
+// CHECKOUT & PAYMENT ROUTES (Delegated to routes/user/checkout.routes.js)
+// ==========================================
 
 // Wallet
 router.get('/wallet', isUser, userController.loadWalletPage);

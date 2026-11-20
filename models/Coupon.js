@@ -57,4 +57,4 @@ couponSchema.methods.isValid = function () {
     return this.isActive && !this.isBlocked && this.expiryDate > now && this.usedCount < this.usageLimit;
 };
 
-module.exports = mongoose.model('Coupon', couponSchema);
+module.exports = mongoose.models.Coupon || mongoose.model('Coupon', couponSchema);
