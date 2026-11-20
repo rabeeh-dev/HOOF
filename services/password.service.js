@@ -87,6 +87,72 @@ class PasswordService {
     await user.save({ validateBeforeSave: false });
     return true;
   }
+
+  /**
+   * Resets the user's password using a verified OTP.
+   * @param {string} email
+   * @param {string} otp
+   * @param {string} password
+   * @returns {Promise<boolean>}
+   */
+  async resetPasswordWithOtp(email, otp, password) {
+    if (!password || password.length < 8) {
+      throw new AppError('Password must be at least 8 characters long', 400);
+    }
+
+    const authService = require('./auth.service');
+    await authService.verifyOtpCode({
+      otp,
+      email,
+      mode: 'PASSWORD_RESET',
+    });
+
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    if (user.authProvider === 'google') {
+      user.authProvider = 'both';
+    }
+
+    await user.save({ validateBeforeSave: false });
+    return true;
+  }
+
+  /**
+   * Resets the user's password directly after authorized verification.
+   * @param {string} email
+   * @param {string} password
+   * @returns {Promise<boolean>}
+   */
+  async resetPasswordDirect(email, password) {
+    if (!password || password.length < 8) {
+      throw new AppError('Password must be at least 8 characters long', 400);
+    }
+
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    if (user.authProvider === 'google') {
+      user.authProvider = 'both';
+    }
+
+    await user.save({ validateBeforeSave: false });
+    return true;
+  }
 }
 
 module.exports = new PasswordService();

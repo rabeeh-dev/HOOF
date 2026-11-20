@@ -250,22 +250,14 @@ exports.deleteProfileImage = async (req, res) => {
  */
 exports.getChangeEmailOtp = async (req, res) => {
   try {
-    const user = await User.findById(req.session.userId);
-    const otp = generateOtp();
-    const hashedOtp = await bcrypt.hash(otp, 10);
-
-    // Refresh OTP record for current email
-    await Otp.deleteMany({ email: user.email });
-    await Otp.create({ email: user.email, otp: hashedOtp, expiresAt: Date.now() + 300000 });
-    await sendOtpEmail(user.email, otp);
-
-    console.log("OLD EMAIL OTP (DEBUG):", otp);
-
+    const currentEmail = await authService.initiateEmailChangeCurrent(req.session.userId);
     req.session.changeEmailFlow = true;
-    req.session.currentEmailToVerify = user.email;
+    req.session.currentEmailToVerify = currentEmail;
+    req.session.otpEmail = currentEmail;
 
-    res.render("User/auth/verify-otp", { layout: "layouts/user", email: user.email, message: null });
+    res.render("User/auth/verify-otp", { layout: "layouts/user", email: currentEmail, message: null });
   } catch (err) {
+    console.error("Change Email Start Error:", err.message);
     res.redirect('/user/profile');
   }
 };
@@ -283,30 +275,19 @@ exports.sendNewEmailOtp = async (req, res) => {
     if (!req.session.emailVerifiedForChange) return res.redirect('/user/profile');
     const { newEmail } = req.body;
 
-    const exists = await User.findOne({ email: newEmail });
-    if (exists) {
-      return res.render('User/change-email', {
-        layout: 'layouts/user',
-        message: { type: 'error', text: 'Email already registered.' }
-      });
-    }
+    const normalizedNewEmail = await authService.initiateEmailChangeNew(req.session.userId, newEmail);
 
-    const otp = generateOtp();
-    const hashedOtp = await bcrypt.hash(otp, 10);
-
-    // Save OTP for new email verification
-    await Otp.deleteMany({ email: newEmail });
-    await Otp.create({ email: newEmail, otp: hashedOtp, expiresAt: Date.now() + 300000 });
-    await sendOtpEmail(newEmail, otp);
-
-    console.log("NEW EMAIL OTP (DEBUG):", otp);
-
-    req.session.tempNewEmail = newEmail;
+    req.session.tempNewEmail = normalizedNewEmail;
     req.session.newEmailOtpSent = true;
+    req.session.otpEmail = normalizedNewEmail;
 
-    res.render("User/auth/verify-otp", { layout: "layouts/user", email: newEmail, message: null });
+    res.render("User/auth/verify-otp", { layout: "layouts/user", email: normalizedNewEmail, message: null });
   } catch (err) {
-    res.redirect('/user/profile');
+    console.error("Send New Email OTP Error:", err.message);
+    res.render('User/change-email', {
+      layout: 'layouts/user',
+      message: { type: 'error', text: err.message || 'Failed to send verification code.' }
+    });
   }
 };
 

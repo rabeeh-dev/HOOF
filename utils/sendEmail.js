@@ -48,9 +48,16 @@ if (mailUser && mailPass && mailPass !== "temp_email_app_password") {
  * Sends a verification OTP email to a user.
  * @param {string} email - Destination email address.
  * @param {string} otp - The 6-digit OTP code to include in the email.
+ * @param {string} [title="Verify Your Email"] - Subject and header title.
+ * @param {string} [description="Use the code below to complete your verification."] - Context description.
  * @returns {Promise<void>}
  */
-const sendOtpEmail = async (email, otp) => {
+const sendOtpEmail = async (
+  email,
+  otp,
+  title = "Verify Your Email",
+  description = "Use the code below to complete your verification."
+) => {
   try {
     const html = `
 <!DOCTYPE html>
@@ -59,7 +66,7 @@ const sendOtpEmail = async (email, otp) => {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Verify Your Email - HOOF</title>
+  <title>${title} - HOOF</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #869897; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#869897;">
@@ -75,10 +82,9 @@ const sendOtpEmail = async (email, otp) => {
 
           <tr>
             <td style="padding:40px;text-align:center;">
-              <h2 style="color:#0f1514;">Verify Your Email</h2>
+              <h2 style="color:#0f1514;">${title}</h2>
               <p style="color:#555;font-size:16px;">
-                Thank you for signing up with HOOF!  
-                Use the code below to verify your email address.
+                ${description}
               </p>
 
               <div style="margin:30px 0;display:inline-block;
@@ -112,10 +118,15 @@ const sendOtpEmail = async (email, otp) => {
 </html>
 `;
 
+    if (!mailPass || mailPass === "temp_email_app_password") {
+      console.log(`ℹ️ [MAIL SIMULATED] To: ${email} | Subject: ${title} | OTP: ${otp}`);
+      return;
+    }
+
     await transporter.sendMail({
       from: `"HOOF" <${mailUser}>`,
       to: email,
-      subject: "Verify your HOOF account",
+      subject: `${title} - HOOF`,
       html,
     });
 

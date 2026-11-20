@@ -1,6 +1,6 @@
 /**
  * @file services/auth.service.js
- * @description Core business logic for user authentication, registration, and OTP verification.
+ * @description Core business logic for user authentication, registration, email updates, and OTP verification lifecycle.
  */
 
 const bcrypt = require('bcrypt');
@@ -13,6 +13,61 @@ const AppError = require('../utils/AppError');
 
 class AuthService {
   /**
+   * Centralized helper to generate, hash, persist, and dispatch a 6-digit OTP.
+   * @param {Object} params
+   * @param {string} params.email - Recipient email address.
+   * @param {string} [params.action='SIGNUP'] - Purpose of OTP ('SIGNUP', 'PASSWORD_RESET', 'EMAIL_CHANGE_OLD', 'EMAIL_CHANGE_NEW').
+   * @param {string} [params.title='Verify Your Email'] - Email subject & title.
+   * @param {string} [params.description='Use the code below to complete verification.'] - Body text in email.
+   * @returns {Promise<string>} The raw 6-digit OTP code (for dev logging).
+   */
+  async sendOtp({
+    email,
+    action = 'SIGNUP',
+    title = 'Verify Your Email',
+    description = 'Use the code below to complete your verification.',
+  }) {
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    if (!normalizedEmail) {
+      throw new AppError('Email address is required', 400);
+    }
+
+    // 1. Enforce 60-second resend cooldown per (email, action)
+    const existingOtp = await Otp.findOne({ email: normalizedEmail, action }).sort({ createdAt: -1 });
+    if (existingOtp?.lastSentAt) {
+      const diff = Date.now() - existingOtp.lastSentAt.getTime();
+      if (diff < 60 * 1000) {
+        const remainingSec = Math.ceil((60000 - diff) / 1000);
+        throw new AppError(`Please wait ${remainingSec} seconds before requesting another code.`, 429);
+      }
+    }
+
+    // 2. Generate cryptographically secure OTP & hash it
+    const rawOtp = generateOtp();
+    const hashedOtp = await bcrypt.hash(rawOtp, 10);
+
+    // 3. Clear previous OTPs for this email & action, then store new record (5-minute TTL)
+    await Otp.deleteMany({ email: normalizedEmail, action });
+    await Otp.create({
+      email: normalizedEmail,
+      otp: hashedOtp,
+      action,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+      lastSentAt: new Date(),
+      attempts: 0,
+    });
+
+    // 4. Dispatch email via Nodemailer
+    await sendOtpEmail(normalizedEmail, rawOtp, title, description);
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[AUTH-DEV] ${action} OTP for ${normalizedEmail}: ${rawOtp}`);
+    }
+
+    return rawOtp;
+  }
+
+  /**
    * Initiates local user registration by validating details, hashing password, and sending OTP.
    * @param {string} fullName
    * @param {string} email
@@ -24,7 +79,7 @@ class AuthService {
     const normalizedEmail = email.trim().toLowerCase();
     const cleanFullName = fullName.trim();
 
-    // 1. Check if user already exists
+    // 1. Check duplicate user
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       throw new AppError('An account with this email already exists', 409);
@@ -43,27 +98,13 @@ class AuthService {
     // 3. Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Generate & hash cryptographically secure OTP
-    const rawOtp = generateOtp();
-    const hashedOtp = await bcrypt.hash(rawOtp, 10);
-
-    // 5. Store OTP with 5-minute expiry
-    await Otp.deleteMany({ email: normalizedEmail });
-    await Otp.create({
+    // 4. Send OTP via centralized helper
+    const rawOtp = await this.sendOtp({
       email: normalizedEmail,
-      otp: hashedOtp,
-      expiresAt: Date.now() + 5 * 60 * 1000,
-      lastSentAt: new Date(),
-      attempts: 0,
+      action: 'SIGNUP',
+      title: 'Verify Your Email',
+      description: 'Thank you for signing up with HOOF! Use the code below to verify your email address.',
     });
-
-    // 6. Deliver OTP via email
-    await sendOtpEmail(normalizedEmail, rawOtp);
-
-    // Development logging only
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[AUTH-DEV] OTP for ${normalizedEmail}: ${rawOtp}`);
-    }
 
     return {
       pendingUser: {
@@ -77,44 +118,128 @@ class AuthService {
   }
 
   /**
-   * Verifies the submitted OTP code.
+   * Initiates step 1 of email change: sends OTP to user's CURRENT registered email.
+   * @param {string} userId
+   * @returns {Promise<string>} Current email
+   */
+  async initiateEmailChangeCurrent(userId) {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    await this.sendOtp({
+      email: user.email,
+      action: 'EMAIL_CHANGE_OLD',
+      title: 'Authorize Email Change',
+      description: 'You requested to change your HOOF registered email address. Use this code to authorize the request.',
+    });
+
+    return user.email;
+  }
+
+  /**
+   * Initiates step 2 of email change: sends OTP to the user's NEW email address.
+   * @param {string} userId
+   * @param {string} newEmail
+   * @returns {Promise<string>} Normalized new email
+   */
+  async initiateEmailChangeNew(userId, newEmail) {
+    const normalizedNewEmail = (newEmail || '').trim().toLowerCase();
+    if (!normalizedNewEmail) {
+      throw new AppError('New email address is required', 400);
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedNewEmail)) {
+      throw new AppError('Please enter a valid email address', 400);
+    }
+
+    // Check if new email is already taken
+    const exists = await User.findOne({ email: normalizedNewEmail });
+    if (exists) {
+      throw new AppError('This email is already registered to another account.', 409);
+    }
+
+    await this.sendOtp({
+      email: normalizedNewEmail,
+      action: 'EMAIL_CHANGE_NEW',
+      title: 'Confirm Your New Email',
+      description: 'Enter this verification code to confirm your new email address for your HOOF account.',
+    });
+
+    return normalizedNewEmail;
+  }
+
+  /**
+   * Initiates password reset via OTP code.
+   * @param {string} email
+   * @returns {Promise<boolean>}
+   */
+  async initiatePasswordResetOtp(email) {
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (user && (user.authProvider === 'local' || user.authProvider === 'both' || user.password)) {
+      await this.sendOtp({
+        email: normalizedEmail,
+        action: 'PASSWORD_RESET',
+        title: 'Reset Your Password',
+        description: 'You requested to reset your HOOF password. Use the verification code below to proceed.',
+      });
+    }
+
+    return true;
+  }
+
+  /**
+   * Verifies the submitted OTP code across any authentication context.
    * @param {Object} params
    * @returns {Promise<Object>}
    */
   async verifyOtpCode({ otp, email, mode = 'NEW_SIGNUP', userId, pendingUserData }) {
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = (email || '').trim().toLowerCase();
 
-    // 1. Fetch latest OTP
-    const otpRecord = await Otp.findOne({ email: normalizedEmail }).sort({ createdAt: -1 });
+    // Map verification mode to action
+    let action = 'SIGNUP';
+    if (mode === 'NEW_EMAIL_UPDATE') action = 'EMAIL_CHANGE_NEW';
+    else if (mode === 'VERIFY_OLD_EMAIL') action = 'EMAIL_CHANGE_OLD';
+    else if (mode === 'PASSWORD_RESET') action = 'PASSWORD_RESET';
+
+    // 1. Fetch latest OTP matching email & action (or fallback to email for backwards compatibility)
+    let otpRecord = await Otp.findOne({ email: normalizedEmail, action }).sort({ createdAt: -1 });
+    if (!otpRecord) {
+      otpRecord = await Otp.findOne({ email: normalizedEmail }).sort({ createdAt: -1 });
+    }
 
     if (!otpRecord) {
-      throw new AppError('No active OTP found. Please request a new code.', 400);
+      throw new AppError('No active verification code found. Please request a new code.', 400);
     }
 
     if (otpRecord.expiresAt < Date.now()) {
       await Otp.deleteMany({ email: normalizedEmail });
-      throw new AppError('OTP has expired. Please request a new one.', 400);
+      throw new AppError('Verification code has expired. Please request a new code.', 400);
     }
 
-    // Check brute-force attempt limits (max 5)
+    // Brute-force check: max 5 failed attempts
     if (otpRecord.attempts >= 5) {
       await Otp.deleteMany({ email: normalizedEmail });
-      throw new AppError('Too many failed attempts. This OTP is now invalid. Please request a new code.', 429);
+      throw new AppError('Too many failed attempts. This code is now invalid. Please request a new code.', 429);
     }
 
-    // 2. Validate OTP
+    // 2. Validate OTP hash
     const isMatch = await bcrypt.compare(otp, otpRecord.otp);
     if (!isMatch) {
       otpRecord.attempts = (otpRecord.attempts || 0) + 1;
       await otpRecord.save();
-      const remainingAttempts = 5 - otpRecord.attempts;
-      throw new AppError(`Invalid verification code. ${remainingAttempts} attempts remaining.`, 400);
+      const remaining = 5 - otpRecord.attempts;
+      throw new AppError(`Invalid verification code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`, 400);
     }
 
-    // 3. Clear OTP records on success
+    // 3. Clear OTPs on success
     await Otp.deleteMany({ email: normalizedEmail });
 
-    // 4. Handle context
+    // 4. Handle context execution
     if (mode === 'NEW_EMAIL_UPDATE') {
       await User.findByIdAndUpdate(userId, { email: normalizedEmail });
       return { success: true, redirectUrl: '/user/profile?emailChanged=true' };
@@ -122,6 +247,10 @@ class AuthService {
 
     if (mode === 'VERIFY_OLD_EMAIL') {
       return { success: true, redirectUrl: '/user/profile/change-email-form' };
+    }
+
+    if (mode === 'PASSWORD_RESET') {
+      return { success: true, redirectUrl: `/user/reset-password/${encodeURIComponent(normalizedEmail)}?verified=true` };
     }
 
     // Default: NEW_SIGNUP
@@ -158,40 +287,25 @@ class AuthService {
   /**
    * Resends an OTP with a 60-second cooldown period.
    * @param {string} email
+   * @param {string} [action='SIGNUP']
    * @returns {Promise<string>}
    */
-  async processResendOtp(email) {
-    const normalizedEmail = email.trim().toLowerCase();
-    const existingOtp = await Otp.findOne({ email: normalizedEmail });
+  async processResendOtp(email, action = 'SIGNUP') {
+    let title = 'Verify Your Email';
+    let description = 'Use the code below to complete your verification.';
 
-    if (existingOtp?.lastSentAt) {
-      const diff = Date.now() - existingOtp.lastSentAt.getTime();
-      if (diff < 60 * 1000) {
-        const remainingSec = Math.ceil((60000 - diff) / 1000);
-        throw new AppError(`Please wait ${remainingSec} seconds before requesting another code`, 429);
-      }
+    if (action === 'EMAIL_CHANGE_NEW') {
+      title = 'Confirm Your New Email';
+      description = 'Enter this verification code to confirm your new email address.';
+    } else if (action === 'EMAIL_CHANGE_OLD') {
+      title = 'Authorize Email Change';
+      description = 'Use this code to authorize changing your email address.';
+    } else if (action === 'PASSWORD_RESET') {
+      title = 'Reset Your Password';
+      description = 'Use the verification code below to reset your password.';
     }
 
-    await Otp.deleteMany({ email: normalizedEmail });
-
-    const rawOtp = generateOtp();
-    const hashedOtp = await bcrypt.hash(rawOtp, 10);
-
-    await Otp.create({
-      email: normalizedEmail,
-      otp: hashedOtp,
-      expiresAt: Date.now() + 5 * 60 * 1000,
-      lastSentAt: new Date(),
-      attempts: 0,
-    });
-
-    await sendOtpEmail(normalizedEmail, rawOtp);
-
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[AUTH-DEV] Resent OTP for ${normalizedEmail}: ${rawOtp}`);
-    }
-
-    return rawOtp;
+    return await this.sendOtp({ email, action, title, description });
   }
 
   /**

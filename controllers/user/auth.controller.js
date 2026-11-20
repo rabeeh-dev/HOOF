@@ -155,20 +155,32 @@ exports.verifyOtp = async (req, res) => {
  */
 exports.resendOtp = async (req, res) => {
   try {
-    const email = req.session.otpEmail || req.session.pendingUser?.email || req.session.tempNewEmail;
+    const isNewEmailFlow = !!req.session.newEmailOtpSent;
+    const isOldEmailFlow = !!req.session.changeEmailFlow;
+
+    let email = req.session.otpEmail || req.session.pendingUser?.email;
+    let action = 'SIGNUP';
+
+    if (isNewEmailFlow) {
+      email = req.session.tempNewEmail;
+      action = 'EMAIL_CHANGE_NEW';
+    } else if (isOldEmailFlow) {
+      email = req.session.currentEmailToVerify;
+      action = 'EMAIL_CHANGE_OLD';
+    }
 
     if (!email) {
       return res.status(400).json({
-        message: 'Session expired. Please signup again.',
+        message: 'Session expired. Please start the verification process again.',
       });
     }
 
-    await authService.processResendOtp(email);
-    return res.json({ success: true, message: 'New OTP sent to your email successfully.' });
+    await authService.processResendOtp(email, action);
+    return res.json({ success: true, message: 'New verification code sent to your email successfully.' });
   } catch (err) {
     console.error('Resend OTP Error:', err);
     const status = err.statusCode || err.status || 500;
-    return res.status(status).json({ message: err.message || 'Failed to resend OTP' });
+    return res.status(status).json({ message: err.message || 'Failed to resend verification code' });
   }
 };
 
@@ -299,6 +311,16 @@ exports.forgotPassword = async (req, res) => {
 exports.resetPasswordPage = async (req, res) => {
   try {
     const { token } = req.params;
+
+    // Check if token corresponds to an active OTP-verified reset session
+    if (req.session.passwordResetOtpVerified && req.session.passwordResetEmail === decodeURIComponent(token)) {
+      return res.render('User/auth/reset-password', {
+        layout: 'layouts/user',
+        token,
+        error: null,
+      });
+    }
+
     await passwordService.verifyResetToken(token);
 
     return res.render('User/auth/reset-password', {
@@ -331,6 +353,14 @@ exports.resetPassword = async (req, res) => {
         token,
         error: 'Passwords do not match',
       });
+    }
+
+    // Direct password reset via OTP verification
+    if (req.session.passwordResetOtpVerified && req.session.passwordResetEmail === decodeURIComponent(token)) {
+      await passwordService.resetPasswordDirect(req.session.passwordResetEmail, password);
+      req.session.passwordResetOtpVerified = null;
+      req.session.passwordResetEmail = null;
+      return res.redirect('/user/login?resetSuccess=true');
     }
 
     await passwordService.resetPassword(token, password);

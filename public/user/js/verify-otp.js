@@ -130,7 +130,7 @@ resendBtn?.addEventListener("click", async () => {
     showMessage("New OTP sent to your email!", "success");
 
     // Restart timer
-    timeLeft = 120;
+    timeLeft = 60;
     resendBtn.style.display = "none";
     updateTimer();
 
