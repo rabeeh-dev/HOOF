@@ -13,12 +13,14 @@ const authRoutes = require("./user/auth.routes");
 const shopRoutes = require("./user/shop.routes");
 const cartRoutes = require("./user/cart.routes");
 const checkoutRoutes = require("./user/checkout.routes");
+const orderRoutes = require("./user/order.routes");
 
 // Mount user sub-routers
 router.use("/", authRoutes);
 router.use("/", shopRoutes);
 router.use("/", cartRoutes);
 router.use("/", checkoutRoutes);
+router.use("/", orderRoutes);
 
 // ==========================================
 // USER PROFILE & ACCOUNT MANAGEMENT
@@ -133,17 +135,6 @@ router.get('/wallet/data', isUser, userController.getWalletData);
 router.get('/referral', isUser, userController.loadReferralPage);
 router.post('/referral/withdraw', isUser, userController.withdrawReferralPoints);
 
-router.get('/orders', isUser, userController.loadOrders);
-router.get('/orders/:id', isUser, userController.loadOrderDetails);
-
-// Whole order actions (legacy/fallback)
-router.put('/orders/cancel/:id', isUser, userController.cancelOrder);
-router.put('/orders/return/:id', isUser, userController.returnOrder);
-
-// Per-item actions
-router.put('/orders/:orderId/item/:itemId/cancel', isUser, userController.cancelOrderItem);
-router.put('/orders/:orderId/item/:itemId/return', isUser, userController.returnOrderItem);
-
-router.get('/orders/invoice/:id', isUser, userController.downloadInvoice);
+// Order management routes delegated to routes/user/order.routes.js
 
 module.exports = router;

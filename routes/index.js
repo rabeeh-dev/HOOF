@@ -10,6 +10,7 @@ const authRoutes = require('./user/auth.routes');
 const shopRoutes = require('./user/shop.routes');
 const cartRoutes = require('./user/cart.routes');
 const checkoutRoutes = require('./user/checkout.routes');
+const orderRoutes = require('./user/order.routes');
 const googleAuthRoutes = require('./Auth');
 const userRoutes = require('./User');
 const addressRoutes = require('./Address');
@@ -31,10 +32,13 @@ router.use('/user', cartRoutes);
 // 5. Checkout & payment routes (/user/checkout, /user/checkout/place-order, Razorpay, coupons)
 router.use('/user', checkoutRoutes);
 
-// 6. Address book routes
+// 6. Customer order management (/user/orders, /user/orders/:id, returns, cancellations, invoices)
+router.use('/user', orderRoutes);
+
+// 7. Address book routes
 router.use('/user/address', addressRoutes);
 
-// 7. User portal features (profile, orders, wallet, referral)
+// 8. User portal features (profile, wallet, referral)
 router.use('/user', userRoutes);
 
 // 6. Admin portal routes (disable default user layout)
