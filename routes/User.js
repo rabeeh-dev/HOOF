@@ -12,9 +12,11 @@ const { isUser, isLoggedOut } = require("../middlewares/auth.middleware");
 const upload = require('../middleware/multer');
 const passport = require("../config/passport");
 const authRoutes = require("./user/auth.routes");
+const shopRoutes = require("./user/shop.routes");
 
-// Mount user authentication routes (login, signup, OTP, Google OAuth, password reset)
+// Mount user authentication & discovery routes
 router.use("/", authRoutes);
+router.use("/", shopRoutes);
 
 // ==========================================
 // USER PROFILE & ACCOUNT MANAGEMENT
@@ -111,77 +113,6 @@ router.get('/profile/change-password-request', isUser, userController.changePass
  * @access  Private (isUser)
  */
 router.post("/logout", userController.logout);
-
-// ==========================================
-// ABOUT & CONTACT PAGES
-// ==========================================
-
-/**
- * @desc    Render the About page.
- * @route   GET /user/about
- * @access  Public
- */
-router.get('/about', (req, res) => {
-  res.render('User/about', { title: 'About - HOOF', layout: 'layouts/user' });
-});
-
-/**
- * @desc    Render the Contact page.
- * @route   GET /user/contact
- * @access  Public
- */
-router.get('/contact', (req, res) => {
-  res.render('User/contact', { title: 'Contact - HOOF', layout: 'layouts/user' });
-});
-
-/**
- * @desc    Handle contact form submission.
- * @route   POST /user/contact
- * @access  Public
- */
-const { sendContactEmail } = require("../utils/sendEmail");
-const { appendContactLead } = require("../utils/googleSheets");
-
-router.post('/contact', async (req, res) => {
-  try {
-    const { name, email, subject, message } = req.body;
-
-    if (!name || !email || !subject || !message) {
-      return res.status(400).json({ success: false, message: 'All fields are required.' });
-    }
-
-    // Send email (primary action)
-    await sendContactEmail(name, email, subject, message);
-
-    // Log to Google Sheet for lead generation (non-blocking)
-    appendContactLead(name, email, subject, message);
-
-    res.json({ success: true, message: 'Message received! We will get back to you soon.' });
-  } catch (err) {
-    console.error('Contact form error:', err);
-    res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
-  }
-});
-
-// ==========================================
-// SHOP / PRODUCT LISTING
-// ==========================================
-const productController = require("../controller/Product");
-
-/**
- * @desc    Display the main shop page with filtering, sorting, and pagination.
- * @route   GET /user/shop
- * @access  Public / Private
- */
-router.get('/shop', productController.listProducts);
-
-/**
- * @desc    View details of a specific product and related items.
- * @route   GET /user/product-details/:id
- * @access  Public / Private
- */
-router.get('/product-details/:id', productController.loadProductDetails);
-router.post('/product/:id/review', isUser, productController.addReview);
 
 // ==========================================
 // CART ROUTES
