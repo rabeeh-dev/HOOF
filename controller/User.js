@@ -19,6 +19,7 @@ const Order = require('../model/Order');
 const PDFDocument = require('pdfkit');
 const walletService = require('../services/Wallet');
 const ReferralConfig = require('../model/ReferralConfig');
+const referralController = require('../controllers/user/referral.controller');
 
 
 // ==========================================
@@ -382,85 +383,8 @@ exports.getWalletData = walletController.getWalletData;
 // REFERRAL SECTION
 // ==========================================
 
-/**
- * @desc    Render the referral page with user's code, points, and stats.
- * @route   GET /user/referral
- * @access  Private
- */
-exports.loadReferralPage = async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    const user = await User.findById(userId);
-
-    // Count how many users this person has referred
-    const referredCount = await User.countDocuments({ referredBy: userId });
-
-    // Get referral config for dynamic display
-    const referralConfig = await ReferralConfig.getConfig();
-
-    res.render('User/referral', {
-      user,
-      referredCount,
-      referralConfig,
-      title: 'Referral Program | HOOF',
-      layout: 'layouts/user'
-    });
-  } catch (err) {
-    console.error("Referral Page Error:", err);
-    res.redirect('/user/profile');
-  }
-};
-
-/**
- * @desc    Withdraw referral points to wallet (100 points = ₹1).
- * @route   POST /user/referral/withdraw
- * @access  Private
- */
-exports.withdrawReferralPoints = async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    // Get referral config for dynamic conversion
-    const refConfig = await ReferralConfig.getConfig();
-    const pointsPerRupee = refConfig.pointsPerRupee || 100;
-    const minWithdraw = refConfig.minWithdrawPoints || 100;
-
-    const points = user.referralPoints || 0;
-    if (points < minWithdraw) {
-      return res.status(400).json({
-        success: false,
-        message: `Minimum ${minWithdraw} points required to withdraw`
-      });
-    }
-
-    // Convert all eligible points (multiples of pointsPerRupee) to rupees
-    const withdrawablePoints = Math.floor(points / pointsPerRupee) * pointsPerRupee;
-    const amountInRupees = withdrawablePoints / pointsPerRupee;
-
-    // Credit wallet
-    await walletService.creditWallet(
-      userId,
-      amountInRupees,
-      `Referral reward withdrawal (${withdrawablePoints} points)`
-    );
-
-    // Deduct points from user
-    user.referralPoints = points - withdrawablePoints;
-    await user.save();
-
-    res.json({
-      success: true,
-      message: `₹${amountInRupees.toFixed(2)} credited to your wallet!`,
-      amountCredited: amountInRupees,
-      remainingPoints: user.referralPoints
-    });
-  } catch (err) {
-    console.error("Referral Withdraw Error:", err);
-    res.status(500).json({ success: false, message: "Failed to withdraw" });
-  }
-};
+// ==========================================
+// REFERRAL SECTION (Delegated to controllers/user/referral.controller)
+// ==========================================
+exports.loadReferralPage = (req, res, next) => referralController.loadReferralPage(req, res, next);
+exports.withdrawReferralPoints = (req, res, next) => referralController.withdrawReferralPoints(req, res, next);

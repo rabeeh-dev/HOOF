@@ -14,6 +14,7 @@ const PDFDocument = require('pdfkit-table');
 const bcrypt = require("bcrypt");
 const adminProductService = require("../services/AdminProduct");
 const walletService = require("../services/Wallet");
+const customerController = require("../controllers/admin/customer.controller");
 
 // ==========================================
 // ADMIN AUTHENTICATION SECTION
@@ -368,106 +369,11 @@ exports.loadDashboard = async (req, res) => {
 // USER MANAGEMENT SECTION
 // ==========================================
 
-/**
- * @desc    Fetch and display all users with pagination support.
- * @route   GET /admin/users
- * @access  Private (Admin Only)
- * @param   {Object} req - Express request object.
- * @param   {Object} res - Express response object.
- * @returns {void}
- */
-exports.loadCustomers = async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = 5;
-        const skip = (page - 1) * limit;
-
-        const totalUsers = await User.countDocuments({});
-
-        const users = await User.aggregate([
-            { $sort: { createdAt: -1 } },
-            { $skip: skip },
-            { $limit: limit },
-            {
-                $lookup: {
-                    from: "orders",
-                    localField: "_id",
-                    foreignField: "userId",
-                    as: "orders"
-                }
-            },
-            {
-                $addFields: {
-                    totalOrders: { $size: "$orders" },
-                    totalSpend: {
-                        $reduce: {
-                            input: "$orders",
-                            initialValue: 0,
-                            in: {
-                                $cond: [
-                                    { $ne: ["$$this.status", "CANCELLED"] },
-                                    { $add: ["$$value", { $ifNull: ["$$this.totalAmount", 0] }] },
-                                    "$$value"
-                                ]
-                            }
-                        }
-                    }
-                }
-            },
-            {
-                $project: {
-                    password: 0,
-                    orders: 0
-                }
-            }
-        ]);
-
-        res.render('Admin/user-management', {
-            users,
-            currentPage: page,
-            totalPages: Math.ceil(totalUsers / limit) || 1,
-            title: "Customers | HOOF Admin",
-            layout: false
-        });
-    } catch (error) {
-        console.error("Load Customers Error:", error.message);
-        res.status(500).send("Error loading customer data");
-    }
-};
-
-/**
- * @desc    Toggles the isBlocked status of a specific user.
- * @route   PATCH /admin/users/:id/:action
- * @access  Private (Admin Only)
- * @param   {Object} req - Express request object.
- * @param   {Object} res - Express response object.
- * @returns {void}
- */
-exports.toggleUserStatus = async (req, res) => {
-    try {
-        const { id, action } = req.params;
-        const blockStatus = (action === 'block');
-
-        const updatedUser = await User.findByIdAndUpdate(
-            id,
-            { isBlocked: blockStatus },
-            { new: true }
-        );
-
-        if (updatedUser) {
-            const io = req.app.get('io');
-            if (io) {
-                io.emit('user:statusChanged', { userId: id, isBlocked: blockStatus });
-            }
-            res.json({ success: true });
-        } else {
-            res.json({ success: false, message: "User not found" });
-        }
-    } catch (error) {
-        console.error("Update Error:", error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-};
+// ==========================================
+// CUSTOMER MANAGEMENT (Delegated to controllers/admin/customer.controller)
+// ==========================================
+exports.loadCustomers = (req, res, next) => customerController.loadCustomers(req, res, next);
+exports.toggleUserStatus = (req, res, next) => customerController.toggleUserStatus(req, res, next);
 
 /**
  * @desc    Generates and downloads a PDF report of all users.
@@ -1761,83 +1667,8 @@ exports.exportOrdersExcel = async (req, res) => {
 // REFERRAL SETTINGS SECTION
 // ==========================================
 
-/**
- * @desc    Load the referral settings admin page.
- * @route   GET /admin/referral
- * @access  Private (Admin Only)
- */
-exports.loadReferralSettings = async (req, res) => {
-    try {
-        const config = await ReferralConfig.getConfig();
-
-        // Compute stats
-        const totalReferrals = await User.countDocuments({ referredBy: { $ne: null } });
-        const pointsResult = await User.aggregate([
-            { $group: { _id: null, total: { $sum: '$referralPoints' } } }
-        ]);
-        const totalPointsDistributed = pointsResult[0]?.total || 0;
-        const topReferrers = await User.aggregate([
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: '_id',
-                    foreignField: 'referredBy',
-                    as: 'referrals'
-                }
-            },
-            { $addFields: { referralCount: { $size: '$referrals' } } },
-            { $match: { referralCount: { $gt: 0 } } },
-            { $sort: { referralCount: -1 } },
-            { $limit: 5 },
-            { $project: { fullName: 1, email: 1, referralCode: 1, referralPoints: 1, referralCount: 1 } }
-        ]);
-
-        res.render('Admin/referral-settings', {
-            config,
-            stats: {
-                totalReferrals,
-                totalPointsDistributed,
-                topReferrers
-            },
-            title: "Referral Settings | HOOF Admin",
-            layout: false
-        });
-    } catch (error) {
-        console.error("Load Referral Settings Error:", error.message);
-        res.redirect('/admin/dashboard');
-    }
-};
-
-/**
- * @desc    Update referral configuration.
- * @route   PATCH /admin/referral
- * @access  Private (Admin Only)
- */
-exports.updateReferralSettings = async (req, res) => {
-    try {
-        const { pointsPerReferral, pointsPerRupee, minWithdrawPoints, isActive } = req.body;
-
-        // Validation
-        if (pointsPerReferral < 0) {
-            return res.status(400).json({ success: false, message: "Points per referral cannot be negative" });
-        }
-        if (pointsPerRupee < 1) {
-            return res.status(400).json({ success: false, message: "Points per rupee must be at least 1" });
-        }
-        if (minWithdrawPoints < 1) {
-            return res.status(400).json({ success: false, message: "Minimum withdrawal must be at least 1 point" });
-        }
-
-        const config = await ReferralConfig.getConfig();
-        config.pointsPerReferral = Number(pointsPerReferral);
-        config.pointsPerRupee = Number(pointsPerRupee);
-        config.minWithdrawPoints = Number(minWithdrawPoints);
-        config.isActive = isActive === true || isActive === 'true';
-        await config.save();
-
-        res.json({ success: true, message: "Referral settings updated successfully" });
-    } catch (error) {
-        console.error("Update Referral Settings Error:", error.message);
-        res.status(500).json({ success: false, message: "Failed to update settings" });
-    }
-};
+// ==========================================
+// REFERRAL SETTINGS (Delegated to controllers/admin/customer.controller)
+// ==========================================
+exports.loadReferralSettings = (req, res, next) => customerController.loadReferralSettings(req, res, next);
+exports.updateReferralSettings = (req, res, next) => customerController.updateReferralSettings(req, res, next);

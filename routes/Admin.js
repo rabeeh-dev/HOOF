@@ -10,9 +10,11 @@ const adminProductController = require('../controller/AdminProduct');
 const adminAuth = require('../middleware/adminAuth');
 const upload = require('../middleware/productMulter');
 const couponRoutes = require('./admin/coupon.routes');
+const customerRoutes = require('./admin/customer.routes');
 
 // Mount Admin sub-routers
 router.use('/', couponRoutes);
+router.use('/', customerRoutes);
 
 // ==========================================
 // ADMIN AUTHENTICATION ROUTES
@@ -53,25 +55,11 @@ router.get('/dashboard/export', adminAuth.isLogin, adminController.exportSalesRe
 router.get('/dashboard/export-excel', adminAuth.isLogin, adminController.exportSalesExcel);
 
 /**
- * @desc    Load user management list with pagination.
- * @route   GET /admin/customers
- * @access  Private (Admin Only)
- */
-router.get('/customers', adminAuth.isLogin, adminController.loadCustomers);
-
-/**
  * @desc    Generate and download a PDF report of all users.
  * @route   GET /admin/users/export-pdf
  * @access  Private (Admin Only)
  */
 router.get('/users/export-pdf', adminAuth.isLogin, adminController.exportUsersPDF);
-
-/**
- * @desc    Block or Unblock a user based on action parameter.
- * @route   PATCH /admin/users/:id/:action
- * @access  Private (Admin Only)
- */
-router.patch('/users/:id/:action', adminAuth.isLogin, adminController.toggleUserStatus);
 
 // ==========================================
 // CATEGORY MANAGEMENT SECTION
@@ -230,22 +218,8 @@ router.patch('/orders/:orderId/item/:itemId/status', adminAuth.isLogin, adminCon
 // ==========================================
 
 // ==========================================
-// REFERRAL SETTINGS SECTION
+// REFERRAL SETTINGS SECTION (Delegated to routes/admin/customer.routes.js)
 // ==========================================
-
-/**
- * @desc    Load referral settings page.
- * @route   GET /admin/referral
- * @access  Private (Admin Only)
- */
-router.get('/referral', adminAuth.isLogin, adminController.loadReferralSettings);
-
-/**
- * @desc    Update referral configuration.
- * @route   PATCH /admin/referral
- * @access  Private (Admin Only)
- */
-router.patch('/referral', adminAuth.isLogin, adminController.updateReferralSettings);
 
 // ==========================================
 

@@ -15,6 +15,7 @@ const cartRoutes = require("./user/cart.routes");
 const checkoutRoutes = require("./user/checkout.routes");
 const orderRoutes = require("./user/order.routes");
 const walletRoutes = require("./user/wallet.routes");
+const referralRoutes = require("./user/referral.routes");
 
 // Mount user sub-routers
 router.use("/", authRoutes);
@@ -23,6 +24,7 @@ router.use("/", cartRoutes);
 router.use("/", checkoutRoutes);
 router.use("/", orderRoutes);
 router.use("/", walletRoutes);
+router.use("/", referralRoutes);
 
 // ==========================================
 // USER PROFILE & ACCOUNT MANAGEMENT
@@ -131,9 +133,7 @@ router.post("/logout", userController.logout);
 
 // Wallet routes delegated to routes/user/wallet.routes.js
 
-// Referral
-router.get('/referral', isUser, userController.loadReferralPage);
-router.post('/referral/withdraw', isUser, userController.withdrawReferralPoints);
+// Referral routes delegated to routes/user/referral.routes.js
 
 // Order management routes delegated to routes/user/order.routes.js
 

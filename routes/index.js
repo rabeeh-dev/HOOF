@@ -12,6 +12,7 @@ const cartRoutes = require('./user/cart.routes');
 const checkoutRoutes = require('./user/checkout.routes');
 const orderRoutes = require('./user/order.routes');
 const walletRoutes = require('./user/wallet.routes');
+const referralRoutes = require('./user/referral.routes');
 const googleAuthRoutes = require('./Auth');
 const userRoutes = require('./User');
 const addressRoutes = require('./Address');
@@ -39,10 +40,13 @@ router.use('/user', orderRoutes);
 // 7. Customer wallet management (/user/wallet, /user/wallet/data)
 router.use('/user', walletRoutes);
 
-// 8. Address book routes
+// 8. Customer referral routes (/user/referral, /user/referral/withdraw)
+router.use('/user', referralRoutes);
+
+// 9. Address book routes
 router.use('/user/address', addressRoutes);
 
-// 9. User portal features (profile, referral)
+// 10. User portal features (profile, referral fallback)
 router.use('/user', userRoutes);
 
 // 6. Admin portal routes (disable default user layout)

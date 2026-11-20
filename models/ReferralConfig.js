@@ -41,4 +41,4 @@ referralConfigSchema.statics.getConfig = async function () {
   return config;
 };
 
-module.exports = mongoose.model('ReferralConfig', referralConfigSchema);
+module.exports = mongoose.models.ReferralConfig || mongoose.model('ReferralConfig', referralConfigSchema);
