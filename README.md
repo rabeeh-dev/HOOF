@@ -150,34 +150,45 @@
 ```
 HOOF/
 │
-├── 📄 app.js                          # Express app entry point
-├── 📄 backfillReferralCodes.js        # Utility: backfill referral codes
+├── 📄 app.js                          # Express app configuration & middleware
+├── 📄 server.js                       # HTTP & Socket.IO server entry point
 ├── 📄 package.json
 │
 ├── 📂 config/
 │   ├── 📄 db.js                       # MongoDB connection
-│   └── 📄 passport.js                 # Passport.js strategies (Local + Google)
+│   ├── 📄 env.js                      # Centralized environment configuration
+│   ├── 📄 passport.js                 # Passport.js Google OAuth 2.0 strategy
+│   └── 📄 session.js                  # MongoStore-backed session configuration
 │
-├── 📂 controller/
-│   ├── 📄 Address.js                  # Address CRUD for users
-│   ├── 📄 Admin.js                    # Admin dashboard & user management
-│   ├── 📄 AdminCoupon.js              # Admin coupon management
-│   ├── 📄 AdminProduct.js             # Admin product management
-│   ├── 📄 Coupon.js                   # User coupon application
-│   ├── 📄 Product.js                  # Product listing & details
-│   ├── 📄 User.js                     # User profile, auth, OTP
-│   └── 📄 UserCheckout.js             # Checkout & order placement
+├── 📂 controllers/
+│   ├── 📂 admin/
+│   │   ├── 📄 auth.controller.js       # Admin authentication & session
+│   │   ├── 📄 coupon.controller.js     # Admin coupon management
+│   │   ├── 📄 customer.controller.js   # Customer account blocking & status
+│   │   ├── 📄 dashboard.controller.js  # Dashboard analytics & Excel/PDF exports
+│   │   ├── 📄 order.controller.js      # Admin order status & item tracking
+│   │   └── 📄 product.controller.js    # Product & category CRUD operations
+│   └── 📂 user/
+│       ├── 📄 auth.controller.js       # User signup, login, OTP, Google OAuth
+│       ├── 📄 cart.controller.js       # Shopping cart operations
+│       ├── 📄 checkout.controller.js   # Checkout, address selection, payments
+│       ├── 📄 order.controller.js      # Customer order tracking & invoices
+│       ├── 📄 profile.controller.js    # Profile & address book management
+│       ├── 📄 referral.controller.js   # Referral dashboard & reward withdrawal
+│       ├── 📄 shop.controller.js       # Storefront catalog, search, filter
+│       ├── 📄 wallet.controller.js     # Customer digital wallet & history
+│       └── 📄 wishlist.controller.js   # Customer wishlist management
 │
-├── 📂 middleware/
-│   ├── 📄 adminAuth.js                # Admin route protection
-│   ├── 📄 auth.js                     # User route protection
-│   ├── 📄 breadcrumb.js               # Breadcrumb navigation builder
-│   ├── 📄 cartCount.js                # Inject cart count into views
-│   ├── 📄 multer.js                   # Profile image upload config
-│   ├── 📄 productMulter.js            # Product image upload config
-│   └── 📄 wishlistCount.js            # Inject wishlist count into views
+├── 📂 middlewares/
+│   ├── 📄 adminAuth.middleware.js     # Admin route protection
+│   ├── 📄 auth.middleware.js          # User route protection (isUser, isLoggedOut)
+│   ├── 📄 breadcrumb.middleware.js    # Dynamic breadcrumb navigation builder
+│   ├── 📄 error.middleware.js         # Centralized error handler & 404 handler
+│   ├── 📄 navCounts.middleware.js     # Cart and wishlist count injector
+│   ├── 📄 rateLimit.middleware.js     # Express-rate-limit protection
+│   └── 📄 upload.middleware.js        # Multer image storage with HEIC support
 │
-├── 📂 model/
+├── 📂 models/
 │   ├── 📄 Address.js                  # Address schema
 │   ├── 📄 Admin.js                    # Admin schema
 │   ├── 📄 Cart.js                     # Cart schema
@@ -186,28 +197,54 @@ HOOF/
 │   ├── 📄 Order.js                    # Order schema
 │   ├── 📄 Otp.js                      # OTP schema
 │   ├── 📄 Product.js                  # Product schema
+│   ├── 📄 ReferralConfig.js           # Referral rewards configuration schema
 │   ├── 📄 Review.js                   # Review & rating schema
 │   ├── 📄 User.js                     # User schema
-│   ├── 📄 Wallet.js                   # Wallet schema
+│   ├── 📄 Wallet.js                   # Digital wallet schema
 │   └── 📄 Wishlist.js                 # Wishlist schema
 │
 ├── 📂 routes/
-│   ├── 📄 Address.js                  # /address/*
-│   ├── 📄 Admin.js                    # /admin/*
-│   ├── 📄 Auth.js                     # /login, /register, /logout
-│   └── 📄 User.js                     # /shop, /cart, /orders, etc.
+│   ├── 📄 index.js                    # Master portal router (/user, /admin, /auth)
+│   ├── 📂 admin/
+│   │   ├── 📄 auth.routes.js
+│   │   ├── 📄 coupon.routes.js
+│   │   ├── 📄 customer.routes.js
+│   │   ├── 📄 dashboard.routes.js
+│   │   ├── 📄 order.routes.js
+│   │   └── 📄 product.routes.js
+│   └── 📂 user/
+│       ├── 📄 auth.routes.js
+│       ├── 📄 cart.routes.js
+│       ├── 📄 checkout.routes.js
+│       ├── 📄 order.routes.js
+│       ├── 📄 profile.routes.js
+│       ├── 📄 referral.routes.js
+│       ├── 📄 shop.routes.js
+│       ├── 📄 wallet.routes.js
+│       └── 📄 wishlist.routes.js
+│
+├── 📂 scripts/
+│   └── 📄 backfillReferralCodes.js    # Maintenance script: backfill referral codes
 │
 ├── 📂 services/
-│   ├── 📄 AdminProduct.js             # Admin product business logic
-│   ├── 📄 Auth.js                     # Auth service (OTP, sessions)
-│   ├── 📄 Password.js                 # Password reset logic
-│   ├── 📄 Product.js                  # Product filtering & search
-│   ├── 📄 User.js                     # User profile logic
-│   ├── 📄 UserCheckout.js             # Checkout business logic
-│   └── 📄 Wallet.js                   # Wallet debit/credit logic
+│   ├── 📄 auth.service.js             # User registration, verification, sessions
+│   ├── 📄 cart.service.js             # Cart calculations & stock checks
+│   ├── 📄 checkout.service.js         # Checkout calculations & order placement
+│   ├── 📄 coupon.service.js           # Coupon validation & application logic
+│   ├── 📄 order.service.js            # Customer order lifecycle & PDF invoices
+│   ├── 📄 password.service.js         # Password reset token handling
+│   ├── 📄 product.service.js          # Product filtering, sorting, & admin CRUD
+│   ├── 📄 report.service.js           # Sales report generation (PDF & Excel)
+│   ├── 📄 user.service.js             # User profile & account management logic
+│   ├── 📄 wallet.service.js           # Wallet debit/credit transactions
+│   └── 📄 wishlist.service.js         # Wishlist operations & transfers
 │
 ├── 📂 utils/
-│   ├── 📄 generateOtp.js              # OTP generator
+│   ├── 📄 AppError.js                 # Custom operational error class
+│   ├── 📄 asyncHandler.js             # Async wrapper for Express routes
+│   ├── 📄 generateOtp.js              # Cryptographic OTP generator
+│   ├── 📄 googleSheets.js             # Google Sheets API synchronization
+│   ├── 📄 pdfBrowser.js               # Puppeteer PDF generation utility
 │   └── 📄 sendEmail.js                # Nodemailer email sender
 │
 ├── 📂 public/
