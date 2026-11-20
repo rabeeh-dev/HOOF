@@ -1,16 +1,9 @@
-const Cart = require("../model/Cart");
+const cartService = require("../services/cart.service");
 
 const fetchCartCount = async (req, res, next) => {
-    if (req.session.userId) {
+    if (req.session && req.session.userId) {
         try {
-            const cart = await Cart.findOne({ userId: req.session.userId });
-            let count = 0;
-            if (cart && cart.items) {
-                cart.items.forEach(item => {
-                    count += item.quantity;
-                });
-            }
-            res.locals.cartCount = count;
+            res.locals.cartCount = await cartService.getCartCount(req.session.userId);
         } catch (error) {
             console.error("Error fetching cart count:", error);
             res.locals.cartCount = 0;
