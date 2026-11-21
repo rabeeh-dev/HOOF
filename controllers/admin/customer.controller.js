@@ -82,7 +82,6 @@ exports.loadCustomers = async (req, res) => {
       title: 'Customers | HOOF Admin',
       layout: false,
     });
-    });
   } catch (error) {
     console.error('Load Customers Error:', error.message);
     res.status(500).send('Error loading customer data');
