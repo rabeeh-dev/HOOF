@@ -423,7 +423,9 @@ async function placeOrder() {
                                 razorpay_order_id: response.razorpay_order_id,
                                 razorpay_payment_id: response.razorpay_payment_id,
                                 razorpay_signature: response.razorpay_signature,
-                                orderId: result.orderId
+                                addressId: result.addressId || payload.addressId,
+                                couponCode: result.couponCode || payload.couponCode,
+                                orderId: result.orderId || null
                             };
 
                             const verifyRes = await fetch("/user/checkout/verify-payment", {
@@ -434,16 +436,22 @@ async function placeOrder() {
 
                             const verifyResult = await verifyRes.json();
                             if (verifyResult.success) {
-                                showToast("Payment successful!", "success");
+                                showToast("Payment successful! Placing your order...", "success");
                                 setTimeout(() => {
                                     window.location.href = verifyResult.redirectUrl;
                                 }, 1000);
                             } else {
-                                window.location.href = `/user/payment-failure/${result.orderId}`;
+                                hideLoading();
+                                showToast(verifyResult.message || "Payment verification failed. No order was placed.", "error");
+                                placeOrderBtn.disabled = false;
+                                placeOrderBtn.innerHTML = originalText;
                             }
                         } catch (err) {
                             console.error("Verification error:", err);
-                            window.location.href = `/user/payment-failure/${result.orderId}`;
+                            hideLoading();
+                            showToast("Payment verification failed. No order was placed.", "error");
+                            placeOrderBtn.disabled = false;
+                            placeOrderBtn.innerHTML = originalText;
                         } finally {
                             hideLoading();
                         }
@@ -457,13 +465,20 @@ async function placeOrder() {
                     },
                     modal: {
                         ondismiss: function () {
-                            window.location.href = `/user/payment-failure/${result.orderId}`;
+                            hideLoading();
+                            showToast("Payment was cancelled. No order was placed.", "warning");
+                            placeOrderBtn.disabled = false;
+                            placeOrderBtn.innerHTML = originalText;
                         }
                     }
                 };
                 const rzp1 = new Razorpay(options);
                 rzp1.on('payment.failed', function (response) {
-                    window.location.href = `/user/payment-failure/${result.orderId}`;
+                    hideLoading();
+                    const reason = (response && response.error && response.error.description) || "Transaction failed";
+                    showToast(`Payment failed: ${reason}. No order was placed.`, "error");
+                    placeOrderBtn.disabled = false;
+                    placeOrderBtn.innerHTML = originalText;
                 });
                 rzp1.open();
             } else {

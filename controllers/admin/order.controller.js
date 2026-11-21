@@ -28,6 +28,11 @@ exports.loadOrders = async (req, res) => {
     if (status) query.status = status;
     if (payment) query.paymentMethod = payment;
 
+    // Exclude abandoned/unpaid pending UPI attempts unless explicitly filtered
+    if (!status && !payment) {
+      query.$nor = [{ paymentMethod: 'upi', paymentStatus: 'Pending' }];
+    }
+
     if (search) {
       const cleanSearch = search.replace('#', '').trim();
       const searchRegex = new RegExp(cleanSearch, 'i');
@@ -42,6 +47,7 @@ exports.loadOrders = async (req, res) => {
     else if (sort === 'amount_high') sortOption = { totalAmount: -1 };
     else if (sort === 'amount_low') sortOption = { totalAmount: 1 };
 
+    const baseFilter = { $nor: [{ paymentMethod: 'upi', paymentStatus: 'Pending' }] };
     const totalOrders = await Order.countDocuments(query);
     const orders = await Order.find(query)
       .populate('userId', 'fullName email')
@@ -50,8 +56,8 @@ exports.loadOrders = async (req, res) => {
       .limit(limit);
 
     const stats = {
-      total: await Order.countDocuments({}),
-      pending: await Order.countDocuments({ status: 'Pending' }),
+      total: await Order.countDocuments(baseFilter),
+      pending: await Order.countDocuments({ status: 'Pending', ...baseFilter }),
       processing: await Order.countDocuments({ status: 'Processing' }),
       delivered: await Order.countDocuments({ status: 'DELIVERED' }),
       totalRevenue:
@@ -115,7 +121,7 @@ exports.loadOrderDetailPage = async (req, res) => {
     order.hasReturnApproved = hasReturnApproved;
     order.hasReturnRequested = hasReturnRequested;
 
-    res.render('Admin/order-details', {
+    res.render('Admin/admin-order-detail', {
       order,
       title: `Order Details #${order._id.toString().slice(-8).toUpperCase()} | HOOF Admin`,
       layout: false,

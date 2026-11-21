@@ -73,15 +73,14 @@ exports.placeOrderApi = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please select a delivery address.' });
     }
 
-    const order = await checkoutService.createOrder({
-      userId,
-      addressId,
-      paymentMethod,
-      couponCode,
-    });
-
     // 1. Wallet Payment (instant confirmation)
     if (paymentMethod === 'wallet') {
+      const order = await checkoutService.createOrder({
+        userId,
+        addressId,
+        paymentMethod,
+        couponCode,
+      });
       return res.status(200).json({
         success: true,
         redirectUrl: `/user/order-success/${order._id}`,
@@ -89,12 +88,23 @@ exports.placeOrderApi = async (req, res) => {
     }
 
     // 2. Online Payment (Razorpay / UPI)
+    // NOTE: Order is NOT created in DB until payment signature is cryptographically verified!
+    // This prevents abandoned or failed UPI attempts from cluttering the system or admin portal.
     if (paymentMethod === 'upi') {
       try {
-        const razorpayOrder = await checkoutService.createRazorpayOrder(order.totalAmount, order._id);
+        const orderCalc = await checkoutService.calculateOrderAmount({
+          userId,
+          addressId,
+          couponCode,
+        });
 
-        order.razorpayOrderId = razorpayOrder.id;
-        await order.save();
+        const receiptId = `rcpt_${Date.now()}`;
+        const razorpayOrder = await checkoutService.createRazorpayOrder(
+          orderCalc.totalAmount,
+          receiptId
+        );
+
+        const userDoc = await User.findById(userId);
 
         return res.status(200).json({
           success: true,
@@ -103,22 +113,29 @@ exports.placeOrderApi = async (req, res) => {
           amount: razorpayOrder.amount,
           currency: razorpayOrder.currency,
           keyId: process.env.RAZORPAY_KEY_ID,
-          orderId: order._id,
+          addressId,
+          couponCode,
           user: {
-            name: req.session.userName,
-            email: req.session.userEmail,
+            name: userDoc?.fullName || req.session.userName || 'Customer',
+            email: userDoc?.email || req.session.userEmail || '',
           },
         });
       } catch (rzpErr) {
         console.error('Razorpay Order Creation Failed:', rzpErr);
-        return res.status(200).json({
+        return res.status(400).json({
           success: false,
-          message: 'Payment initialization failed. Please try again or use COD.',
+          message: rzpErr.message || 'Payment initialization failed. Please try again or use COD.',
         });
       }
     }
 
     // 3. Cash on Delivery (COD)
+    const order = await checkoutService.createOrder({
+      userId,
+      addressId,
+      paymentMethod,
+      couponCode,
+    });
     return res.status(200).json({
       success: true,
       redirectUrl: `/user/order-success/${order._id}`,
@@ -134,13 +151,14 @@ exports.placeOrderApi = async (req, res) => {
 };
 
 /**
- * @desc    Verify Razorpay payment signature and deduct stock.
+ * @desc    Verify Razorpay payment signature and create order upon success.
  * @route   POST /user/checkout/verify-payment
  * @access  Private (isUser)
  */
 exports.verifyPayment = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, addressId, couponCode, orderId } = req.body;
+    const userId = req.session.userId;
 
     const isVerified = checkoutService.verifyRazorpayPayment(
       razorpay_order_id,
@@ -148,40 +166,54 @@ exports.verifyPayment = async (req, res) => {
       razorpay_signature
     );
 
-    if (isVerified) {
-      const order = await Order.findById(orderId);
-      if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (!isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment verification failed. No order was created.',
+      });
+    }
 
-      // Deduct stock now that payment is confirmed
-      await checkoutService.deductStockForOrder(orderId);
+    let order;
+    if (orderId) {
+      order = await Order.findById(orderId);
+    }
 
+    if (order) {
+      // Existing retry payment flow
+      await checkoutService.deductStockForOrder(order._id);
       order.paymentStatus = 'SUCCESS';
       order.status = 'Processing';
       order.razorpayPaymentId = razorpay_payment_id;
-
+      order.razorpayOrderId = razorpay_order_id;
       order.statusHistory.push({
         status: 'Processing',
-        note: 'Payment verified successfully via Razorpay',
+        note: 'Payment verified successfully via Razorpay UPI',
       });
-
       await order.save();
-
-      return res.status(200).json({
-        success: true,
-        message: 'Payment verified successfully',
-        redirectUrl: `/user/order-success/${order._id}`,
-      });
     } else {
-      return res.status(400).json({
-        success: false,
-        message: 'Payment verification failed',
+      // Standard UPI Flow: Create order ONLY now that payment is confirmed
+      order = await checkoutService.createOrder({
+        userId,
+        addressId,
+        paymentMethod: 'upi',
+        couponCode,
+        razorpayOrderId: razorpay_order_id,
+        razorpayPaymentId: razorpay_payment_id,
+        paymentStatus: 'SUCCESS',
+        status: 'Processing',
       });
     }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Payment verified successfully',
+      redirectUrl: `/user/order-success/${order._id}`,
+    });
   } catch (err) {
     console.error('Verify Payment Error:', err.message);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error during verification',
+      message: err.message || 'Internal server error during verification',
     });
   }
 };

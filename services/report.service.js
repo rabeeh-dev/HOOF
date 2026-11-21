@@ -559,6 +559,9 @@ class ReportService {
 
     if (status) dbQuery.status = status;
     if (payment) dbQuery.paymentMethod = payment;
+    if (!status && !payment) {
+      dbQuery.$nor = [{ paymentMethod: 'upi', paymentStatus: 'Pending' }];
+    }
     if (search) {
       const cleanSearch = search.replace('#', '').trim();
       const searchRegex = new RegExp(cleanSearch, 'i');
@@ -612,6 +615,9 @@ class ReportService {
 
     if (status) dbQuery.status = status;
     if (payment) dbQuery.paymentMethod = payment;
+    if (!status && !payment) {
+      dbQuery.$nor = [{ paymentMethod: 'upi', paymentStatus: 'Pending' }];
+    }
     if (search) {
       const cleanSearch = search.replace('#', '').trim();
       const searchRegex = new RegExp(cleanSearch, 'i');

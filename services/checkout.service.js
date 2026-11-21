@@ -87,15 +87,123 @@ class CheckoutService {
   }
 
   /**
+   * Pre-calculates order totals and validates cart & stock before initiating online payment.
+   * Does NOT deduct stock, does NOT modify cart, and does NOT create an Order document.
+   * @param {Object} params
+   * @param {string} params.userId
+   * @param {string} params.addressId
+   * @param {string|null} [params.couponCode]
+   * @returns {Promise<Object>} Calculated amounts and pricing
+   */
+  async calculateOrderAmount({ userId, addressId, couponCode = null }) {
+    if (!userId) {
+      throw new AppError('User authentication required', 401);
+    }
+
+    const cart = await Cart.findOne({ userId }).populate({
+      path: 'items.productId',
+      populate: { path: 'category' },
+    });
+
+    if (!cart || !cart.items || cart.items.length === 0) {
+      throw new AppError('Cart is empty', 400);
+    }
+
+    const address = await Address.findOne({ _id: addressId, userId });
+    if (!address) {
+      throw new AppError('Invalid shipping address selected', 400);
+    }
+
+    let subtotal = 0;
+
+    for (const item of cart.items) {
+      const product = item.productId;
+      if (!product) {
+        throw new AppError('A product in your cart is no longer available.', 400);
+      }
+
+      if (product.isBlocked || (product.category && !product.category.isListed)) {
+        throw new AppError(
+          `"${product.productName}" is currently unavailable and cannot be purchased.`,
+          400
+        );
+      }
+
+      const variant = product.variants
+        ? product.variants.find((v) => String(v.size) === String(item.size))
+        : null;
+
+      if (!variant) {
+        throw new AppError(
+          `Size ${item.size} is no longer available for "${product.productName}".`,
+          400
+        );
+      }
+
+      if (variant.quantity < item.quantity) {
+        throw new AppError(
+          `Insufficient stock for "${product.productName}" (Size ${item.size}). Available: ${variant.quantity}`,
+          400
+        );
+      }
+
+      subtotal += product.salePrice * item.quantity;
+    }
+
+    let discountAmount = 0;
+    let appliedCouponCode = null;
+
+    if (couponCode && couponCode.trim()) {
+      const coupon = await Coupon.findOne({ couponCode: couponCode.trim().toUpperCase() });
+      if (coupon && coupon.isValid() && subtotal >= coupon.minPurchaseAmount) {
+        appliedCouponCode = coupon.couponCode;
+        if (coupon.discountType === 'percentage') {
+          discountAmount = (subtotal * coupon.discountValue) / 100;
+          if (coupon.maxDiscountAmount && discountAmount > coupon.maxDiscountAmount) {
+            discountAmount = coupon.maxDiscountAmount;
+          }
+        } else {
+          discountAmount = coupon.discountValue;
+        }
+        discountAmount = Math.min(discountAmount, subtotal);
+      }
+    }
+
+    const shippingCharge = subtotal > 999 || subtotal === 0 ? 0 : 50;
+    const totalAmount = subtotal - discountAmount + shippingCharge;
+
+    return {
+      subtotal,
+      shippingCharge,
+      couponCode: appliedCouponCode,
+      discountAmount,
+      totalAmount,
+    };
+  }
+
+  /**
    * Creates a formal order from the user's active shopping cart.
    * @param {Object} params
    * @param {string} params.userId
    * @param {string} params.addressId
    * @param {string} [params.paymentMethod="COD"] - "COD" | "upi" | "wallet"
    * @param {string|null} [params.couponCode]
+   * @param {string|null} [params.razorpayOrderId]
+   * @param {string|null} [params.razorpayPaymentId]
+   * @param {string|null} [params.paymentStatus]
+   * @param {string|null} [params.status]
    * @returns {Promise<Object>} Created Order document
    */
-  async createOrder({ userId, addressId, paymentMethod = 'COD', couponCode = null }) {
+  async createOrder({
+    userId,
+    addressId,
+    paymentMethod = 'COD',
+    couponCode = null,
+    razorpayOrderId = null,
+    razorpayPaymentId = null,
+    paymentStatus = null,
+    status = null,
+  }) {
     if (!userId) {
       throw new AppError('User authentication required', 401);
     }
@@ -159,14 +267,11 @@ class CheckoutService {
         variantSize: item.size || null,
       });
 
-      // Deduct stock immediately for COD and Wallet orders
-      // For online UPI orders: stock is deducted upon Razorpay signature verification
-      if (paymentMethod !== 'upi') {
-        variant.quantity -= item.quantity;
-        variant.status = variant.quantity > 0 ? 'Available' : 'Out of Stock';
-        product.quantity -= item.quantity;
-        await product.save();
-      }
+      // Deduct stock immediately for confirmed orders
+      variant.quantity -= item.quantity;
+      variant.status = variant.quantity > 0 ? 'Available' : 'Out of Stock';
+      product.quantity -= item.quantity;
+      await product.save();
     }
 
     // Apply Coupon if supplied
@@ -205,6 +310,9 @@ class CheckoutService {
       );
     }
 
+    const initialStatus = status || (paymentMethod === 'wallet' || paymentMethod === 'upi' ? 'Processing' : 'Pending');
+    const initialPaymentStatus = paymentStatus || (paymentMethod === 'wallet' || paymentMethod === 'upi' ? 'SUCCESS' : 'Pending');
+
     const newOrder = new Order({
       userId,
       items: orderItems,
@@ -223,8 +331,16 @@ class CheckoutService {
       discountAmount,
       totalAmount,
       paymentMethod: paymentMethod || 'COD',
-      paymentStatus: paymentMethod === 'wallet' ? 'SUCCESS' : 'Pending',
-      status: paymentMethod === 'wallet' ? 'Processing' : 'Pending',
+      paymentStatus: initialPaymentStatus,
+      status: initialStatus,
+      razorpayOrderId,
+      razorpayPaymentId,
+      statusHistory: [
+        {
+          status: initialStatus,
+          note: paymentMethod === 'upi' ? 'Order placed and paid via Razorpay UPI' : 'Order placed successfully',
+        },
+      ],
     });
 
     await newOrder.save();
