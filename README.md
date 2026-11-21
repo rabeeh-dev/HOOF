@@ -52,11 +52,14 @@ The application has successfully undergone a **complete modular architectural re
 
 - 🏛️ **Controller-Service-Model Architecture**: Thin controllers, pure asynchronous business logic services, and strongly-typed Mongoose models.
 - ⚡ **Real-Time Communication**: Integrated **Socket.IO** for instantaneous inventory status alerts, block/unblock updates, and order notifications.
-- 🛡️ **Production-Ready Security**: Centralized rate limiting (`express-rate-limit`), MongoDB-backed sessions (`connect-mongo`), role-based middleware (`isUser`, `isAdminLogin`, `isLoggedOut`), and global error handling (`AppError` + `errorHandler`).
+- 🛡️ **Production-Ready Security & Auth**: Centralized rate limiting (`express-rate-limit`), MongoDB-backed sessions (`connect-mongo`), role-based middleware (`isUser`, `isAdminLogin`, `isLoggedOut`), dedicated CLI admin seeder (`npm run seed:admin`), and global error handling (`AppError` + `errorHandler`).
+- 💳 **Atomic Online Payments**: Razorpay / UPI orders are generated only upon verified cryptographic payment signatures—eliminating phantom or abandoned orders in the admin panel and keeping customer shopping carts intact upon payment cancellations.
+- 🛒 **Cart Cancellation Restoration**: When an order or single item is cancelled (by either the customer or administrator), items with their respective variant sizes are automatically restored into the customer's active shopping cart.
 - 📊 **Analytics & Reporting**: Sales reporting engine generating PDF (`puppeteer`) and Excel (`exceljs`) exports with dynamic date filters (daily, weekly, monthly, custom).
-- 🖼️ **Smart Image Processing**: Multi-image disk storage with automatic Apple `.HEIC` to JPEG conversion (`heic-convert`).
-- 📈 **Third-Party Integrations**: Google OAuth 2.0 (Passport), Nodemailer SMTP with Gmail App Passwords, Razorpay Payment Gateway, and Google Sheets API.
+- 🖼️ **Cloudinary Media Pipeline**: High-performance cloud media storage with automatic WebP/AVIF format optimization (`q_auto, f_auto`), responsive CDN delivery, and AI-assisted facial cropping for user avatars.
+- 📈 **Third-Party Integrations**: Cloudinary SDK, Google OAuth 2.0 (Passport), Nodemailer SMTP with Gmail App Passwords, Razorpay Payment Gateway, and Google Sheets API.
 - 🧪 **100% Route Coverage**: All 103 user and admin routes audited, tested, and active.
+- 🧭 **Portal Routing**: Seamless root-level routing for `/admin` redirecting to dashboard or login based on active session state.
 
 ---
 
@@ -127,9 +130,11 @@ The application has successfully undergone a **complete modular architectural re
 | ⚙️ **Backend** | Node.js, Express.js |
 | 🗄️ **Database** | MongoDB, Mongoose ODM |
 | 🔐 **Auth** | Passport.js (Local + Google OAuth), bcrypt, Express Session |
-| 📧 **Email / OTP** | Nodemailer |
-| 🖼️ **File Uploads** | Multer |
-| 💳 **Payments** | Razorpay |
+| 📧 **Email / OTP** | Nodemailer (Gmail App Passwords) |
+| 🖼️ **File Uploads** | Cloudinary CDN, Multer (`multer-storage-cloudinary`) |
+| 💳 **Payments** | Razorpay (Atomic UPI / NetBanking / Cards) |
+| ⚡ **Real-Time** | Socket.IO (Live stock & user status updates) |
+| 📄 **Reporting** | Puppeteer (PDF invoices & sales), ExcelJS (Sales reports) |
 | 🔧 **Dev Tools** | Nodemon, Git, Postman, VS Code |
 
 </div>
@@ -170,6 +175,7 @@ HOOF/
 ├── 📄 package.json
 │
 ├── 📂 config/
+│   ├── 📄 cloudinary.js               # Centralized Cloudinary SDK configuration
 │   ├── 📄 db.js                       # MongoDB connection
 │   ├── 📄 env.js                      # Centralized environment configuration
 │   ├── 📄 passport.js                 # Passport.js Google OAuth 2.0 strategy
@@ -201,7 +207,7 @@ HOOF/
 │   ├── 📄 error.middleware.js         # Centralized error handler & 404 handler
 │   ├── 📄 navCounts.middleware.js     # Cart and wishlist count injector
 │   ├── 📄 rateLimit.middleware.js     # Express-rate-limit protection
-│   └── 📄 upload.middleware.js        # Multer image storage with HEIC support
+│   └── 📄 upload.middleware.js        # Cloudinary upload middleware with WebP/AVIF auto-format
 │
 ├── 📂 models/
 │   ├── 📄 Address.js                  # Address schema
@@ -239,7 +245,8 @@ HOOF/
 │       └── 📄 wishlist.routes.js
 │
 ├── 📂 scripts/
-│   └── 📄 backfillReferralCodes.js    # Maintenance script: backfill referral codes
+│   ├── 📄 backfillReferralCodes.js    # Maintenance script: backfill referral codes
+│   └── 📄 seedAdmin.js                # Production-ready CLI admin account seeder
 │
 ├── 📂 services/
 │   ├── 📄 auth.service.js             # User registration, verification, sessions
@@ -271,9 +278,9 @@ HOOF/
 │   │   ├── 📂 js/                     # User client-side scripts
 │   │   ├── 📂 fonts/                  # Custom fonts
 │   │   └── 📂 images/                 # Static UI images
-│   └── 📂 uploads/
-│       ├── 📂 products/               # Uploaded product images
-│       └── 📂 profile/                # Uploaded user profile pictures
+│   └── 📂 uploads/                    # Local dev uploads (git-ignored; CDN-hosted on Cloudinary)
+│       ├── 📂 products/               # Local cache / fallback product images
+│       └── 📂 profile/                # Local cache / fallback user avatars
 │
 └── 📂 views/
     ├── 📂 Admin/
@@ -384,8 +391,12 @@ npm start
 
 ### 🛡️ Access Admin Dashboard
 
-1. Register / seed an admin document in MongoDB
-2. Visit `http://localhost:8080/admin/login`
+1. Seed an admin account using the CLI tool:
+   ```bash
+   npm run seed:admin
+   ```
+   *(Optionally pass credentials directly: `ADMIN_EMAIL="admin@hoof.com" ADMIN_PASSWORD="password" npm run seed:admin`)*
+2. Visit `http://localhost:8080/admin` (automatically redirects to `/admin/dashboard` if logged in, or `/admin/login` if unauthenticated).
 
 ---
 
@@ -428,6 +439,11 @@ RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 GOOGLE_SHEET_ID=your_google_sheet_id
 GOOGLE_SERVICE_ACCOUNT_EMAIL=your_service_account@project.iam.gserviceaccount.com
 GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+
+# ─── Cloudinary Media Storage ───────────────────
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
 > ⚠️ **Never commit your `.env` file!** It's already covered by `.gitignore`.
