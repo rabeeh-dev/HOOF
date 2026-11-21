@@ -37,10 +37,21 @@ exports.loadOrders = async (req, res) => {
     if (search) {
       const cleanSearch = search.replace('#', '').trim();
       const searchRegex = new RegExp(cleanSearch, 'i');
+      const User = require('../../models/User');
+      const matchingUsers = await User.find({
+        $or: [{ fullName: searchRegex }, { email: searchRegex }],
+      }).select('_id');
+      const matchingUserIds = matchingUsers.map((u) => u._id);
+
       query.$or = [
         { 'shippingAddress.fullName': searchRegex },
+        { userId: { $in: matchingUserIds } },
         { $expr: { $regexMatch: { input: { $toString: '$_id' }, regex: searchRegex } } },
       ];
+
+      if (/^[0-9a-fA-F]{24}$/.test(cleanSearch)) {
+        query.$or.push({ _id: cleanSearch });
+      }
     }
 
     let sortOption = { createdAt: -1 };
@@ -64,8 +75,15 @@ exports.loadOrders = async (req, res) => {
       totalRevenue:
         (
           await Order.aggregate([
-            { $match: { status: 'DELIVERED' } },
+            { $match: { status: { $nin: ['CANCELLED', 'Returned'] } } },
             { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+          ])
+        )[0]?.total || 0,
+      totalDiscount:
+        (
+          await Order.aggregate([
+            { $match: { status: { $nin: ['CANCELLED', 'Returned'] } } },
+            { $group: { _id: null, total: { $sum: { $ifNull: ['$discountAmount', 0] } } } },
           ])
         )[0]?.total || 0,
     };

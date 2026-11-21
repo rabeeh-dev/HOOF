@@ -166,7 +166,7 @@
         </div>
         <div class="pagination-buttons">
           <% if (currentPage> 1) { %>
-            <a href="/admin/customers?page=<%= currentPage - 1 %>" class="page-link">
+            <a href="/admin/customers?page=<%= currentPage - 1 %><%= typeof search !== 'undefined' && search ? '&search=' + encodeURIComponent(search) : '' %>" class="page-link">
               <i class="fas fa-chevron-left"></i> Previous
             </a>
             <% } %>
@@ -175,13 +175,13 @@
                 (endPage - startPage < 4) startPage=Math.max(1, endPage - 4); %>
 
                 <% for(let i=startPage; i <=endPage; i++) { %>
-                  <a href="/admin/customers?page=<%= i %>" class="page-link <%= i === currentPage ? 'active' : '' %>">
+                  <a href="/admin/customers?page=<%= i %><%= typeof search !== 'undefined' && search ? '&search=' + encodeURIComponent(search) : '' %>" class="page-link <%= i === currentPage ? 'active' : '' %>">
                     <%= i %>
                   </a>
                   <% } %>
 
                     <% if (currentPage < totalPages) { %>
-                      <a href="/admin/customers?page=<%= currentPage + 1 %>" class="page-link">
+                      <a href="/admin/customers?page=<%= currentPage + 1 %><%= typeof search !== 'undefined' && search ? '&search=' + encodeURIComponent(search) : '' %>" class="page-link">
                         Next <i class="fas fa-chevron-right"></i>
                       </a>
                       <% } %>

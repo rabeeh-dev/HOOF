@@ -151,7 +151,7 @@ class ReportService {
     const dateFilterStage = Object.keys(matchCondition).length > 0 ? { $match: matchCondition } : null;
 
     // Revenue KPI
-    const revenuePipeline = [{ $match: { status: 'DELIVERED' } }];
+    const revenuePipeline = [{ $match: { status: { $nin: ['CANCELLED', 'Returned'] } } }];
     if (dateFilterStage) revenuePipeline.push(dateFilterStage);
     revenuePipeline.push({ $group: { _id: null, total: { $sum: '$totalAmount' } } });
     const [revenueResult] = await Order.aggregate(revenuePipeline);
@@ -194,7 +194,7 @@ class ReportService {
       const hourlySalesRaw = await Order.aggregate([
         {
           $match: {
-            status: 'DELIVERED',
+            status: { $nin: ['CANCELLED', 'Returned'] },
             createdAt: { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
           },
         },
@@ -222,7 +222,7 @@ class ReportService {
       const dailySalesRaw = await Order.aggregate([
         {
           $match: {
-            status: 'DELIVERED',
+            status: { $nin: ['CANCELLED', 'Returned'] },
             createdAt: { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) },
           },
         },
@@ -254,8 +254,71 @@ class ReportService {
           count: found ? found.count : 0,
         });
       }
+    } else if (filter === 'custom' && query.startDate && query.endDate) {
+      const startStr = query.startDate.includes('T') ? query.startDate : query.startDate + 'T00:00:00.000Z';
+      const endStr = query.endDate.includes('T') ? query.endDate : query.endDate + 'T23:59:59.999Z';
+      const start = new Date(startStr);
+      const end = new Date(endStr);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+
+      const diffDays = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+
+      if (diffDays <= 31) {
+        const customSalesRaw = await Order.aggregate([
+          { $match: { status: { $nin: ['CANCELLED', 'Returned'] }, createdAt: { $gte: start, $lte: end } } },
+          {
+            $group: {
+              _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' }, day: { $dayOfMonth: '$createdAt' } },
+              revenue: { $sum: '$totalAmount' },
+              count: { $sum: 1 },
+            },
+          },
+        ]);
+
+        for (let i = 0; i < diffDays; i++) {
+          const d = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
+          const day = d.getDate();
+          const month = d.getMonth() + 1;
+          const year = d.getFullYear();
+          const found = customSalesRaw.find(
+            (ds) => ds._id.year === year && ds._id.month === month && ds._id.day === day
+          );
+          chartData.push({
+            label: d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+            revenue: found ? found.revenue : 0,
+            count: found ? found.count : 0,
+          });
+        }
+      } else {
+        const customSalesRaw = await Order.aggregate([
+          { $match: { status: { $nin: ['CANCELLED', 'Returned'] }, createdAt: { $gte: start, $lte: end } } },
+          {
+            $group: {
+              _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } },
+              revenue: { $sum: '$totalAmount' },
+              count: { $sum: 1 },
+            },
+          },
+        ]);
+
+        let currentDate = new Date(start.getFullYear(), start.getMonth(), 1);
+        const endDateObj = new Date(end.getFullYear(), end.getMonth(), 1);
+
+        while (currentDate <= endDateObj) {
+          const year = currentDate.getFullYear();
+          const month = currentDate.getMonth() + 1;
+          const found = customSalesRaw.find((m) => m._id.year === year && m._id.month === month);
+          chartData.push({
+            label: `${monthNames[month - 1]} ${year}`,
+            revenue: found ? found.revenue : 0,
+            count: found ? found.count : 0,
+          });
+          currentDate.setMonth(currentDate.getMonth() + 1);
+        }
+      }
     } else {
-      const aggregationPipeline = [{ $match: { status: 'DELIVERED' } }];
+      const aggregationPipeline = [{ $match: { status: { $nin: ['CANCELLED', 'Returned'] } } }];
       if (dateFilterStage) aggregationPipeline.push(dateFilterStage);
 
       aggregationPipeline.push({
@@ -554,7 +617,7 @@ class ReportService {
    * @param {Object} query
    */
   async generateOrdersPDF(res, query = {}) {
-    const { status, payment, search } = query;
+    const { status, payment, search, startDate, endDate } = query;
     const dbQuery = {};
 
     if (status) dbQuery.status = status;
@@ -562,13 +625,31 @@ class ReportService {
     if (!status && !payment) {
       dbQuery.$nor = [{ paymentMethod: 'upi', paymentStatus: 'Pending' }];
     }
+
+    if (startDate && endDate) {
+      dbQuery.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
+      };
+    }
+
     if (search) {
       const cleanSearch = search.replace('#', '').trim();
       const searchRegex = new RegExp(cleanSearch, 'i');
+      const matchingUsers = await User.find({
+        $or: [{ fullName: searchRegex }, { email: searchRegex }],
+      }).select('_id');
+      const matchingUserIds = matchingUsers.map((u) => u._id);
+
       dbQuery.$or = [
         { 'shippingAddress.fullName': searchRegex },
+        { userId: { $in: matchingUserIds } },
         { $expr: { $regexMatch: { input: { $toString: '$_id' }, regex: searchRegex } } },
       ];
+
+      if (/^[0-9a-fA-F]{24}$/.test(cleanSearch)) {
+        dbQuery.$or.push({ _id: cleanSearch });
+      }
     }
 
     const orders = await Order.find(dbQuery)
@@ -581,6 +662,7 @@ class ReportService {
     if (status) filters.push(`Status: ${status}`);
     if (payment) filters.push(`Payment: ${payment}`);
     if (search) filters.push(`Search: "${search}"`);
+    if (startDate && endDate) filters.push(`Date: ${startDate} to ${endDate}`);
 
     const templatePath = path.join(__dirname, '../views/Admin/sales-report.ejs');
     const compiledHtml = await ejs.renderFile(templatePath, {
@@ -610,7 +692,7 @@ class ReportService {
    * @param {Object} query
    */
   async generateOrdersExcel(res, query = {}) {
-    const { status, payment, search } = query;
+    const { status, payment, search, startDate, endDate } = query;
     const dbQuery = {};
 
     if (status) dbQuery.status = status;
@@ -618,13 +700,31 @@ class ReportService {
     if (!status && !payment) {
       dbQuery.$nor = [{ paymentMethod: 'upi', paymentStatus: 'Pending' }];
     }
+
+    if (startDate && endDate) {
+      dbQuery.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
+      };
+    }
+
     if (search) {
       const cleanSearch = search.replace('#', '').trim();
       const searchRegex = new RegExp(cleanSearch, 'i');
+      const matchingUsers = await User.find({
+        $or: [{ fullName: searchRegex }, { email: searchRegex }],
+      }).select('_id');
+      const matchingUserIds = matchingUsers.map((u) => u._id);
+
       dbQuery.$or = [
         { 'shippingAddress.fullName': searchRegex },
+        { userId: { $in: matchingUserIds } },
         { $expr: { $regexMatch: { input: { $toString: '$_id' }, regex: searchRegex } } },
       ];
+
+      if (/^[0-9a-fA-F]{24}$/.test(cleanSearch)) {
+        dbQuery.$or.push({ _id: cleanSearch });
+      }
     }
 
     const orders = await Order.find(dbQuery)

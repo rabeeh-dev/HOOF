@@ -17,9 +17,24 @@ exports.loadCustomers = async (req, res) => {
     const limit = 5;
     const skip = (page - 1) * limit;
 
-    const totalUsers = await User.countDocuments({});
+    const { search } = req.query;
+    let query = {};
+    if (search) {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { fullName: searchRegex },
+        { email: searchRegex },
+        { phone: searchRegex },
+      ];
+    }
 
-    const users = await User.aggregate([
+    const totalUsers = await User.countDocuments(query);
+
+    const pipeline = [];
+    if (Object.keys(query).length > 0) {
+      pipeline.push({ $match: query });
+    }
+    pipeline.push(
       { $sort: { createdAt: -1 } },
       { $skip: skip },
       { $limit: limit },
@@ -54,15 +69,19 @@ exports.loadCustomers = async (req, res) => {
           password: 0,
           orders: 0,
         },
-      },
-    ]);
+      }
+    );
+
+    const users = await User.aggregate(pipeline);
 
     res.render('Admin/user-management', {
       users,
       currentPage: page,
       totalPages: Math.ceil(totalUsers / limit) || 1,
+      search: search || '',
       title: 'Customers | HOOF Admin',
       layout: false,
+    });
     });
   } catch (error) {
     console.error('Load Customers Error:', error.message);

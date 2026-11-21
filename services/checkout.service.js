@@ -268,9 +268,9 @@ class CheckoutService {
       });
 
       // Deduct stock immediately for confirmed orders
-      variant.quantity -= item.quantity;
+      variant.quantity = Math.max(0, variant.quantity - item.quantity);
       variant.status = variant.quantity > 0 ? 'Available' : 'Out of Stock';
-      product.quantity -= item.quantity;
+      product.quantity = Math.max(0, product.quantity - item.quantity);
       await product.save();
     }
 
@@ -415,10 +415,10 @@ class CheckoutService {
         : null;
 
       if (variant) {
-        variant.quantity -= item.quantity;
+        variant.quantity = Math.max(0, variant.quantity - item.quantity);
         variant.status = variant.quantity > 0 ? 'Available' : 'Out of Stock';
       }
-      product.quantity -= item.quantity;
+      product.quantity = Math.max(0, product.quantity - item.quantity);
       await product.save();
     }
   }
