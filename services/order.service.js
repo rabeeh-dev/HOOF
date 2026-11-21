@@ -122,6 +122,9 @@ class OrderService {
       order.paymentStatus = 'Refunded';
     }
 
+    // Put cancelled items back into user's shopping cart
+    await this.restoreItemsToCart(userId, order.items);
+
     await order.save();
     return order;
   }
@@ -255,6 +258,9 @@ class OrderService {
     if (order.subtotal < 0) order.subtotal = 0;
     if (order.totalAmount < 0) order.totalAmount = 0;
 
+    // Put cancelled item back into user's shopping cart
+    await this.restoreItemsToCart(userId, [item]);
+
     // If ALL items cancelled, mark whole order cancelled
     const allCancelled = order.items.every((i) => i.itemStatus === 'Cancelled');
     if (allCancelled) {
@@ -267,6 +273,48 @@ class OrderService {
 
     await order.save();
     return { item, order };
+  }
+
+  /**
+   * Restores items from a cancelled order back into the user's shopping cart.
+   * @param {string} userId
+   * @param {Array<Object>} items
+   * @returns {Promise<void>}
+   */
+  async restoreItemsToCart(userId, items) {
+    if (!userId || !items || items.length === 0) return;
+    try {
+      const Cart = require('../models/Cart');
+      let cart = await Cart.findOne({ userId });
+      if (!cart) {
+        cart = new Cart({ userId, items: [] });
+      }
+
+      for (const item of items) {
+        if (!item.productId) continue;
+        const pId = item.productId._id ? item.productId._id.toString() : item.productId.toString();
+        const pSize = item.variantSize || item.size || null;
+        const qty = parseInt(item.quantity, 10) || 1;
+
+        const existingItem = cart.items.find(
+          (ci) => ci.productId.toString() === pId && String(ci.size || '') === String(pSize || '')
+        );
+
+        if (existingItem) {
+          existingItem.quantity += qty;
+        } else {
+          cart.items.push({
+            productId: pId,
+            quantity: qty,
+            size: pSize,
+          });
+        }
+      }
+
+      await cart.save();
+    } catch (err) {
+      console.error('Failed to restore items to cart on order cancellation:', err.message);
+    }
   }
 
   /**

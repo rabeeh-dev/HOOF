@@ -8,6 +8,7 @@ const Product = require('../../models/Product');
 const Coupon = require('../../models/Coupon');
 const walletService = require('../../services/wallet.service');
 const checkoutService = require('../../services/checkout.service');
+const orderService = require('../../services/order.service');
 const reportService = require('../../services/report.service');
 
 /**
@@ -200,6 +201,28 @@ exports.updateOrderStatus = async (req, res) => {
       order.items.forEach((item) => {
         if (item.itemStatus === 'Active') item.itemStatus = 'Cancelled';
       });
+
+      const stockWasDeducted =
+        order.paymentMethod !== 'upi' ||
+        order.paymentStatus === 'SUCCESS' ||
+        order.paymentStatus === 'Paid';
+      if (stockWasDeducted) {
+        await checkoutService.restoreStockForOrder(order._id);
+      }
+
+      if (order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'Paid') {
+        const shortId = String(order._id).slice(-8).toUpperCase();
+        await walletService.creditWallet(
+          order.userId,
+          order.totalAmount,
+          `Refund for cancelled order #${shortId} (by admin)`,
+          order._id
+        );
+        order.paymentStatus = 'Refunded';
+      }
+
+      // Put items back into customer's shopping cart
+      await orderService.restoreItemsToCart(order.userId, order.items);
     }
 
     order.status = status;
@@ -489,6 +512,9 @@ exports.cancelOrderAdmin = async (req, res) => {
       );
       order.paymentStatus = 'Refunded';
     }
+
+    // Put items back into customer's shopping cart
+    await orderService.restoreItemsToCart(order.userId, order.items);
 
     await order.save();
 
