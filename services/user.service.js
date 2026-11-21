@@ -5,12 +5,35 @@
 
 const fs = require('fs');
 const path = require('path');
+const cloudinary = require('../config/cloudinary');
 const User = require('../models/User');
 const Address = require('../models/Address');
 const Product = require('../models/Product');
 const ReferralConfig = require('../models/ReferralConfig');
 const walletService = require('./wallet.service');
 const AppError = require('../utils/AppError');
+
+/**
+ * Extracts public_id from a Cloudinary URL for safe deletion.
+ * @param {string} url
+ * @returns {string|null}
+ */
+function getCloudinaryPublicId(url) {
+  if (!url || typeof url !== 'string' || !url.includes('cloudinary.com')) return null;
+  try {
+    const uploadIndex = url.indexOf('/upload/');
+    if (uploadIndex === -1) return null;
+    let pathAfterUpload = url.substring(uploadIndex + 8);
+    pathAfterUpload = pathAfterUpload.replace(/^(?:[a-zA-Z0-9_,]+\/)?v\d+\//, '').replace(/^v\d+\//, '');
+    const lastDot = pathAfterUpload.lastIndexOf('.');
+    if (lastDot !== -1) {
+      pathAfterUpload = pathAfterUpload.substring(0, lastDot);
+    }
+    return pathAfterUpload;
+  } catch (_) {
+    return null;
+  }
+}
 
 class UserService {
   /**
@@ -40,38 +63,49 @@ class UserService {
   }
 
   /**
-   * Handles profile image upload and deletes old avatar.
+   * Handles profile image upload and deletes old avatar from Cloudinary or local disk.
    * @param {string} userId
-   * @param {string} filename
-   * @param {string} publicRoot
+   * @param {string} newImageUrl - Cloudinary URL or local path
+   * @param {string} [publicRoot] - Fallback path for old local files
    * @returns {Promise<string>}
    */
-  async updateUserProfileImage(userId, filename, publicRoot) {
-    const newImagePath = `/uploads/profile/${filename}`;
-
+  async updateUserProfileImage(userId, newImageUrl, publicRoot) {
     const user = await User.findById(userId);
     if (!user) throw new AppError('User not found', 404);
 
-    if (user.profileImage && user.profileImage.startsWith('/uploads/profile/')) {
-      const oldPath = path.join(publicRoot, user.profileImage);
-      try {
-        if (fs.existsSync(oldPath)) {
-          fs.unlinkSync(oldPath);
+    if (user.profileImage) {
+      if (user.profileImage.includes('cloudinary.com')) {
+        const publicId = getCloudinaryPublicId(user.profileImage);
+        if (publicId) {
+          cloudinary.uploader.destroy(publicId).catch((err) => {
+            console.warn('Could not delete old avatar from Cloudinary:', err.message);
+          });
         }
-      } catch (err) {
-        console.warn('Warning: Could not delete old avatar:', err.message);
+      } else if (user.profileImage.startsWith('/uploads/profile/') && publicRoot) {
+        const oldPath = path.join(publicRoot, user.profileImage);
+        try {
+          if (fs.existsSync(oldPath)) {
+            fs.unlinkSync(oldPath);
+          }
+        } catch (err) {
+          console.warn('Warning: Could not delete old avatar:', err.message);
+        }
       }
     }
 
-    user.profileImage = newImagePath;
+    const resolvedPath = newImageUrl.startsWith('http') || newImageUrl.startsWith('/')
+      ? newImageUrl
+      : `/uploads/profile/${newImageUrl}`;
+
+    user.profileImage = resolvedPath;
     await user.save();
-    return newImagePath;
+    return resolvedPath;
   }
 
   /**
-   * Removes current profile avatar.
+   * Removes current profile avatar from Cloudinary or local disk.
    * @param {string} userId
-   * @param {string} publicRoot
+   * @param {string} [publicRoot]
    * @returns {Promise<boolean>}
    */
   async removeUserProfileImage(userId, publicRoot) {
@@ -80,13 +114,22 @@ class UserService {
       throw new AppError('No profile image found to delete', 404);
     }
 
-    const imagePath = path.join(publicRoot, user.profileImage);
-    try {
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
+    if (user.profileImage.includes('cloudinary.com')) {
+      const publicId = getCloudinaryPublicId(user.profileImage);
+      if (publicId) {
+        cloudinary.uploader.destroy(publicId).catch((err) => {
+          console.warn('Could not delete avatar from Cloudinary:', err.message);
+        });
       }
-    } catch (fileErr) {
-      console.warn('File already missing or could not be deleted:', fileErr.message);
+    } else if (publicRoot) {
+      const imagePath = path.join(publicRoot, user.profileImage);
+      try {
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+      } catch (fileErr) {
+        console.warn('File already missing or could not be deleted:', fileErr.message);
+      }
     }
 
     user.profileImage = '';

@@ -198,10 +198,11 @@ exports.updateProfileImage = async (req, res) => {
 
     const userId = req.session.userId;
     const publicRoot = path.join(__dirname, '../../public');
+    const imageUrl = req.file.path || req.file.secure_url || req.file.filename;
 
     const newImagePath = await userService.updateUserProfileImage(
       userId,
-      req.file.filename,
+      imageUrl,
       publicRoot
     );
 

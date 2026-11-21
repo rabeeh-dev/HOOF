@@ -9,23 +9,33 @@ const nodemailer = require("nodemailer");
 // CREATE TRANSPORTER (GMAIL SMTP)
 // ==========================================
 
-const mailUser = process.env.MAIL_USER || process.env.EMAIL_USER || "hoof.store@example.com";
-const mailPass = process.env.MAIL_PASS || process.env.EMAIL_PASS || "";
+const mailUser = (process.env.MAIL_USER || process.env.EMAIL_USER || "hoof.store@example.com").trim();
+const mailPass = (process.env.MAIL_PASS || process.env.EMAIL_PASS || "").trim().replace(/\s+/g, "");
 const mailHost = process.env.MAIL_HOST || "smtp.gmail.com";
 const mailPort = Number(process.env.MAIL_PORT) || 587;
 
-const transporter = nodemailer.createTransport({
-  host: mailHost,
-  port: mailPort,
-  secure: false,
-  auth: {
-    user: mailUser,
-    pass: mailPass,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+const transportConfig = mailHost === "smtp.gmail.com"
+  ? {
+      service: "gmail",
+      auth: {
+        user: mailUser,
+        pass: mailPass,
+      },
+    }
+  : {
+      host: mailHost,
+      port: mailPort,
+      secure: mailPort === 465,
+      auth: {
+        user: mailUser,
+        pass: mailPass,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    };
+
+const transporter = nodemailer.createTransport(transportConfig);
 
 // Verify mail transporter connection on startup if credentials exist
 if (mailUser && mailPass && mailPass !== "temp_email_app_password") {

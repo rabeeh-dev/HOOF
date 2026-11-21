@@ -3,9 +3,6 @@
  * @description Pure business logic for product catalog, filtering, sorting, pagination, reviews, and discovery.
  */
 
-const fs = require('fs');
-const path = require('path');
-const convert = require('heic-convert');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const Review = require('../models/Review');
@@ -262,26 +259,8 @@ class ProductService {
     const imagePaths = [];
 
     for (const file of files) {
-      let filename = file.filename;
-      let filePath = file.path;
-
-      if (file.originalname && file.originalname.toLowerCase().endsWith('.heic')) {
-        const inputBuffer = fs.readFileSync(filePath);
-        const outputBuffer = await convert({
-          buffer: inputBuffer,
-          format: 'JPEG',
-          quality: 1,
-        });
-
-        filename = `conv-${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
-        const newPath = path.resolve('public/uploads/products', filename);
-        fs.writeFileSync(newPath, outputBuffer);
-        try {
-          fs.unlinkSync(filePath);
-        } catch (_) {}
-      }
-
-      imagePaths.push(`/uploads/products/${filename}`);
+      const imageUrl = file.path || file.secure_url || file.url;
+      imagePaths.push(imageUrl);
     }
 
     const variants = [];
@@ -392,20 +371,8 @@ class ProductService {
     const newImagePaths = [];
     if (files && files.length > 0) {
       for (const file of files) {
-        let filename = file.filename;
-        let filePath = file.path;
-
-        if (file.originalname && file.originalname.toLowerCase().endsWith('.heic')) {
-          const inputBuffer = fs.readFileSync(filePath);
-          const outputBuffer = await convert({ buffer: inputBuffer, format: 'JPEG', quality: 1 });
-          filename = `upd-${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
-          const newPath = path.resolve('public/uploads/products', filename);
-          fs.writeFileSync(newPath, outputBuffer);
-          try {
-            fs.unlinkSync(filePath);
-          } catch (_) {}
-        }
-        newImagePaths.push(`/uploads/products/${filename}`);
+        const imageUrl = file.path || file.secure_url || file.url;
+        newImagePaths.push(imageUrl);
       }
     }
 
